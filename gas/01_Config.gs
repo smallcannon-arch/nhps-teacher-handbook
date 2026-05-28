@@ -3,6 +3,7 @@ var APP = {
   TIMEZONE: "Asia/Taipei",
   SPREADSHEET_ID: "PASTE_SPREADSHEET_ID_HERE",
   GOOGLE_CLIENT_ID: "PASTE_GOOGLE_CLIENT_ID_HERE",
+  ALLOWED_EMAIL_DOMAIN: "nhps.hc.edu.tw",
   SHEETS: {
     CHAPTERS: "Chapters",
     BLOCKS: "ContentBlocks",

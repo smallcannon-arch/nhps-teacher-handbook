@@ -46,12 +46,14 @@
 ```js
 SPREADSHEET_ID: "PASTE_SPREADSHEET_ID_HERE",
 GOOGLE_CLIENT_ID: "PASTE_GOOGLE_CLIENT_ID_HERE",
+ALLOWED_EMAIL_DOMAIN: "nhps.hc.edu.tw",
 ```
 
 請先填入：
 
 1. `SPREADSHEET_ID`：第一步複製的 Google Sheet ID。
 2. `GOOGLE_CLIENT_ID`：完成第四步後再回來填。
+3. `ALLOWED_EMAIL_DOMAIN`：預設為 `nhps.hc.edu.tw`，用來限制只有學校網域帳號可登入後台。
 
 ## 四、建立 Google OAuth Client ID
 
@@ -134,6 +136,7 @@ const GAS_ENDPOINT = "PASTE_GAS_WEB_APP_URL_HERE";
 - 不應放入學生個資、成績、個案內容、通報細節、採購工程細節或未公告內部資料。
 - `Users` 工作表是後台權限來源，離職、調職或不再維護者應改為 `enabled = FALSE`。
 - `Logs` 不應記錄 token、authorization header 或完整表單敏感內容。
+- 後台登入採雙重限制：Google token 必須符合 `ALLOWED_EMAIL_DOMAIN`，且帳號必須存在於 `Users` 工作表並設為 `enabled = TRUE`。
 
 ## 十、後續接前台
 

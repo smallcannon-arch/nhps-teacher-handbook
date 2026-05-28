@@ -293,6 +293,7 @@
   <script>
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbwOzdnBN_kl9mQYlma3VBWESFc2DCkDqaRyti-WF4NsLGDUx7NJ_kl2soJewC5ifPnuEw/exec";
     const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
+    const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
     let idToken = "";
     let chapters = [];
     let activeId = "";
@@ -324,8 +325,19 @@
             setEnabled(false);
             return;
           }
+          const profile = decodeJwtPayload(response.credential);
+          const email = String(profile.email || "").toLowerCase();
+          const emailDomain = email.split("@").pop();
+          const hostedDomain = String(profile.hd || "").toLowerCase();
+          if (emailDomain !== ALLOWED_EMAIL_DOMAIN && hostedDomain !== ALLOWED_EMAIL_DOMAIN) {
+            idToken = "";
+            loginState.textContent = "登入帳號網域不符";
+            showMessage("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入後台。請改用學校 Google 帳號。", true);
+            setEnabled(false);
+            return;
+          }
           idToken = response.credential;
-          loginState.textContent = "已登入，正在載入資料";
+          loginState.textContent = "已登入：" + email;
           showMessage("已取得 Google 登入憑證，正在載入後台資料。", false);
           await loadAdminData();
         }
@@ -487,6 +499,21 @@
         '"': "&quot;",
         "'": "&#39;"
       }[char]));
+    }
+
+    function decodeJwtPayload(token) {
+      const parts = String(token || "").split(".");
+      if (parts.length < 2) return {};
+      try {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+        const json = decodeURIComponent(Array.from(atob(padded)).map((char) => {
+          return "%" + char.charCodeAt(0).toString(16).padStart(2, "0");
+        }).join(""));
+        return JSON.parse(json);
+      } catch (err) {
+        return {};
+      }
     }
 
     chapterList.addEventListener("click", (event) => {

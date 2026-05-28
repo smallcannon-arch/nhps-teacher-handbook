@@ -3,6 +3,7 @@ function requireUser_(idToken) {
   var profile = verifyGoogleIdToken_(idToken);
   var email = String(profile.email || "").toLowerCase();
   if (!email) throw new Error("Google token 無 email");
+  enforceAllowedDomain_(email, profile);
 
   var users = readTable(APP.SHEETS.USERS);
   var user = users.find(function(row) {
@@ -34,6 +35,16 @@ function verifyGoogleIdToken_(idToken) {
     throw new Error("Google email 尚未驗證");
   }
   return profile;
+}
+
+function enforceAllowedDomain_(email, profile) {
+  var domain = String(APP.ALLOWED_EMAIL_DOMAIN || "").toLowerCase();
+  if (!domain) return;
+  var emailDomain = email.split("@").pop();
+  var hostedDomain = String((profile && profile.hd) || "").toLowerCase();
+  if (emailDomain !== domain && hostedDomain !== domain) {
+    throw new Error("僅限 " + domain + " 網域帳號登入後台");
+  }
 }
 
 function requireEditor_(user) {
