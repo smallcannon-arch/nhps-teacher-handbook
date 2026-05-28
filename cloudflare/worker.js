@@ -68,6 +68,20 @@ async function proxyPostToGas(request, env) {
   });
   const text = await upstream.text();
   const isJson = (upstream.headers.get("content-type") || "").includes("json") || looksLikeJson(text);
+  if (!isJson) {
+    return withCors(new Response(JSON.stringify({
+      ok: false,
+      error: "GAS 回傳非 JSON。請檢查 Apps Script 是否已設定 SPREADSHEET_ID 並重新部署 Web App。",
+      status: upstream.status
+    }), {
+      status: upstream.status,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Handbook-Cache": "BYPASS"
+      }
+    }), "BYPASS");
+  }
   const response = new Response(text, {
     status: upstream.status,
     headers: {
