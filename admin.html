@@ -310,11 +310,23 @@
         showMessage("請先設定 GOOGLE_CLIENT_ID 與 GAS_ENDPOINT。", true);
         return;
       }
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        showMessage("Google 登入元件尚未載入完成，請重新整理頁面後再試。", true);
+        return;
+      }
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: async (response) => {
+          if (!response || !response.credential) {
+            idToken = "";
+            loginState.textContent = "尚未完成登入";
+            showMessage("尚未取得 Google 登入憑證。請確認 OAuth JavaScript 來源已加入 https://smallcannon-arch.github.io，並重新登入。", true);
+            setEnabled(false);
+            return;
+          }
           idToken = response.credential;
           loginState.textContent = "已登入，正在載入資料";
+          showMessage("已取得 Google 登入憑證，正在載入後台資料。", false);
           await loadAdminData();
         }
       });
@@ -328,6 +340,7 @@
 
     async function api(cmd, extra = {}) {
       if (GAS_ENDPOINT.startsWith("PASTE_")) throw new Error("尚未設定 GAS_ENDPOINT");
+      if (!idToken) throw new Error("尚未完成 Google 登入，請先按 Google 登入按鈕。");
       const response = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
