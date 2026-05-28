@@ -27,7 +27,7 @@ function doPost(e) {
 
     if (cmd === "adminList") {
       logAction(email, cmd, "", "ok", "load admin handbook");
-      return jsonResponse(getAdminHandbook());
+      return jsonResponse(getAdminHandbook(user));
     }
     if (cmd === "saveDraft") {
       return jsonResponse(saveDraft_(payload, user));

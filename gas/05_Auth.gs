@@ -9,13 +9,14 @@ function requireUser_(idToken) {
   var user = users.find(function(row) {
     return String(row.email || "").toLowerCase() === email && String(row.enabled).toUpperCase() === "TRUE";
   });
-  if (!user) throw new Error("此帳號未授權使用後台：" + email);
+  if (!user && !APP.AUTO_ALLOW_DOMAIN_USERS) throw new Error("此帳號未授權使用後台：" + email);
 
   return {
     email: email,
-    name: user.name || profile.name || "",
-    role: user.role || "viewer",
-    office: user.office || ""
+    name: user ? (user.name || profile.name || "") : (profile.name || ""),
+    role: user ? (user.role || "viewer") : (APP.DEFAULT_DOMAIN_ROLE || "viewer"),
+    office: user ? (user.office || "") : "",
+    domain_user: !user
   };
 }
 

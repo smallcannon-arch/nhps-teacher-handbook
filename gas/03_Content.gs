@@ -42,7 +42,7 @@ function getConfigPayload() {
   };
 }
 
-function getAdminHandbook() {
+function getAdminHandbook(user) {
   var chapters = readTable(APP.SHEETS.CHAPTERS)
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
   var blocks = readTable(APP.SHEETS.BLOCKS)
@@ -52,6 +52,7 @@ function getAdminHandbook() {
     ok: true,
     app_version: getConfigValue("app_version", APP.VERSION),
     cache_version: getConfigValue("cache_version", ""),
+    user: user || null,
     section_labels: SECTION_LABELS,
     chapters: chapters.map(function(chapter) {
       return {

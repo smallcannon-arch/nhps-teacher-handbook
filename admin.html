@@ -297,6 +297,7 @@
     let idToken = "";
     let chapters = [];
     let activeId = "";
+    let currentUser = null;
 
     const chapterList = document.getElementById("chapterList");
     const editorForm = document.getElementById("editorForm");
@@ -368,8 +369,11 @@
       try {
         const data = await api("adminList");
         chapters = data.chapters || [];
+        currentUser = data.user || null;
         activeId = activeId || (chapters[0] && chapters[0].id) || "";
-        loginState.textContent = "已登入";
+        loginState.textContent = currentUser
+          ? "已登入：" + currentUser.email + "（" + currentUser.role + "）"
+          : "已登入";
         renderChapterList();
         renderEditor();
         setEnabled(true);
@@ -489,7 +493,13 @@
     }
 
     function setEnabled(enabled) {
-      buttons.forEach((button) => button.disabled = !enabled || !idToken);
+      const role = currentUser && currentUser.role;
+      const canEdit = ["admin", "editor", "reviewer"].includes(role);
+      const canPublish = ["admin", "reviewer"].includes(role);
+      document.getElementById("saveBtn").disabled = !enabled || !idToken || !canEdit;
+      document.getElementById("reviewBtn").disabled = !enabled || !idToken || !canEdit;
+      document.getElementById("publishBtn").disabled = !enabled || !idToken || !canPublish;
+      document.getElementById("withdrawBtn").disabled = !enabled || !idToken || !canPublish;
     }
 
     function escapeHtml(value) {
