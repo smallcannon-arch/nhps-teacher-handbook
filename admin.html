@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>內湖國小教師手冊後台</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --ink: #203044;
+      --navy: #17375e;
+      --cream: #f7f1e7;
+      --paper: #fffdf8;
+      --line: #d9e0e3;
+      --muted: #6c7782;
+      --gold: #b28b45;
+      --danger: #8b3a3a;
+      --ok: #3f6f50;
+      --radius: 8px;
+      --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(23, 55, 94, 0.06), #fbfaf6 45%), var(--cream);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.7;
+    }
+
+    header {
+      background: var(--navy);
+      color: white;
+      border-bottom: 5px solid var(--gold);
+    }
+
+    .header-inner,
+    main,
+    footer {
+      width: min(1280px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: grid;
+      gap: 12px;
+      padding: 28px 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 0;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      line-height: 1.25;
+    }
+
+    .badge {
+      display: inline-flex;
+      width: fit-content;
+      padding: 5px 10px;
+      border: 1px solid rgba(242, 207, 141, 0.42);
+      border-radius: 999px;
+      color: rgba(255, 255, 255, 0.84);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 24px;
+      padding: 28px 0 48px;
+    }
+
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      padding: 16px;
+    }
+
+    .content {
+      padding: 22px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      color: var(--navy);
+      font-weight: 800;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      padding: 10px 12px;
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    button {
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: var(--navy);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: white;
+      color: var(--navy);
+      border-color: var(--line);
+    }
+
+    button.warn {
+      background: var(--danger);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .chapter-button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+      background: transparent;
+      border-color: transparent;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .chapter-button.is-active {
+      background: var(--navy);
+      color: white;
+    }
+
+    .chapter-number {
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border: 1px solid #d2ddd5;
+      border-radius: var(--radius);
+      background: #edf3ef;
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .error {
+      border-color: #ead0d0;
+      background: #fbefef;
+      color: var(--danger);
+    }
+
+    .block {
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .block-grid {
+      display: grid;
+      grid-template-columns: 1fr 160px 180px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding-bottom: 30px;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+        width: min(100% - 20px, 1280px);
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .chapter-list {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      .chapter-button {
+        min-width: 200px;
+        min-height: 54px;
+      }
+
+      .block-grid,
+      .link-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <span class="badge">原型版｜請先在測試試算表操作</span>
+      <h1>內湖國小教師手冊後台</h1>
+      <p class="meta">草稿、送審、發布與快取版本更新的管理介面雛形。</p>
+      <div id="gsiButton"></div>
+    </div>
+  </header>
+
+  <main>
+    <aside class="panel sidebar">
+      <h2>章節</h2>
+      <p class="meta" id="loginState">尚未登入</p>
+      <div class="chapter-list" id="chapterList"></div>
+    </aside>
+
+    <section class="panel content">
+      <div id="message" class="notice" hidden></div>
+      <h2 id="chapterTitle">請先登入並載入章節</h2>
+      <p class="meta" id="chapterMeta"></p>
+      <form id="editorForm"></form>
+      <div class="actions">
+        <button id="saveBtn" type="button" disabled>儲存草稿</button>
+        <button id="reviewBtn" type="button" class="secondary" disabled>送出審核</button>
+        <button id="publishBtn" type="button" disabled>發布章節</button>
+        <button id="withdrawBtn" type="button" class="warn" disabled>收回發布</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>本後台不應放入學生個資、個案內容、成績、通報細節、採購工程細節或未經確認的高風險資訊。</p>
+  </footer>
+
+  <script>
+    const GAS_ENDPOINT = "PASTE_GAS_WEB_APP_URL_HERE";
+    const GOOGLE_CLIENT_ID = "PASTE_GOOGLE_CLIENT_ID_HERE";
+    let idToken = "";
+    let chapters = [];
+    let activeId = "";
+
+    const chapterList = document.getElementById("chapterList");
+    const editorForm = document.getElementById("editorForm");
+    const message = document.getElementById("message");
+    const loginState = document.getElementById("loginState");
+    const chapterTitle = document.getElementById("chapterTitle");
+    const chapterMeta = document.getElementById("chapterMeta");
+    const buttons = ["saveBtn", "reviewBtn", "publishBtn", "withdrawBtn"].map((id) => document.getElementById(id));
+
+    window.onload = () => {
+      if (GOOGLE_CLIENT_ID.startsWith("PASTE_")) {
+        showMessage("請先設定 GOOGLE_CLIENT_ID 與 GAS_ENDPOINT。", true);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          idToken = response.credential;
+          loginState.textContent = "已登入，正在載入資料";
+          await loadAdminData();
+        }
+      });
+      google.accounts.id.renderButton(document.getElementById("gsiButton"), {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular"
+      });
+    };
+
+    async function api(cmd, extra = {}) {
+      if (GAS_ENDPOINT.startsWith("PASTE_")) throw new Error("尚未設定 GAS_ENDPOINT");
+      const response = await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ cmd, idToken, ...extra })
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "操作失敗");
+      return data;
+    }
+
+    async function loadAdminData() {
+      try {
+        const data = await api("adminList");
+        chapters = data.chapters || [];
+        activeId = activeId || (chapters[0] && chapters[0].id) || "";
+        loginState.textContent = "已登入";
+        renderChapterList();
+        renderEditor();
+        setEnabled(true);
+      } catch (err) {
+        showMessage(err.message, true);
+        loginState.textContent = "載入失敗";
+      }
+    }
+
+    function renderChapterList() {
+      chapterList.innerHTML = chapters.map((chapter) => `
+        <button class="chapter-button ${chapter.id === activeId ? "is-active" : ""}" type="button" data-id="${chapter.id}">
+          <span class="chapter-number">${escapeHtml(chapter.number)}</span>
+          <span>${escapeHtml(chapter.title)}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderEditor() {
+      const chapter = chapters.find((item) => item.id === activeId);
+      if (!chapter) return;
+      chapterTitle.textContent = `${chapter.number} ${chapter.title}`;
+      chapterMeta.textContent = `狀態：${chapter.status}`;
+      editorForm.innerHTML = chapter.blocks.map((block, index) => renderBlock(block, index)).join("");
+    }
+
+    function renderBlock(block, index) {
+      const links = Array.isArray(block.draft_links) ? block.draft_links : [];
+      return `
+        <section class="block" data-index="${index}">
+          <div class="block-grid">
+            <div class="field">
+              <label>${escapeHtml(block.title)}</label>
+              ${block.key === "相關資源"
+                ? `<div class="links" data-index="${index}">${renderLinks(links)}</div><button class="secondary add-link" type="button" data-index="${index}">新增連結</button>`
+                : `<textarea data-field="draft_body">${escapeHtml(block.draft_body || "")}</textarea>`}
+            </div>
+            <div class="field">
+              <label>風險等級</label>
+              <select data-field="risk_level">
+                ${["低", "中", "高"].map((value) => `<option ${block.risk_level === value ? "selected" : ""}>${value}</option>`).join("")}
+              </select>
+            </div>
+            <div class="field">
+              <label>建議確認處室</label>
+              <input data-field="owner_office" value="${escapeHtml(block.owner_office || "")}">
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLinks(links) {
+      const rows = links.length ? links : [{ label: "", url: "" }];
+      return rows.map((link) => `
+        <div class="link-row">
+          <input data-link="label" placeholder="連結名稱" value="${escapeHtml(link.label || "")}">
+          <input data-link="url" placeholder="https://..." value="${escapeHtml(link.url || "")}">
+          <button class="secondary remove-link" type="button">移除</button>
+        </div>
+      `).join("");
+    }
+
+    function collectBlocks() {
+      const chapter = chapters.find((item) => item.id === activeId);
+      return [...editorForm.querySelectorAll(".block")].map((section) => {
+        const index = Number(section.dataset.index);
+        const source = chapter.blocks[index];
+        const draftText = section.querySelector("[data-field='draft_body']");
+        const links = [...section.querySelectorAll(".link-row")].map((row) => ({
+          label: row.querySelector("[data-link='label']").value.trim(),
+          url: row.querySelector("[data-link='url']").value.trim()
+        })).filter((link) => link.label && link.url);
+        return {
+          key: source.key,
+          draft_body: draftText ? draftText.value : "",
+          draft_links: source.key === "相關資源" ? links : [],
+          risk_level: section.querySelector("[data-field='risk_level']").value,
+          owner_office: section.querySelector("[data-field='owner_office']").value.trim()
+        };
+      });
+    }
+
+    async function saveDraft() {
+      await runCommand("saveDraft", { chapter_id: activeId, blocks: collectBlocks() }, "已儲存草稿");
+    }
+
+    async function submitReview() {
+      await runCommand("submitReview", { chapter_id: activeId }, "已送出審核");
+    }
+
+    async function publishChapter() {
+      await runCommand("publishChapter", { chapter_id: activeId }, "已發布章節並更新快取版本");
+    }
+
+    async function withdrawChapter() {
+      await runCommand("withdrawChapter", { chapter_id: activeId }, "已收回發布並更新快取版本");
+    }
+
+    async function runCommand(cmd, payload, successText) {
+      try {
+        setEnabled(false);
+        await api(cmd, payload);
+        showMessage(successText, false);
+        await loadAdminData();
+      } catch (err) {
+        showMessage(err.message, true);
+      } finally {
+        setEnabled(true);
+      }
+    }
+
+    function showMessage(text, isError) {
+      message.hidden = false;
+      message.textContent = text;
+      message.classList.toggle("error", Boolean(isError));
+    }
+
+    function setEnabled(enabled) {
+      buttons.forEach((button) => button.disabled = !enabled || !idToken);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    chapterList.addEventListener("click", (event) => {
+      const button = event.target.closest(".chapter-button");
+      if (!button) return;
+      activeId = button.dataset.id;
+      renderChapterList();
+      renderEditor();
+    });
+
+    editorForm.addEventListener("click", (event) => {
+      if (event.target.classList.contains("add-link")) {
+        const box = event.target.previousElementSibling;
+        box.insertAdjacentHTML("beforeend", renderLinks([{ label: "", url: "" }]));
+      }
+      if (event.target.classList.contains("remove-link")) {
+        event.target.closest(".link-row").remove();
+      }
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", saveDraft);
+    document.getElementById("reviewBtn").addEventListener("click", submitReview);
+    document.getElementById("publishBtn").addEventListener("click", publishChapter);
+    document.getElementById("withdrawBtn").addEventListener("click", withdrawChapter);
+  </script>
+</body>
+</html>
