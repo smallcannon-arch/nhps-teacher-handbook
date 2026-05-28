@@ -6,15 +6,19 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") return corsResponse(null, 204);
+    if (!env.GAS_URL) {
+      return corsResponse(JSON.stringify({ ok: false, error: "MISSING_GAS_URL" }), 500);
+    }
+
+    if (request.method === "POST") {
+      return proxyPostToGas(request, env);
+    }
+
     if (request.method !== "GET") return corsResponse(JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }), 405);
 
     const action = url.searchParams.get("action") || "getHandbook";
     if (!ALLOWED_ACTIONS.has(action)) {
       return corsResponse(JSON.stringify({ ok: false, error: "ACTION_NOT_ALLOWED" }), 400);
-    }
-
-    if (!env.GAS_URL) {
-      return corsResponse(JSON.stringify({ ok: false, error: "MISSING_GAS_URL" }), 500);
     }
 
     const cacheVersion = await getCacheVersion(env);
@@ -52,6 +56,29 @@ export default {
   }
 };
 
+async function proxyPostToGas(request, env) {
+  const upstream = await fetch(env.GAS_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": request.headers.get("Content-Type") || "text/plain;charset=utf-8",
+      "Accept": "application/json"
+    },
+    body: await request.text(),
+    redirect: "follow"
+  });
+  const text = await upstream.text();
+  const isJson = (upstream.headers.get("content-type") || "").includes("json") || looksLikeJson(text);
+  const response = new Response(text, {
+    status: upstream.status,
+    headers: {
+      "Content-Type": isJson ? "application/json; charset=utf-8" : "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Handbook-Cache": "BYPASS"
+    }
+  });
+  return withCors(response, "BYPASS");
+}
+
 async function getCacheVersion(env) {
   try {
     const configUrl = new URL(env.GAS_URL);
@@ -82,7 +109,7 @@ function hasFalseOk(text) {
 function withCors(response, cacheStatus) {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type");
   headers.set("X-Handbook-Cache", cacheStatus);
   return new Response(response.body, { status: response.status, headers });
@@ -94,7 +121,7 @@ function corsResponse(body, status) {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Cache-Control": "no-store",
       "X-Handbook-Cache": "BYPASS"

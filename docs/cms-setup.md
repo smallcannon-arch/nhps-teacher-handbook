@@ -10,6 +10,7 @@
 
 後台 admin.html
   → Google 登入
+  → Cloudflare Worker POST 代理（不快取）
   → GAS doPost
   → Google Sheets
 ```
@@ -112,13 +113,9 @@ function addFirstAdmin() {
 3. 執行身分選：`我`。
 4. 存取權限選：`任何人`。
 5. 部署後複製 Web App URL。
-6. 回到 `admin.html`，將：
+6. 先保留 Web App URL，等第八步 Worker 部署完成後，再把後台 endpoint 改成 Worker URL。
 
-```js
-const GAS_ENDPOINT = "PASTE_GAS_WEB_APP_URL_HERE";
-```
-
-替換成 Web App URL。
+注意：GitHub Pages 前端若直接 `fetch` GAS `doPost`，可能被瀏覽器 CORS 擋下。正式後台建議透過 Cloudflare Worker 代理 POST。
 
 ## 八、Cloudflare Worker 設定
 
@@ -133,6 +130,19 @@ const GAS_ENDPOINT = "PASTE_GAS_WEB_APP_URL_HERE";
    - `https://你的-worker-url/?action=health`
    - `https://你的-worker-url/?action=getConfig`
    - `https://你的-worker-url/?action=getHandbook`
+7. 回到 `admin.html`，將：
+
+```js
+const GAS_ENDPOINT = "PASTE_GAS_WEB_APP_URL_HERE";
+```
+
+替換成 Worker URL，例如：
+
+```js
+const GAS_ENDPOINT = "https://你的-worker-url.workers.dev";
+```
+
+Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律 `BYPASS`，不快取。
 
 ## 九、安全提醒
 

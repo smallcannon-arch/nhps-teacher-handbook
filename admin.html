@@ -359,6 +359,8 @@
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: "payload=" + encodeURIComponent(payload)
+      }).catch((err) => {
+        throw new Error("連線失敗。若目前後台 endpoint 仍是 GAS URL，請改用 Cloudflare Worker URL 代理 POST，避免瀏覽器 CORS 擋下請求。原始訊息：" + err.message);
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error || "操作失敗");
