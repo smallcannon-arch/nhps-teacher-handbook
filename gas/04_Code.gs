@@ -52,11 +52,13 @@ function doPost(e) {
 function parsePostPayload_(e) {
   if (!e || !e.postData || !e.postData.contents) return {};
   var type = String(e.postData.type || "");
-  if (type.indexOf("application/json") >= 0) {
-    return JSON.parse(e.postData.contents);
+  var contents = String(e.postData.contents || "");
+  var trimmed = contents.trim();
+  if (type.indexOf("application/json") >= 0 || trimmed.indexOf("{") === 0 || trimmed.indexOf("[") === 0) {
+    return JSON.parse(contents);
   }
   var data = {};
-  e.postData.contents.split("&").forEach(function(pair) {
+  contents.split("&").forEach(function(pair) {
     var parts = pair.split("=");
     data[decodeURIComponent(parts[0] || "")] = decodeURIComponent((parts[1] || "").replace(/\+/g, " "));
   });

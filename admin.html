@@ -353,10 +353,11 @@
     async function api(cmd, extra = {}) {
       if (GAS_ENDPOINT.startsWith("PASTE_")) throw new Error("尚未設定 GAS_ENDPOINT");
       if (!idToken) throw new Error("尚未完成 Google 登入，請先按 Google 登入按鈕。");
+      const payload = JSON.stringify({ cmd, idToken, ...extra });
       const response = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ cmd, idToken, ...extra })
+        body: "payload=" + encodeURIComponent(payload)
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error || "操作失敗");
