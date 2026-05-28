@@ -1,0 +1,6 @@
+name = "nhps-teacher-handbook-api"
+main = "cloudflare/worker.js"
+compatibility_date = "2026-05-28"
+
+[vars]
+GAS_URL = "https://script.google.com/macros/s/AKfycbwOzdnBN_kl9mQYlma3VBWESFc2DCkDqaRyti-WF4NsLGDUx7NJ_kl2soJewC5ifPnuEw/exec"
