@@ -394,6 +394,9 @@
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: async (response) => {
+          loginState.textContent = "登入中...";
+          showMessage("正在驗證 Google 登入，請稍候...", false, true);
+          setEnabled(false);
           if (!response || !response.credential) {
             idToken = "";
             loginState.textContent = "尚未完成登入";
@@ -413,8 +416,8 @@
             return;
           }
           idToken = response.credential;
-          loginState.textContent = "已登入：" + email;
-          showMessage("已取得 Google 登入憑證，正在載入後台資料。", false);
+          loginState.textContent = "已登入：" + email + "，載入中...";
+          showMessage("已取得 Google 登入憑證，正在載入後台資料，請稍候...", false, true);
           await loadAdminData();
         }
       });
