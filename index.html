@@ -745,6 +745,11 @@
       )).join("") + "</ul>";
     }
 
+    function formatChapterNumber(value) {
+      const text = String(value || "").trim();
+      return /^\d$/.test(text) ? "0" + text : text;
+    }
+
     function getChapterSections(chapter) {
       if (Array.isArray(chapter.blocks) && chapter.blocks.length > 0) {
         return chapter.blocks.map((block) => ({
@@ -773,7 +778,7 @@
         button.tabIndex = isActive ? 0 : -1;
       });
 
-      chapterKicker.textContent = chapter.number + " 工作流程";
+      chapterKicker.textContent = formatChapterNumber(chapter.number) + " 工作流程";
       chapterTitle.textContent = chapter.title;
       chapterStatus.textContent = chapter.status;
 
@@ -800,7 +805,7 @@
     function buildNavigation() {
       chapterList.innerHTML = handbookChapters.map((chapter) => (
         "<button class='chapter-button' type='button' role='tab' data-chapter-id='" + chapter.id + "'>" +
-          "<span class='chapter-number'>" + chapter.number + "</span>" +
+          "<span class='chapter-number'>" + formatChapterNumber(chapter.number) + "</span>" +
           "<span class='chapter-name'>" + chapter.title + "</span>" +
         "</button>"
       )).join("");

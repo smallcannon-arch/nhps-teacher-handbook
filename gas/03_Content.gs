@@ -34,7 +34,7 @@ function getPublishedHandbook() {
       });
       return {
         id: chapter.chapter_id,
-        number: chapter.chapter_no,
+        number: formatChapterNo_(chapter.chapter_no),
         title: chapter.chapter_title,
         status: chapter.status,
         content: content,
@@ -70,7 +70,7 @@ function getAdminHandbook(user) {
     chapters: chapters.map(function(chapter) {
       return {
         id: chapter.chapter_id,
-        number: chapter.chapter_no,
+        number: formatChapterNo_(chapter.chapter_no),
         title: chapter.chapter_title,
         status: chapter.status,
         sort_order: Number(chapter.sort_order),
@@ -116,6 +116,12 @@ function stringifyLinks_(links) {
   }).filter(function(link) {
     return link.label && link.url;
   }));
+}
+
+function formatChapterNo_(value) {
+  var text = String(value || "").trim();
+  if (/^\d+$/.test(text) && text.length < 2) return ("0" + text).slice(-2);
+  return text;
 }
 
 function hasHighRiskText_(text) {

@@ -410,7 +410,7 @@
     function renderChapterList() {
       chapterList.innerHTML = chapters.map((chapter) => `
         <button class="chapter-button ${chapter.id === activeId ? "is-active" : ""}" type="button" data-id="${chapter.id}">
-          <span class="chapter-number">${escapeHtml(chapter.number)}</span>
+          <span class="chapter-number">${escapeHtml(formatChapterNumber(chapter.number))}</span>
           <span>${escapeHtml(chapter.title)}</span>
         </button>
       `).join("");
@@ -419,7 +419,7 @@
     function renderEditor() {
       const chapter = chapters.find((item) => item.id === activeId);
       if (!chapter) return;
-      chapterTitle.textContent = `${chapter.number} ${chapter.title}`;
+      chapterTitle.textContent = `${formatChapterNumber(chapter.number)} ${chapter.title}`;
       chapterMeta.textContent = `狀態：${chapter.status}`;
       chapterTitleInput.value = chapter.title || "";
       chapterNumberInput.value = chapter.number || "";
@@ -560,6 +560,11 @@
         '"': "&quot;",
         "'": "&#39;"
       }[char]));
+    }
+
+    function formatChapterNumber(value) {
+      const text = String(value || "").trim();
+      return /^\d$/.test(text) ? "0" + text : text;
     }
 
     function decodeJwtPayload(token) {
