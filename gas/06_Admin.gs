@@ -97,7 +97,7 @@ function submitReview_(payload, user) {
 }
 
 function publishChapter_(payload, user) {
-  requireReviewer_(user);
+  requireEditor_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();

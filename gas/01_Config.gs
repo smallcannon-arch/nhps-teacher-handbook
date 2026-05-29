@@ -5,7 +5,7 @@ var APP = {
   GOOGLE_CLIENT_ID: "PASTE_GOOGLE_CLIENT_ID_HERE",
   ALLOWED_EMAIL_DOMAIN: "nhps.hc.edu.tw",
   AUTO_ALLOW_DOMAIN_USERS: true,
-  DEFAULT_DOMAIN_ROLE: "viewer",
+  DEFAULT_DOMAIN_ROLE: "editor",
   SHEETS: {
     CHAPTERS: "Chapters",
     BLOCKS: "ContentBlocks",

@@ -227,11 +227,6 @@
       align-items: end;
     }
 
-    .block .block-grid {
-      grid-template-columns: minmax(0, 1fr) 220px;
-      align-items: start;
-    }
-
     .link-row {
       display: grid;
       grid-template-columns: 1fr 1.4fr auto;
@@ -268,7 +263,6 @@
       }
 
       .block-grid,
-      .block .block-grid,
       .link-row {
         grid-template-columns: 1fr;
       }
@@ -313,12 +307,11 @@
       </div>
       <form id="editorForm"></form>
       <div class="safety-note publish-note">
-        發布前請確認內容已由相關處室確認，且不含學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經確認的高風險資訊。
+        按下「發布章節」後會直接更新前台。發布前請確認內容已由相關處室確認，且不含學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經確認的高風險資訊。
       </div>
       <div class="actions">
         <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
         <button id="saveBtn" type="button" disabled>儲存草稿</button>
-        <button id="reviewBtn" type="button" class="secondary" disabled>送出審核</button>
         <button id="publishBtn" type="button" disabled>發布章節</button>
         <button id="withdrawBtn" type="button" class="warn" disabled>收回發布</button>
         <button id="deleteChapterBtn" type="button" class="warn" disabled>封存章節</button>
@@ -462,10 +455,6 @@
               ${block.key === "相關資源"
                 ? `<div class="links" data-index="${index}">${renderLinks(links)}</div><button class="secondary add-link" type="button" data-index="${index}">新增連結</button>`
                 : `<textarea data-field="draft_body">${escapeHtml(block.draft_body || "")}</textarea>`}
-            </div>
-            <div class="field">
-              <label>建議確認處室</label>
-              <input data-field="owner_office" value="${escapeHtml(block.owner_office || "")}">
               <div class="safety-note">
                 提醒：請勿填入學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經處室確認的高風險資訊。
               </div>
@@ -505,7 +494,7 @@
           draft_body: draftText ? draftText.value : "",
           draft_links: source.key === "相關資源" ? links : [],
           risk_level: "低",
-          owner_office: section.querySelector("[data-field='owner_office']").value.trim(),
+          owner_office: source.owner_office || "",
           deleted: false
         };
       }).concat(deletedBlocks);
@@ -518,10 +507,6 @@
         chapter_title: chapterTitleInput.value.trim(),
         blocks: collectBlocks()
       }, "已儲存草稿");
-    }
-
-    async function submitReview() {
-      await runCommand("submitReview", { chapter_id: activeId }, "已送出審核");
     }
 
     async function publishChapter() {
@@ -562,14 +547,14 @@
     function setEnabled(enabled) {
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
-      const canPublish = ["admin", "reviewer"].includes(role);
+      const canPublish = canEdit;
+      const canArchive = ["admin", "reviewer"].includes(role);
       document.getElementById("addChapterBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("addBlockBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("saveBtn").disabled = !enabled || !idToken || !canEdit;
-      document.getElementById("reviewBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("publishBtn").disabled = !enabled || !idToken || !canPublish;
-      document.getElementById("withdrawBtn").disabled = !enabled || !idToken || !canPublish;
-      document.getElementById("deleteChapterBtn").disabled = !enabled || !idToken || !canPublish;
+      document.getElementById("withdrawBtn").disabled = !enabled || !idToken || !canArchive;
+      document.getElementById("deleteChapterBtn").disabled = !enabled || !idToken || !canArchive;
     }
 
     function escapeHtml(value) {
@@ -696,7 +681,6 @@
     });
 
     document.getElementById("saveBtn").addEventListener("click", saveDraft);
-    document.getElementById("reviewBtn").addEventListener("click", submitReview);
     document.getElementById("publishBtn").addEventListener("click", publishChapter);
     document.getElementById("withdrawBtn").addEventListener("click", withdrawChapter);
     document.getElementById("deleteChapterBtn").addEventListener("click", deleteChapter);

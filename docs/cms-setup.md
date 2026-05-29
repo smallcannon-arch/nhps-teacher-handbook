@@ -50,7 +50,7 @@ SPREADSHEET_ID: "PASTE_SPREADSHEET_ID_HERE",
 GOOGLE_CLIENT_ID: "PASTE_GOOGLE_CLIENT_ID_HERE",
 ALLOWED_EMAIL_DOMAIN: "nhps.hc.edu.tw",
 AUTO_ALLOW_DOMAIN_USERS: true,
-DEFAULT_DOMAIN_ROLE: "viewer",
+DEFAULT_DOMAIN_ROLE: "editor",
 ```
 
 請先填入：
@@ -59,7 +59,7 @@ DEFAULT_DOMAIN_ROLE: "viewer",
 2. `GOOGLE_CLIENT_ID`：完成第四步後再回來填。
 3. `ALLOWED_EMAIL_DOMAIN`：預設為 `nhps.hc.edu.tw`，用來限制只有學校網域帳號可登入後台。
 4. `AUTO_ALLOW_DOMAIN_USERS`：設為 `true` 時，所有學校網域帳號都可登入。
-5. `DEFAULT_DOMAIN_ROLE`：未列在 `Users` 工作表中的校內帳號預設角色，建議維持 `viewer`。
+5. `DEFAULT_DOMAIN_ROLE`：未列在 `Users` 工作表中的校內帳號預設角色；目前設定為 `editor`，代表校內網域帳號登入後可編輯、儲存草稿並直接發布。
 
 ## 四、建立 Google OAuth Client ID
 
@@ -167,8 +167,8 @@ Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律
 - `Users` 工作表是後台權限來源，離職、調職或不再維護者應改為 `enabled = FALSE`。
 - `Logs` 不應記錄 token、authorization header 或完整表單敏感內容。
 - 後台登入採網域限制：Google token 必須符合 `ALLOWED_EMAIL_DOMAIN`。
-- 若 `AUTO_ALLOW_DOMAIN_USERS = true`，所有校內網域帳號都可登入，但未列在 `Users` 的帳號只會套用 `DEFAULT_DOMAIN_ROLE`。
-- 建議 `DEFAULT_DOMAIN_ROLE` 維持 `viewer`；需要編輯或發布的人，再於 `Users` 工作表指定 `editor`、`reviewer` 或 `admin`。
+- 若 `AUTO_ALLOW_DOMAIN_USERS = true`，所有校內網域帳號都可登入，未列在 `Users` 的帳號會套用 `DEFAULT_DOMAIN_ROLE`。
+- 目前 `DEFAULT_DOMAIN_ROLE` 設為 `editor`，校內網域帳號可編輯與直接發布；需要收回或封存的人，再於 `Users` 工作表指定 `reviewer` 或 `admin`。
 
 ## 十一、小卡管理原則
 
