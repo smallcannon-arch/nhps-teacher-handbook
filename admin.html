@@ -227,6 +227,20 @@
       align-items: end;
     }
 
+    .status-display {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      max-width: 100%;
+      border: 1px solid #d2ddd5;
+      border-radius: 999px;
+      background: #edf3ef;
+      color: var(--ok);
+      font-weight: 800;
+      padding: 8px 14px;
+    }
+
     .block .block-grid {
       grid-template-columns: minmax(0, 1fr);
       align-items: start;
@@ -307,7 +321,7 @@
         </div>
         <div class="field">
           <label>發布狀態</label>
-          <input id="chapterStatusInput" readonly>
+          <div id="chapterStatusDisplay" class="status-display" aria-live="polite">尚未載入</div>
         </div>
       </div>
       <form id="editorForm"></form>
@@ -347,7 +361,7 @@
     const chapterMeta = document.getElementById("chapterMeta");
     const chapterTitleInput = document.getElementById("chapterTitleInput");
     const chapterNumberInput = document.getElementById("chapterNumberInput");
-    const chapterStatusInput = document.getElementById("chapterStatusInput");
+    const chapterStatusDisplay = document.getElementById("chapterStatusDisplay");
 
     window.onload = () => {
       if (GOOGLE_CLIENT_ID.startsWith("PASTE_")) {
@@ -444,7 +458,7 @@
       chapterMeta.textContent = `狀態：${chapter.status}`;
       chapterTitleInput.value = chapter.title || "";
       chapterNumberInput.value = chapter.number || "";
-      chapterStatusInput.value = chapter.status || "";
+      chapterStatusDisplay.textContent = chapter.status || "未設定";
       editorForm.innerHTML = chapter.blocks.map((block, index) => renderBlock(block, index)).join("");
     }
 
