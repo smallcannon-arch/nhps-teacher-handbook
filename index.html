@@ -585,6 +585,7 @@
     ];
 
     const padletUrl = "https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns";
+    const handbookApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getHandbook";
 
     const chapters = [
       {
@@ -720,23 +721,50 @@
     const chapterTitle = document.getElementById("chapterTitle");
     const chapterStatus = document.getElementById("chapterStatus");
     const chapterContent = document.getElementById("chapterContent");
+    let handbookChapters = chapters;
+    let handbookSectionLabels = sectionLabels;
+    let navigationEventsBound = false;
 
     function contentToHtml(value) {
       if (Array.isArray(value)) {
         return "<ul>" + value.map((item) => "<li>" + item + "</li>").join("") + "</ul>";
       }
 
+      if (typeof value === "string" && value.split("\n").some((line) => line.trim().indexOf("- ") === 0)) {
+        const items = value.split("\n").filter((line) => line.trim()).map((line) => line.replace(/^\s*-\s*/, ""));
+        return "<ul>" + items.map((item) => "<li>" + item + "</li>").join("") + "</ul>";
+      }
+
       return "<p>" + value + "</p>";
     }
 
     function linksToHtml(links) {
+      if (!Array.isArray(links) || links.length === 0) return "<p>暫無相關資源。</p>";
       return "<ul class='link-list'>" + links.map((link) => (
-        "<li><a href='" + link.url + "'" + (link.url.indexOf("http") === 0 ? " target='_blank' rel='noopener'" : "") + ">" + link.label + "</a></li>"
+        "<li><a href='" + String(link.url || "#") + "'" + (String(link.url || "").indexOf("http") === 0 ? " target='_blank' rel='noopener'" : "") + ">" + String(link.label || "未命名連結") + "</a></li>"
       )).join("") + "</ul>";
     }
 
+    function getChapterSections(chapter) {
+      if (Array.isArray(chapter.blocks) && chapter.blocks.length > 0) {
+        return chapter.blocks.map((block) => ({
+          label: block.title || block.key,
+          value: block.key === "相關資源" ? block.links : block.body,
+          isLinks: block.key === "相關資源"
+        }));
+      }
+
+      const extraLabels = Object.keys(chapter.content || {}).filter((label) => handbookSectionLabels.indexOf(label) < 0);
+      return handbookSectionLabels.concat(extraLabels).map((label) => ({
+        label,
+        value: chapter.content[label],
+        isLinks: label === "相關資源"
+      }));
+    }
+
     function renderChapter(chapterId, shouldFocus) {
-      const chapter = chapters.find((item) => item.id === chapterId) || chapters[0];
+      const chapter = handbookChapters.find((item) => item.id === chapterId) || handbookChapters[0];
+      if (!chapter) return;
 
       document.querySelectorAll(".chapter-button").forEach((button) => {
         const isActive = button.dataset.chapterId === chapter.id;
@@ -749,13 +777,13 @@
       chapterTitle.textContent = chapter.title;
       chapterStatus.textContent = chapter.status;
 
-      chapterContent.innerHTML = sectionLabels.map((label) => {
-        const body = label === "相關資源"
-          ? linksToHtml(chapter.content[label])
-          : contentToHtml(chapter.content[label]);
+      chapterContent.innerHTML = getChapterSections(chapter).map((section) => {
+        const body = section.isLinks
+          ? linksToHtml(section.value)
+          : contentToHtml(section.value || "");
 
         return "<section class='info-section'>" +
-          "<h3>" + label + "</h3>" +
+          "<h3>" + section.label + "</h3>" +
           "<div>" + body + "</div>" +
         "</section>";
       }).join("");
@@ -770,12 +798,15 @@
     }
 
     function buildNavigation() {
-      chapterList.innerHTML = chapters.map((chapter) => (
+      chapterList.innerHTML = handbookChapters.map((chapter) => (
         "<button class='chapter-button' type='button' role='tab' data-chapter-id='" + chapter.id + "'>" +
           "<span class='chapter-number'>" + chapter.number + "</span>" +
           "<span class='chapter-name'>" + chapter.title + "</span>" +
         "</button>"
       )).join("");
+
+      if (navigationEventsBound) return;
+      navigationEventsBound = true;
 
       chapterList.addEventListener("click", (event) => {
         const button = event.target.closest(".chapter-button");
@@ -805,8 +836,31 @@
       });
     }
 
+    function applyDynamicHandbook(data) {
+      if (!data || data.ok !== true || !Array.isArray(data.chapters) || data.chapters.length === 0) return false;
+      handbookSectionLabels = Array.isArray(data.section_labels) && data.section_labels.length > 0
+        ? data.section_labels
+        : sectionLabels;
+      handbookChapters = data.chapters;
+      buildNavigation();
+      renderChapter((location.hash || "").replace("#", ""), false);
+      return true;
+    }
+
+    async function loadDynamicHandbook() {
+      try {
+        const response = await fetch(handbookApiUrl, { method: "GET", headers: { "Accept": "application/json" } });
+        const data = await response.json();
+        applyDynamicHandbook(data);
+      } catch (err) {
+        handbookChapters = chapters;
+        handbookSectionLabels = sectionLabels;
+      }
+    }
+
     buildNavigation();
     renderChapter((location.hash || "").replace("#", ""), false);
+    loadDynamicHandbook();
   </script>
 </body>
 </html>

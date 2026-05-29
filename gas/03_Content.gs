@@ -15,19 +15,30 @@ function getPublishedHandbook() {
     section_labels: SECTION_LABELS,
     chapters: chapters.map(function(chapter) {
       var content = {};
+      var chapterBlocks = [];
       blocks.filter(function(block) {
         return block.chapter_id === chapter.chapter_id;
       }).forEach(function(block) {
-        content[block.block_key] = block.block_key === "相關資源"
-          ? parseJson_(block.published_links_json, [])
-          : block.published_body;
+        var isLinks = block.block_key === "相關資源";
+        var value = isLinks ? parseJson_(block.published_links_json, []) : block.published_body;
+        content[block.block_key] = value;
+        chapterBlocks.push({
+          block_id: block.block_id,
+          key: block.block_key,
+          title: block.block_title || block.block_key,
+          body: isLinks ? "" : block.published_body,
+          links: isLinks ? value : [],
+          risk_level: block.risk_level || "低",
+          sort_order: Number(block.sort_order)
+        });
       });
       return {
         id: chapter.chapter_id,
         number: chapter.chapter_no,
         title: chapter.chapter_title,
         status: chapter.status,
-        content: content
+        content: content,
+        blocks: chapterBlocks
       };
     })
   };

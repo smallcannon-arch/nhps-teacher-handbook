@@ -15,7 +15,7 @@
   → Google Sheets
 ```
 
-目前 `index.html` 仍是穩定靜態版，尚未改成動態讀取。這批檔案先建立後台與資料層原型。
+目前 `index.html` 已採「動態優先、靜態回退」模式：會先嘗試讀取 Worker/GAS 的已發布內容；若讀取失敗或尚未匯入資料，會回退到檔案內建的靜態內容。
 
 ## 一、建立 Google Sheet
 
@@ -105,7 +105,7 @@ DEFAULT_DOMAIN_ROLE: "viewer",
    - `draft_body` 與 `published_body` 都已帶入目前前台文字。
 5. 之後若只想補缺漏、不覆蓋已修改內容，可執行 `importCurrentFrontendContent`。
 
-注意：這一步只匯入後台資料，不會自動覆蓋現有前台 `index.html`。目前前台仍是靜態版，等確認後台資料正確後，才建議把前台改成優先讀 Worker/GAS。
+注意：這一步只匯入後台資料，不會直接改寫 `index.html`。前台會優先讀 Worker/GAS 的已發布內容；若沒有可用資料，仍會回退到靜態內容。
 
 ## 七、加入第一位後台管理者
 
@@ -176,7 +176,7 @@ Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律
 - 後台可以新增「補充小卡」，例如 `處室提醒`、`版本紀錄`、`附件說明`。
 - 核心六段不可刪除；補充小卡可移除。
 - 補充小卡會寫入 `ContentBlocks`，狀態被移除時會標記為 `deleted`，不會直接刪除歷史資料。
-- 目前前台仍是靜態版，不會顯示補充小卡；前台改成動態讀取 Worker/GAS 後，才能呈現補充小卡。
+- 前台讀到 Worker/GAS 的已發布資料後，會在核心六段後方呈現補充小卡。
 
 ## 十二、章節管理原則
 
@@ -185,11 +185,12 @@ Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律
 - 章節不做硬刪除；封存章節時會將 `Chapters.status` 與該章 `ContentBlocks.review_status` 標記為 `deleted`。
 - 核心 9 章建議只改名或調整內容，不建議封存；若要大幅更動章節架構，請先由維護者確認。
 
-## 十三、後續接前台
+## 十三、前台讀取模式
 
-目前 `index.html` 還沒有改成動態讀取。確認 GAS 與後台可用後，再進行下一步：
+`index.html` 目前使用以下策略：
 
-1. 讓 `index.html` 先嘗試從 Worker 讀取 `getHandbook`。
-2. Worker 失敗時回退到目前內建靜態章節。
-3. 保留 GitHub Pages 可直接部署。
-4. 發布章節時由 GAS 更新 `cache_version`，Worker 依版本更新快取。
+1. 頁面先用內建靜態資料立即渲染，避免空白。
+2. 背景嘗試從 Worker 讀取 `getHandbook`。
+3. Worker/GAS 回傳 `ok:true` 且有章節時，前台替換成後台發布資料。
+4. Worker 失敗、GAS 失敗、或尚無發布章節時，維持靜態回退內容。
+5. 發布章節時由 GAS 更新 `cache_version`，Worker 依版本更新快取。
