@@ -208,8 +208,5 @@ function validatePublish_(chapter, blocks) {
     if (block.block_key !== "相關資源" && !String(block.draft_body || "").trim()) {
       throw new Error(block.block_key + "不可空白");
     }
-    if (block.risk_level === "高" && String(block.review_status || "") !== "待審核") {
-      throw new Error("高風險內容需先送審：" + block.block_key);
-    }
   });
 }

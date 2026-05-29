@@ -201,6 +201,20 @@
       color: var(--danger);
     }
 
+    .safety-note {
+      padding: 10px 12px;
+      border: 1px solid #e3d6bc;
+      border-radius: var(--radius);
+      background: #fbf7ee;
+      color: #665335;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .publish-note {
+      margin-top: 16px;
+    }
+
     .block {
       padding: 16px 0;
       border-top: 1px solid var(--line);
@@ -211,6 +225,11 @@
       grid-template-columns: 1fr 160px 180px;
       gap: 12px;
       align-items: end;
+    }
+
+    .block .block-grid {
+      grid-template-columns: minmax(0, 1fr) 220px;
+      align-items: start;
     }
 
     .link-row {
@@ -249,6 +268,7 @@
       }
 
       .block-grid,
+      .block .block-grid,
       .link-row {
         grid-template-columns: 1fr;
       }
@@ -292,6 +312,9 @@
         </div>
       </div>
       <form id="editorForm"></form>
+      <div class="safety-note publish-note">
+        發布前請確認內容已由相關處室確認，且不含學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經確認的高風險資訊。
+      </div>
       <div class="actions">
         <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
         <button id="saveBtn" type="button" disabled>儲存草稿</button>
@@ -441,14 +464,11 @@
                 : `<textarea data-field="draft_body">${escapeHtml(block.draft_body || "")}</textarea>`}
             </div>
             <div class="field">
-              <label>風險等級</label>
-              <select data-field="risk_level">
-                ${["低", "中", "高"].map((value) => `<option ${block.risk_level === value ? "selected" : ""}>${value}</option>`).join("")}
-              </select>
-            </div>
-            <div class="field">
               <label>建議確認處室</label>
               <input data-field="owner_office" value="${escapeHtml(block.owner_office || "")}">
+              <div class="safety-note">
+                提醒：請勿填入學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經處室確認的高風險資訊。
+              </div>
             </div>
           </div>
           ${isCore ? "" : `<div class="actions"><button class="secondary remove-block" type="button" data-index="${index}">移除此小卡</button></div>`}
@@ -484,7 +504,7 @@
           title: titleInput ? titleInput.value.trim() : source.title,
           draft_body: draftText ? draftText.value : "",
           draft_links: source.key === "相關資源" ? links : [],
-          risk_level: section.querySelector("[data-field='risk_level']").value,
+          risk_level: "低",
           owner_office: section.querySelector("[data-field='owner_office']").value.trim(),
           deleted: false
         };
