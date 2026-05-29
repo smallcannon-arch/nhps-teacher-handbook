@@ -269,6 +269,7 @@
     <aside class="panel sidebar">
       <h2>章節</h2>
       <p class="meta" id="loginState">尚未登入</p>
+      <button id="addChapterBtn" type="button" class="secondary" disabled>新增章節</button>
       <div class="chapter-list" id="chapterList"></div>
     </aside>
 
@@ -276,6 +277,20 @@
       <div id="message" class="notice" hidden></div>
       <h2 id="chapterTitle">請先登入並載入章節</h2>
       <p class="meta" id="chapterMeta"></p>
+      <div class="block-grid">
+        <div class="field">
+          <label>章節名稱</label>
+          <input id="chapterTitleInput" placeholder="章節名稱">
+        </div>
+        <div class="field">
+          <label>章節編號</label>
+          <input id="chapterNumberInput" placeholder="01">
+        </div>
+        <div class="field">
+          <label>發布狀態</label>
+          <input id="chapterStatusInput" readonly>
+        </div>
+      </div>
       <form id="editorForm"></form>
       <div class="actions">
         <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
@@ -283,6 +298,7 @@
         <button id="reviewBtn" type="button" class="secondary" disabled>送出審核</button>
         <button id="publishBtn" type="button" disabled>發布章節</button>
         <button id="withdrawBtn" type="button" class="warn" disabled>收回發布</button>
+        <button id="deleteChapterBtn" type="button" class="warn" disabled>封存章節</button>
       </div>
     </section>
   </main>
@@ -308,7 +324,9 @@
     const loginState = document.getElementById("loginState");
     const chapterTitle = document.getElementById("chapterTitle");
     const chapterMeta = document.getElementById("chapterMeta");
-    const buttons = ["saveBtn", "reviewBtn", "publishBtn", "withdrawBtn"].map((id) => document.getElementById(id));
+    const chapterTitleInput = document.getElementById("chapterTitleInput");
+    const chapterNumberInput = document.getElementById("chapterNumberInput");
+    const chapterStatusInput = document.getElementById("chapterStatusInput");
 
     window.onload = () => {
       if (GOOGLE_CLIENT_ID.startsWith("PASTE_")) {
@@ -403,6 +421,9 @@
       if (!chapter) return;
       chapterTitle.textContent = `${chapter.number} ${chapter.title}`;
       chapterMeta.textContent = `狀態：${chapter.status}`;
+      chapterTitleInput.value = chapter.title || "";
+      chapterNumberInput.value = chapter.number || "";
+      chapterStatusInput.value = chapter.status || "";
       editorForm.innerHTML = chapter.blocks.map((block, index) => renderBlock(block, index)).join("");
     }
 
@@ -471,7 +492,12 @@
     }
 
     async function saveDraft() {
-      await runCommand("saveDraft", { chapter_id: activeId, blocks: collectBlocks() }, "已儲存草稿");
+      await runCommand("saveDraft", {
+        chapter_id: activeId,
+        chapter_no: chapterNumberInput.value.trim(),
+        chapter_title: chapterTitleInput.value.trim(),
+        blocks: collectBlocks()
+      }, "已儲存草稿");
     }
 
     async function submitReview() {
@@ -484,6 +510,14 @@
 
     async function withdrawChapter() {
       await runCommand("withdrawChapter", { chapter_id: activeId }, "已收回發布並更新快取版本");
+    }
+
+    async function deleteChapter() {
+      const chapter = chapters.find((item) => item.id === activeId);
+      if (!chapter) return;
+      const ok = window.confirm("確定要封存「" + chapter.title + "」？封存後前台不會顯示，資料仍保留在 Sheets。");
+      if (!ok) return;
+      await runCommand("deleteChapter", { chapter_id: activeId }, "已封存章節");
     }
 
     async function runCommand(cmd, payload, successText) {
@@ -509,11 +543,13 @@
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canPublish = ["admin", "reviewer"].includes(role);
+      document.getElementById("addChapterBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("addBlockBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("saveBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("reviewBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("publishBtn").disabled = !enabled || !idToken || !canPublish;
       document.getElementById("withdrawBtn").disabled = !enabled || !idToken || !canPublish;
+      document.getElementById("deleteChapterBtn").disabled = !enabled || !idToken || !canPublish;
     }
 
     function escapeHtml(value) {
@@ -604,10 +640,41 @@
       renderEditor();
     });
 
+    document.getElementById("addChapterBtn").addEventListener("click", () => {
+      const title = window.prompt("請輸入新章節名稱");
+      if (!title) return;
+      const nextNumber = String(chapters.length + 1).padStart(2, "0");
+      const id = "custom-chapter-" + Date.now();
+      chapters.push({
+        id,
+        number: nextNumber,
+        title,
+        status: "草稿",
+        sort_order: chapters.length + 1,
+        blocks: CORE_BLOCK_KEYS.map((key, index) => ({
+          block_id: "",
+          key,
+          title: key,
+          draft_body: "",
+          draft_links: [],
+          risk_level: "低",
+          owner_office: "",
+          review_status: "草稿",
+          sort_order: index + 1
+        }))
+      });
+      activeId = id;
+      deletedBlocks = [];
+      renderChapterList();
+      renderEditor();
+      showMessage("已新增章節草稿，請補內容後按「儲存草稿」。", false);
+    });
+
     document.getElementById("saveBtn").addEventListener("click", saveDraft);
     document.getElementById("reviewBtn").addEventListener("click", submitReview);
     document.getElementById("publishBtn").addEventListener("click", publishChapter);
     document.getElementById("withdrawBtn").addEventListener("click", withdrawChapter);
+    document.getElementById("deleteChapterBtn").addEventListener("click", deleteChapter);
   </script>
 </body>
 </html>

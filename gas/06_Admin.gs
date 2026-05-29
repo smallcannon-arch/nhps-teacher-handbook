@@ -7,7 +7,7 @@ function saveDraft_(payload, user) {
     var blocks = payload.blocks || [];
     if (!chapterId) throw new Error("缺少 chapter_id");
 
-    var chapter = findChapter_(chapterId);
+    var chapter = findOrCreateChapter_(payload);
     var allBlocks = readTable(APP.SHEETS.BLOCKS);
     blocks.forEach(function(input, index) {
       var block = allBlocks.find(function(row) {
@@ -53,9 +53,16 @@ function saveDraft_(payload, user) {
       }
     });
 
-    chapter.status = "草稿";
+    chapter.chapter_no = payload.chapter_no || chapter.chapter_no || "";
+    chapter.chapter_title = payload.chapter_title || chapter.chapter_title || "";
+    chapter.status = chapter.status || "草稿";
+    chapter.sort_order = chapter.sort_order || readTable(APP.SHEETS.CHAPTERS).length + 1;
     chapter.updated_at = nowText();
-    writeRowByHeaders(APP.SHEETS.CHAPTERS, chapter._row, chapter);
+    if (chapter._row) {
+      writeRowByHeaders(APP.SHEETS.CHAPTERS, chapter._row, chapter);
+    } else {
+      appendRowByHeaders(APP.SHEETS.CHAPTERS, chapter);
+    }
     logAction(user.email, "saveDraft", chapterId, "ok", "draft saved");
     return { ok: true, chapter_id: chapterId };
   } finally {
@@ -79,7 +86,7 @@ function submitReview_(payload, user) {
       block.updated_at = nowText();
       writeRowByHeaders(APP.SHEETS.BLOCKS, block._row, block);
     });
-    chapter.status = "待審核";
+    if (chapter.status !== "已發布") chapter.status = "待審核";
     chapter.updated_at = nowText();
     writeRowByHeaders(APP.SHEETS.CHAPTERS, chapter._row, chapter);
     logAction(user.email, "submitReview", chapterId, "ok", "submitted for review");
@@ -140,12 +147,55 @@ function withdrawChapter_(payload, user) {
   }
 }
 
+function deleteChapter_(payload, user) {
+  requireReviewer_(user);
+  var chapterId = payload.chapter_id;
+  if (!chapterId) throw new Error("缺少 chapter_id");
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var chapter = findChapter_(chapterId);
+    chapter.status = "deleted";
+    chapter.updated_at = nowText();
+    writeRowByHeaders(APP.SHEETS.CHAPTERS, chapter._row, chapter);
+    var blocks = readTable(APP.SHEETS.BLOCKS).filter(function(row) {
+      return row.chapter_id === chapterId;
+    });
+    blocks.forEach(function(block) {
+      block.review_status = "deleted";
+      block.updated_at = nowText();
+      writeRowByHeaders(APP.SHEETS.BLOCKS, block._row, block);
+    });
+    bumpCacheVersion();
+    logAction(user.email, "deleteChapter", chapterId, "ok", "chapter soft deleted");
+    return { ok: true, chapter_id: chapterId };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function findChapter_(chapterId) {
   var chapter = readTable(APP.SHEETS.CHAPTERS).find(function(row) {
     return row.chapter_id === chapterId;
   });
   if (!chapter) throw new Error("找不到章節：" + chapterId);
   return chapter;
+}
+
+function findOrCreateChapter_(payload) {
+  var chapterId = payload.chapter_id;
+  var chapter = readTable(APP.SHEETS.CHAPTERS).find(function(row) {
+    return row.chapter_id === chapterId;
+  });
+  if (chapter) return chapter;
+  return {
+    chapter_id: chapterId || ("custom-chapter-" + Date.now()),
+    chapter_no: payload.chapter_no || "",
+    chapter_title: payload.chapter_title || "未命名章節",
+    status: "草稿",
+    sort_order: readTable(APP.SHEETS.CHAPTERS).length + 1,
+    updated_at: nowText()
+  };
 }
 
 function validatePublish_(chapter, blocks) {

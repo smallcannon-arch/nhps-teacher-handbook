@@ -44,6 +44,7 @@ function getConfigPayload() {
 
 function getAdminHandbook(user) {
   var chapters = readTable(APP.SHEETS.CHAPTERS)
+    .filter(function(chapter) { return chapter.status !== "deleted"; })
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
   var blocks = readTable(APP.SHEETS.BLOCKS)
     .filter(function(block) { return block.review_status !== "deleted"; })

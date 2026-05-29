@@ -41,6 +41,9 @@ function doPost(e) {
     if (cmd === "withdrawChapter") {
       return jsonResponse(withdrawChapter_(payload, user));
     }
+    if (cmd === "deleteChapter") {
+      return jsonResponse(deleteChapter_(payload, user));
+    }
 
     return jsonResponse({ ok: false, error: "UNKNOWN_CMD" });
   } catch (err) {
