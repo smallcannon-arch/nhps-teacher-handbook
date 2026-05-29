@@ -278,6 +278,7 @@
       <p class="meta" id="chapterMeta"></p>
       <form id="editorForm"></form>
       <div class="actions">
+        <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
         <button id="saveBtn" type="button" disabled>儲存草稿</button>
         <button id="reviewBtn" type="button" class="secondary" disabled>送出審核</button>
         <button id="publishBtn" type="button" disabled>發布章節</button>
@@ -294,10 +295,12 @@
     const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
     const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
     const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
+    const CORE_BLOCK_KEYS = ["項目說明", "適用情境", "辦理方式", "注意事項", "承辦單位", "相關資源"];
     let idToken = "";
     let chapters = [];
     let activeId = "";
     let currentUser = null;
+    let deletedBlocks = [];
 
     const chapterList = document.getElementById("chapterList");
     const editorForm = document.getElementById("editorForm");
@@ -372,6 +375,7 @@
         const data = await api("adminList");
         chapters = data.chapters || [];
         currentUser = data.user || null;
+        deletedBlocks = [];
         activeId = activeId || (chapters[0] && chapters[0].id) || "";
         loginState.textContent = currentUser
           ? "已登入：" + currentUser.email + "（" + currentUser.role + "）"
@@ -403,12 +407,14 @@
     }
 
     function renderBlock(block, index) {
+      const isCore = CORE_BLOCK_KEYS.includes(block.key);
       const links = Array.isArray(block.draft_links) ? block.draft_links : [];
       return `
         <section class="block" data-index="${index}">
           <div class="block-grid">
             <div class="field">
               <label>${escapeHtml(block.title)}</label>
+              ${isCore ? "" : `<input data-field="title" value="${escapeHtml(block.title || "補充說明")}" placeholder="小卡標題">`}
               ${block.key === "相關資源"
                 ? `<div class="links" data-index="${index}">${renderLinks(links)}</div><button class="secondary add-link" type="button" data-index="${index}">新增連結</button>`
                 : `<textarea data-field="draft_body">${escapeHtml(block.draft_body || "")}</textarea>`}
@@ -424,6 +430,7 @@
               <input data-field="owner_office" value="${escapeHtml(block.owner_office || "")}">
             </div>
           </div>
+          ${isCore ? "" : `<div class="actions"><button class="secondary remove-block" type="button" data-index="${index}">移除此小卡</button></div>`}
         </section>
       `;
     }
@@ -445,18 +452,22 @@
         const index = Number(section.dataset.index);
         const source = chapter.blocks[index];
         const draftText = section.querySelector("[data-field='draft_body']");
+        const titleInput = section.querySelector("[data-field='title']");
         const links = [...section.querySelectorAll(".link-row")].map((row) => ({
           label: row.querySelector("[data-link='label']").value.trim(),
           url: row.querySelector("[data-link='url']").value.trim()
         })).filter((link) => link.label && link.url);
         return {
+          block_id: source.block_id || "",
           key: source.key,
+          title: titleInput ? titleInput.value.trim() : source.title,
           draft_body: draftText ? draftText.value : "",
           draft_links: source.key === "相關資源" ? links : [],
           risk_level: section.querySelector("[data-field='risk_level']").value,
-          owner_office: section.querySelector("[data-field='owner_office']").value.trim()
+          owner_office: section.querySelector("[data-field='owner_office']").value.trim(),
+          deleted: false
         };
-      });
+      }).concat(deletedBlocks);
     }
 
     async function saveDraft() {
@@ -498,6 +509,7 @@
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canPublish = ["admin", "reviewer"].includes(role);
+      document.getElementById("addBlockBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("saveBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("reviewBtn").disabled = !enabled || !idToken || !canEdit;
       document.getElementById("publishBtn").disabled = !enabled || !idToken || !canPublish;
@@ -533,6 +545,7 @@
       const button = event.target.closest(".chapter-button");
       if (!button) return;
       activeId = button.dataset.id;
+      deletedBlocks = [];
       renderChapterList();
       renderEditor();
     });
@@ -545,6 +558,50 @@
       if (event.target.classList.contains("remove-link")) {
         event.target.closest(".link-row").remove();
       }
+      if (event.target.classList.contains("remove-block")) {
+        const chapter = chapters.find((item) => item.id === activeId);
+        const index = Number(event.target.dataset.index);
+        const block = chapter.blocks[index];
+        if (block && block.block_id) {
+          deletedBlocks.push({
+            block_id: block.block_id,
+            key: block.key,
+            title: block.title,
+            deleted: true
+          });
+        }
+        chapter.blocks.splice(index, 1);
+        renderEditor();
+      }
+    });
+
+    document.getElementById("addBlockBtn").addEventListener("click", () => {
+      const chapter = chapters.find((item) => item.id === activeId);
+      if (!chapter) return;
+      const current = collectBlocks().filter((block) => !block.deleted).map((block, index) => ({
+        block_id: block.block_id,
+        key: block.key,
+        title: block.title || block.key,
+        draft_body: block.draft_body || "",
+        draft_links: block.draft_links || [],
+        risk_level: block.risk_level || "低",
+        owner_office: block.owner_office || "",
+        review_status: "草稿",
+        sort_order: index + 1
+      }));
+      current.push({
+        block_id: "",
+        key: "custom-" + Date.now(),
+        title: "補充說明",
+        draft_body: "",
+        draft_links: [],
+        risk_level: "低",
+        owner_office: "",
+        review_status: "草稿",
+        sort_order: current.length + 1
+      });
+      chapter.blocks = current;
+      renderEditor();
     });
 
     document.getElementById("saveBtn").addEventListener("click", saveDraft);

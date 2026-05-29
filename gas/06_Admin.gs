@@ -9,24 +9,48 @@ function saveDraft_(payload, user) {
 
     var chapter = findChapter_(chapterId);
     var allBlocks = readTable(APP.SHEETS.BLOCKS);
-    blocks.forEach(function(input) {
+    blocks.forEach(function(input, index) {
       var block = allBlocks.find(function(row) {
-        return row.chapter_id === chapterId && row.block_key === input.key;
+        return (input.block_id && row.block_id === input.block_id) ||
+          (row.chapter_id === chapterId && row.block_key === input.key);
       });
-      if (!block) throw new Error("找不到內容區塊：" + input.key);
+      var isCore = SECTION_LABELS.indexOf(input.key) >= 0;
+      if (input.deleted) {
+        if (isCore) throw new Error("核心六段不可刪除：" + input.key);
+        if (block) {
+          block.review_status = "deleted";
+          block.updated_at = nowText();
+          writeRowByHeaders(APP.SHEETS.BLOCKS, block._row, block);
+        }
+        return;
+      }
+      if (!block) {
+        block = {
+          block_id: chapterId + "-custom-" + Date.now() + "-" + index,
+          chapter_id: chapterId,
+          block_key: input.key || ("custom-" + Date.now()),
+          sort_order: allBlocks.length + index + 1
+        };
+      }
 
       var body = String(input.draft_body || "");
       var linksJson = stringifyLinks_(input.draft_links || []);
       var risk = input.risk_level || block.risk_level || "低";
       if (hasHighRiskText_(body) && risk === "低") risk = "中";
 
+      block.block_title = input.title || block.block_title || block.block_key;
       block.draft_body = body;
       block.draft_links_json = input.key === "相關資源" ? linksJson : "";
       block.risk_level = risk;
       block.owner_office = input.owner_office || block.owner_office || "";
       block.review_status = "草稿";
+      block.sort_order = index + 1;
       block.updated_at = nowText();
-      writeRowByHeaders(APP.SHEETS.BLOCKS, block._row, block);
+      if (block._row) {
+        writeRowByHeaders(APP.SHEETS.BLOCKS, block._row, block);
+      } else {
+        appendRowByHeaders(APP.SHEETS.BLOCKS, block);
+      }
     });
 
     chapter.status = "草稿";
@@ -48,7 +72,7 @@ function submitReview_(payload, user) {
   try {
     var chapter = findChapter_(chapterId);
     var blocks = readTable(APP.SHEETS.BLOCKS).filter(function(row) {
-      return row.chapter_id === chapterId;
+      return row.chapter_id === chapterId && row.review_status !== "deleted";
     });
     blocks.forEach(function(block) {
       block.review_status = "待審核";
@@ -74,7 +98,7 @@ function publishChapter_(payload, user) {
   try {
     var chapter = findChapter_(chapterId);
     var blocks = readTable(APP.SHEETS.BLOCKS).filter(function(row) {
-      return row.chapter_id === chapterId;
+      return row.chapter_id === chapterId && row.review_status !== "deleted";
     });
     validatePublish_(chapter, blocks);
 
@@ -126,7 +150,10 @@ function findChapter_(chapterId) {
 
 function validatePublish_(chapter, blocks) {
   if (!chapter.chapter_title) throw new Error("章節標題不可空白");
-  if (blocks.length !== SECTION_LABELS.length) throw new Error("章節六段內容不完整");
+  var labels = blocks.map(function(block) { return block.block_key; });
+  SECTION_LABELS.forEach(function(label) {
+    if (labels.indexOf(label) < 0) throw new Error("章節核心六段內容不完整：" + label);
+  });
   blocks.forEach(function(block) {
     if (block.block_key !== "相關資源" && !String(block.draft_body || "").trim()) {
       throw new Error(block.block_key + "不可空白");

@@ -4,7 +4,7 @@ function getPublishedHandbook() {
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
 
   var blocks = readTable(APP.SHEETS.BLOCKS)
-    .filter(function(block) { return block.review_status === "已發布"; })
+    .filter(function(block) { return block.review_status === "已發布" && block.review_status !== "deleted"; })
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
 
   return {
@@ -46,6 +46,7 @@ function getAdminHandbook(user) {
   var chapters = readTable(APP.SHEETS.CHAPTERS)
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
   var blocks = readTable(APP.SHEETS.BLOCKS)
+    .filter(function(block) { return block.review_status !== "deleted"; })
     .sort(function(a, b) { return Number(a.sort_order) - Number(b.sort_order); });
 
   return {

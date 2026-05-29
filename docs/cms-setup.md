@@ -39,6 +39,7 @@
    - `04_Code.gs`
    - `05_Auth.gs`
    - `06_Admin.gs`
+   - `07_CurrentContentSeed.gs`
 
 ## 三、填入 Apps Script 設定
 
@@ -91,7 +92,22 @@ DEFAULT_DOMAIN_ROLE: "viewer",
    - `Config`
    - `Logs`
 
-## 六、加入第一位後台管理者
+## 六、匯入目前前台內容
+
+後台預設資料表建立後，請先把目前 `index.html` 的內容匯入 Sheets，讓後台以「修改目前內容」的方式運作。
+
+1. 回到 Apps Script。
+2. 函式下拉選單選 `forceImportCurrentFrontendContent`。
+3. 點選 `執行`。
+4. 完成後檢查：
+   - `Chapters` 有 9 章，狀態為 `已發布`。
+   - `ContentBlocks` 有每章六段內容。
+   - `draft_body` 與 `published_body` 都已帶入目前前台文字。
+5. 之後若只想補缺漏、不覆蓋已修改內容，可執行 `importCurrentFrontendContent`。
+
+注意：這一步只匯入後台資料，不會自動覆蓋現有前台 `index.html`。目前前台仍是靜態版，等確認後台資料正確後，才建議把前台改成優先讀 Worker/GAS。
+
+## 七、加入第一位後台管理者
 
 1. Apps Script 函式下拉選單選 `addAdminUser`。
 2. 若介面無法直接傳參數，可暫時新增一個測試函式：
@@ -106,25 +122,25 @@ function addFirstAdmin() {
 4. 確認 `Users` 工作表出現該帳號，且 `enabled` 是 `TRUE`。
 5. 完成後可刪除 `addFirstAdmin` 測試函式。
 
-## 七、部署 GAS Web App
+## 八、部署 GAS Web App
 
 1. 在 Apps Script 點選 `部署` → `新增部署作業`。
 2. 類型選 `網頁應用程式`。
 3. 執行身分選：`我`。
 4. 存取權限選：`任何人`。
 5. 部署後複製 Web App URL。
-6. 先保留 Web App URL，等第八步 Worker 部署完成後，再把後台 endpoint 改成 Worker URL。
+6. 先保留 Web App URL，等第九步 Worker 部署完成後，再把後台 endpoint 改成 Worker URL。
 
 注意：GitHub Pages 前端若直接 `fetch` GAS `doPost`，可能被瀏覽器 CORS 擋下。正式後台建議透過 Cloudflare Worker 代理 POST。
 
-## 八、Cloudflare Worker 設定
+## 九、Cloudflare Worker 設定
 
 1. 到 Cloudflare Workers。
 2. 建立 Worker。
 3. 貼上 `cloudflare/worker.js`。
 4. 新增環境變數：
    - 名稱：`GAS_URL`
-   - 值：第七步取得的 GAS Web App URL
+   - 值：第八步取得的 GAS Web App URL
 5. 部署 Worker。
 6. 測試：
    - `https://你的-worker-url/?action=health`
@@ -144,7 +160,7 @@ const GAS_ENDPOINT = "https://你的-worker-url.workers.dev";
 
 Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律 `BYPASS`，不快取。
 
-## 九、安全提醒
+## 十、安全提醒
 
 - 後台可編輯內容，但高風險資訊仍需人工確認。
 - 不應放入學生個資、成績、個案內容、通報細節、採購工程細節或未公告內部資料。
@@ -154,7 +170,15 @@ Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律
 - 若 `AUTO_ALLOW_DOMAIN_USERS = true`，所有校內網域帳號都可登入，但未列在 `Users` 的帳號只會套用 `DEFAULT_DOMAIN_ROLE`。
 - 建議 `DEFAULT_DOMAIN_ROLE` 維持 `viewer`；需要編輯或發布的人，再於 `Users` 工作表指定 `editor`、`reviewer` 或 `admin`。
 
-## 十、後續接前台
+## 十一、小卡管理原則
+
+- 核心六段小卡固定保留：`項目說明`、`適用情境`、`辦理方式`、`注意事項`、`承辦單位`、`相關資源`。
+- 後台可以新增「補充小卡」，例如 `處室提醒`、`版本紀錄`、`附件說明`。
+- 核心六段不可刪除；補充小卡可移除。
+- 補充小卡會寫入 `ContentBlocks`，狀態被移除時會標記為 `deleted`，不會直接刪除歷史資料。
+- 目前前台仍是靜態版，不會顯示補充小卡；前台改成動態讀取 Worker/GAS 後，才能呈現補充小卡。
+
+## 十二、後續接前台
 
 目前 `index.html` 還沒有改成動態讀取。確認 GAS 與後台可用後，再進行下一步：
 
