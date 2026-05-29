@@ -215,6 +215,19 @@
       margin-top: 16px;
     }
 
+    .action-help {
+      display: grid;
+      gap: 6px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .action-help strong {
+      color: var(--navy);
+    }
+
     .block {
       padding: 16px 0;
       border-top: 1px solid var(--line);
@@ -327,6 +340,12 @@
       <form id="editorForm"></form>
       <div class="safety-note publish-note">
         按下「發布章節」後會直接更新前台。發布前請確認內容已由相關處室確認，且不含學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經確認的高風險資訊。
+      </div>
+      <div class="action-help">
+        <div><strong>儲存草稿</strong>：只保存後台草稿，不影響前台。</div>
+        <div><strong>發布章節</strong>：將目前草稿發布到前台，讀者會看到更新。</div>
+        <div><strong>收回發布</strong>：讓章節暫時不在前台顯示，資料仍保留。</div>
+        <div><strong>封存章節</strong>：將章節從後台清單與前台隱藏，資料仍保留在 Sheets。</div>
       </div>
       <div class="actions">
         <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
@@ -547,6 +566,7 @@
     async function runCommand(cmd, payload, successText) {
       try {
         setEnabled(false);
+        showMessage(getLoadingText(cmd), false, true);
         await api(cmd, payload);
         showMessage(successText, false);
         await loadAdminData();
@@ -557,10 +577,21 @@
       }
     }
 
-    function showMessage(text, isError) {
+    function showMessage(text, isError, isLoading = false) {
       message.hidden = false;
       message.textContent = text;
       message.classList.toggle("error", Boolean(isError));
+      message.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+
+    function getLoadingText(cmd) {
+      const labels = {
+        saveDraft: "正在儲存草稿，請稍候...",
+        publishChapter: "正在發布章節並更新前台，請稍候...",
+        withdrawChapter: "正在收回發布，請稍候...",
+        deleteChapter: "正在封存章節，請稍候..."
+      };
+      return labels[cmd] || "正在處理，請稍候...";
     }
 
     function setEnabled(enabled) {
