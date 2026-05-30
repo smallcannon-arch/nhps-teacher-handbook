@@ -750,6 +750,39 @@
       return /^\d$/.test(text) ? "0" + text : text;
     }
 
+    function hasMeaningfulContent(value, isLinks) {
+      if (isLinks) return Array.isArray(value) && value.length > 0;
+      if (Array.isArray(value)) return value.some((item) => String(item || "").trim());
+      return String(value || "").trim().length > 0;
+    }
+
+    function hasChapterContent(chapter) {
+      if (!chapter) return false;
+      if (Array.isArray(chapter.blocks) && chapter.blocks.some((block) => (
+        hasMeaningfulContent(block.key === "相關資源" ? block.links : block.body, block.key === "相關資源")
+      ))) {
+        return true;
+      }
+      return Object.keys(chapter.content || {}).some((label) => (
+        hasMeaningfulContent(chapter.content[label], label === "相關資源")
+      ));
+    }
+
+    function mergeWithStaticFallback(dynamicChapters) {
+      return dynamicChapters.map((chapter) => {
+        if (hasChapterContent(chapter)) return chapter;
+        const fallback = chapters.find((item) => item.id === chapter.id || formatChapterNumber(item.number) === formatChapterNumber(chapter.number));
+        if (!fallback) return chapter;
+        return {
+          ...fallback,
+          id: chapter.id || fallback.id,
+          number: chapter.number || fallback.number,
+          title: chapter.title || fallback.title,
+          status: chapter.status || fallback.status
+        };
+      });
+    }
+
     function getChapterSections(chapter) {
       if (Array.isArray(chapter.blocks) && chapter.blocks.length > 0) {
         return chapter.blocks.map((block) => ({
@@ -846,7 +879,7 @@
       handbookSectionLabels = Array.isArray(data.section_labels) && data.section_labels.length > 0
         ? data.section_labels
         : sectionLabels;
-      handbookChapters = data.chapters;
+      handbookChapters = mergeWithStaticFallback(data.chapters);
       buildNavigation();
       renderChapter((location.hash || "").replace("#", ""), false);
       return true;

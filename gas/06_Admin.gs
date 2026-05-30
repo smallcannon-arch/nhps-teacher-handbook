@@ -200,6 +200,7 @@ function findOrCreateChapter_(payload) {
 
 function validatePublish_(chapter, blocks) {
   if (!chapter.chapter_title) throw new Error("章節標題不可空白");
+  if (!blocks || blocks.length === 0) throw new Error("章節至少要有核心六段小卡，不能發布空章節");
   var labels = blocks.map(function(block) { return block.block_key; });
   SECTION_LABELS.forEach(function(label) {
     if (labels.indexOf(label) < 0) throw new Error("章節核心六段內容不完整：" + label);
