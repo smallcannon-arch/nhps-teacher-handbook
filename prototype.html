@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>內湖國小教師手冊｜校務支援站</title>
+  <style>
+    :root {
+      --ink: #203044;
+      --navy: #17375e;
+      --navy-2: #24496f;
+      --blue-soft: #eef4f8;
+      --blue-line: #cbd7df;
+      --cream: #f7f1e7;
+      --paper: #fffdf8;
+      --line: #d9e0e3;
+      --muted: #66727d;
+      --sage: #6f8372;
+      --sage-soft: #edf3ef;
+      --gold: #b28b45;
+      --gold-soft: #f4ead8;
+      --white: #ffffff;
+      --danger: #9f3f3f;
+      --danger-soft: #f8e9e6;
+      --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
+      --radius: 8px;
+      --max: 1240px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(23, 55, 94, 0.06), rgba(247, 241, 231, 0.44) 300px, #fbfaf6 100%),
+        var(--cream);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+      line-height: 1.75;
+    }
+
+    a {
+      color: var(--navy);
+      text-decoration-color: rgba(23, 55, 94, 0.32);
+      text-underline-offset: 0.18em;
+    }
+
+    a:hover,
+    a:focus-visible {
+      color: var(--navy-2);
+      text-decoration-color: currentColor;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .site-header {
+      color: var(--white);
+      background: var(--navy);
+      border-bottom: 5px solid var(--gold);
+    }
+
+    .header-inner {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto;
+      padding: 36px 0 32px;
+    }
+
+    .site-kicker {
+      margin: 0 0 10px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 0.94rem;
+      font-weight: 700;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: 2.45rem;
+      line-height: 1.25;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .site-summary {
+      max-width: 780px;
+      margin-bottom: 22px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 1.08rem;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      max-width: 860px;
+    }
+
+    .search-field {
+      width: 100%;
+      min-height: 54px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search-field:focus-visible {
+      border-color: #f2cf8d;
+      box-shadow: 0 0 0 4px rgba(242, 207, 141, 0.25);
+    }
+
+    .clear-button,
+    .chip,
+    .quick-entry {
+      min-height: 42px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .clear-button {
+      padding: 8px 16px;
+      border-color: rgba(242, 207, 141, 0.72);
+      background: #f2cf8d;
+      color: #17375e;
+      font-weight: 800;
+    }
+
+    .clear-button:hover,
+    .clear-button:focus-visible,
+    .quick-entry:hover,
+    .quick-entry:focus-visible,
+    .chip:hover,
+    .chip:focus-visible {
+      border-color: var(--navy-2);
+      outline: none;
+    }
+
+    main {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 28px auto 56px;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      color: var(--navy);
+      font-size: 1.35rem;
+      line-height: 1.4;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .quick-entry {
+      display: grid;
+      gap: 4px;
+      min-height: 86px;
+      padding: 14px;
+      text-align: left;
+      box-shadow: 0 8px 20px rgba(32, 48, 68, 0.05);
+    }
+
+    .quick-entry strong {
+      color: var(--navy);
+      font-size: 1rem;
+      line-height: 1.35;
+    }
+
+    .quick-entry span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .filter-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .filter-band {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.88);
+    }
+
+    .filter-title {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .chip.is-active {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .result-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-count {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .resource-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .card-topline {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title {
+      margin-bottom: 4px;
+      color: var(--navy);
+      font-size: 1.14rem;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    .card-office {
+      flex: 0 0 auto;
+      padding: 4px 9px;
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      color: var(--navy);
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .field-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 12px;
+      font-size: 0.94rem;
+    }
+
+    .field-label {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .field-value {
+      min-width: 0;
+    }
+
+    .field-value ul {
+      margin: 0;
+      padding-left: 1.15em;
+    }
+
+    .field-value li + li {
+      margin-top: 4px;
+    }
+
+    .link-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .link-list a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 3px 9px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 8px;
+      border: 1px solid #d8ded6;
+      border-radius: var(--radius);
+      background: var(--sage-soft);
+      color: #506b58;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .tag[data-kind="important"],
+    .tag[data-kind="high-risk"] {
+      border-color: #edc7c0;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .tag[data-kind="form"] {
+      border-color: #e4d0a9;
+      background: var(--gold-soft);
+      color: #76581e;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .info-panel {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .info-panel h3 {
+      margin-bottom: 12px;
+      color: var(--navy);
+      font-size: 1.04rem;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    .update-list,
+    .reminder-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .update-item {
+      display: grid;
+      gap: 2px;
+    }
+
+    .update-title {
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .update-meta {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .reminder-list li {
+      padding-left: 12px;
+      border-left: 4px solid var(--gold);
+      font-size: 0.94rem;
+    }
+
+    .empty-state {
+      display: none;
+      padding: 28px;
+      border: 1px dashed var(--blue-line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.76);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state.is-visible {
+      display: block;
+    }
+
+    .site-footer {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 0 auto 34px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-row p {
+      margin: 0;
+    }
+
+    @media (max-width: 980px) {
+      .quick-grid,
+      .card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .content-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-stack {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .header-inner,
+      main,
+      .site-footer {
+        width: min(100% - 24px, var(--max));
+      }
+
+      .header-inner {
+        padding: 28px 0 26px;
+      }
+
+      h1 {
+        font-size: 1.85rem;
+        word-break: break-all;
+      }
+
+      .site-summary {
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+      }
+
+      .search-row,
+      .filter-layout,
+      .quick-grid,
+      .card-grid,
+      .side-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .result-toolbar,
+      .section-heading,
+      .card-topline {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .clear-button {
+        width: 100%;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .resource-card,
+      .filter-band,
+      .info-panel {
+        padding: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <p class="site-kicker">測試版｜資料卡片架構原型</p>
+      <h1>內湖國小教師手冊｜校務支援站</h1>
+      <p class="site-summary">整合校內常用規定、流程、表件與資源連結，協助教師快速找到所需資訊。</p>
+      <div class="search-row" role="search">
+        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：報修、請假、校安、採購、戶外教育">
+        <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" aria-labelledby="quickTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="quickTitle">常用入口</h2>
+          <p class="section-note">依教師日常最常遇到的需求快速進入。</p>
+        </div>
+      </div>
+      <div id="quickEntries" class="quick-grid"></div>
+    </section>
+
+    <section class="section" aria-labelledby="filterTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="filterTitle">依任務與處室找</h2>
+          <p class="section-note">可先選任務，再用處室縮小範圍。</p>
+        </div>
+      </div>
+      <div class="filter-layout">
+        <div class="filter-band">
+          <p class="filter-title">依任務找</p>
+          <div id="taskFilters" class="chip-list"></div>
+        </div>
+        <div class="filter-band">
+          <p class="filter-title">依處室找</p>
+          <div id="officeFilters" class="chip-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section content-layout" aria-labelledby="cardsTitle">
+      <div>
+        <div class="result-toolbar">
+          <div>
+            <h2 id="cardsTitle">資料卡片</h2>
+            <p id="resultCount" class="result-count"></p>
+          </div>
+          <button id="showAllBtn" class="chip" type="button">顯示全部</button>
+        </div>
+        <div id="cardGrid" class="card-grid"></div>
+        <div id="emptyState" class="empty-state">目前沒有符合條件的資料卡片。</div>
+      </div>
+
+      <aside class="side-stack" aria-label="近期更新與重要提醒">
+        <section class="info-panel" aria-labelledby="recentTitle">
+          <h3 id="recentTitle">近期更新</h3>
+          <ul id="recentUpdates" class="update-list"></ul>
+        </section>
+
+        <section class="info-panel" aria-labelledby="remindersTitle">
+          <h3 id="remindersTitle">重要提醒</h3>
+          <ul class="reminder-list">
+            <li>疑似性平、霸凌、兒少保護事件應即時通報，不宜自行判斷後延誤。</li>
+            <li>採購請購應先確認需求、經費來源與估價資料。</li>
+            <li>校園施工或危險區域應依公告避開並提醒學生。</li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-row">
+      <p>COPYRIGHT © 2026 HSINCHU NEI HU PRIMARY SCHOOL</p>
+      <p>維護：總務主任 江志宏｜<a href="mailto:smallcannon@nhps.hc.edu.tw">smallcannon@nhps.hc.edu.tw</a>｜<a href="admin.html">後台管理</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // 後續要新增任務分類，可在 taskCategories 加一筆 { id, label }，並讓資料卡片的 task 使用同一個 id。
+    const taskCategories = [
+      { id: "student-event", label: "我要處理學生事件" },
+      { id: "funding", label: "我要申請經費或採購" },
+      { id: "field-trip", label: "我要帶學生外出" },
+      { id: "space-equipment", label: "我要借用場地設備" },
+      { id: "teaching-assessment", label: "我要找教學與評量資料" },
+      { id: "new-teacher", label: "我是新進教師" }
+    ];
+
+    const officeCategories = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室"];
+
+    const quickEntries = [
+      { label: "請假／補休", hint: "假別、代理、差勤", query: "請假 補休", office: "人事室" },
+      { label: "報修／設備", hint: "教室、冷氣、設備", query: "報修 設備", task: "space-equipment" },
+      { label: "採購／核銷", hint: "請購、驗收、核銷", task: "funding" },
+      { label: "校安／學生事件", hint: "受傷、通報、紀錄", task: "student-event" },
+      { label: "場地借用", hint: "活動、會議、設備", query: "場地 借用", task: "space-equipment" },
+      { label: "戶外教育", hint: "校外教學、保險", task: "field-trip" },
+      { label: "輔導轉介", hint: "觀察、晤談、支持", query: "輔導 轉介", office: "輔導室" },
+      { label: "常用表件", hint: "表單、附件、連結", tag: "表件" }
+    ];
+
+    // 資料卡片先放在 JavaScript 陣列。日後若改接 Google Sheets / GAS / Worker，可把 API 回傳資料轉成同樣欄位後再呼叫 renderAll()。
+    const handbookItems = [
+      {
+        id: "leave-compensatory",
+        title: "請假與補休申請流程",
+        audience: "全體教職員",
+        situation: "需要辦理事假、病假、公假、補休或課務代理安排時使用。",
+        summary: ["先確認假別、日期、節數與是否影響課務。", "依差勤系統或人事室公告完成申請。", "涉及課務時同步確認調課、代課或補課安排。"],
+        office: "人事室",
+        task: "new-teacher",
+        links: [{ label: "差勤系統（示範）", url: "#" }, { label: "請假附件說明", url: "#" }],
+        updated: "2026-05-30",
+        tags: ["常用", "表件", "新進教師必讀"]
+      },
+      {
+        id: "classroom-repair",
+        title: "教室設備報修流程",
+        audience: "導師、科任教師、行政人員",
+        situation: "教室燈具、門窗、桌椅、投影設備或公共設施故障時使用。",
+        summary: ["先確認安全並暫停使用異常設備。", "拍照記錄地點、設備名稱與故障情形。", "填寫報修表單；急迫狀況同步通知總務處。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [{ label: "報修表單（示範）", url: "#" }],
+        updated: "2026-05-30",
+        tags: ["常用", "流程", "表件"]
+      },
+      {
+        id: "air-conditioner",
+        title: "冷氣使用與異常處理",
+        audience: "各班導師、專科教室使用教師",
+        situation: "冷氣無法啟動、漏水、異音、遙控器或電力異常時使用。",
+        summary: ["先確認電源、遙控器與基本設定。", "發現漏水或異音時停止使用並保留現場。", "登記異常情形後通知總務處安排檢修。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [{ label: "冷氣異常回報（示範）", url: "#" }],
+        updated: "2026-05-29",
+        tags: ["常用", "重要", "流程"]
+      },
+      {
+        id: "small-purchase",
+        title: "小額請購流程",
+        audience: "提出採購需求之教師與行政同仁",
+        situation: "課程、活動或行政業務需要購置物品或服務時使用。",
+        summary: ["先確認需求、經費來源與是否已有校內資源。", "準備品項規格、估價資料與用途說明。", "未完成核准前不先行採購或承諾廠商。"],
+        office: "總務處",
+        task: "funding",
+        links: [{ label: "請購單（示範）", url: "#" }, { label: "估價資料範例", url: "#" }],
+        updated: "2026-05-28",
+        tags: ["重要", "表件", "流程"]
+      },
+      {
+        id: "acceptance-reimbursement",
+        title: "驗收與核銷應備資料",
+        audience: "採購承辦、請購教師、活動承辦人",
+        situation: "物品或服務完成後，需要驗收、黏貼憑證或辦理核銷時使用。",
+        summary: ["確認品項、數量、規格與核准內容一致。", "保存發票、收據、照片、簽收紀錄或成果資料。", "依會計室與總務處要求補齊核銷文件。"],
+        office: "會計室",
+        task: "funding",
+        links: [{ label: "核銷檢核表（示範）", url: "#" }],
+        updated: "2026-05-27",
+        tags: ["表件", "流程"]
+      },
+      {
+        id: "space-booking",
+        title: "場地借用流程",
+        audience: "辦理活動、會議、研習或班級課程之教師",
+        situation: "需要使用會議室、視聽教室、操場、活動中心或共用設備時使用。",
+        summary: ["先查詢場地時段與使用限制。", "提出借用需求並說明人數、設備、時間與復原責任。", "使用後確認門窗、電源、桌椅與清潔復原。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [{ label: "場地借用登記（示範）", url: "#" }],
+        updated: "2026-05-26",
+        tags: ["常用", "表件"]
+      },
+      {
+        id: "student-injury",
+        title: "學生受傷處理流程",
+        audience: "導師、任課教師、活動承辦人",
+        situation: "學生在課堂、下課、活動或校外教學中受傷時使用。",
+        summary: ["先照顧學生安全並通知健康中心。", "客觀記錄時間、地點、經過、在場人員與處置情形。", "依狀況通知家長與相關處室，避免自行判定結案。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "學生事件紀錄表（示範）", url: "#" }],
+        updated: "2026-05-25",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "campus-security",
+        title: "校安事件通報",
+        audience: "全體教職員",
+        situation: "發生校園安全、學生重大事件、外力介入、災害或需通報主管機關事項時使用。",
+        summary: ["先確保現場安全並通報校內行政窗口。", "保留客觀事實，不擴散未確認訊息。", "依校安流程由權責人員完成正式通報。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "校安通報窗口（示範）", url: "#" }],
+        updated: "2026-05-24",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "bullying",
+        title: "疑似霸凌事件處理",
+        audience: "導師、任課教師、學務與輔導相關人員",
+        situation: "疑似出現反覆欺負、排擠、威脅、網路攻擊或身心傷害情形時使用。",
+        summary: ["先保護學生安全並記錄可觀察事實。", "不得以私下和解取代正式受理或通報判斷。", "儘速交由權責處室依規定啟動後續程序。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "霸凌事件處理入口（示範）", url: "#" }],
+        updated: "2026-05-23",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "gender-equity",
+        title: "疑似性平事件處理",
+        audience: "全體教職員",
+        situation: "疑似校園性別事件、性騷擾、性侵害、性霸凌或不當互動時使用。",
+        summary: ["立即保護當事人安全與隱私。", "避免自行調查、詢問細節或要求雙方對質。", "依校內性平與通報流程交由權責單位處理。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "性平事件校內窗口（示範）", url: "#" }],
+        updated: "2026-05-22",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "class-substitution",
+        title: "調課代課流程",
+        audience: "任課教師、導師、教務處承辦人",
+        situation: "因公假、事病假、研習、活動或課務需求需要調課或代課時使用。",
+        summary: ["先確認課務影響與代課需求。", "依教務處規定提出調課或代課資料。", "完成核定後通知相關班級與協同人員。"],
+        office: "教務處",
+        task: "teaching-assessment",
+        links: [{ label: "調課代課申請（示範）", url: "#" }],
+        updated: "2026-05-21",
+        tags: ["常用", "表件", "流程"]
+      },
+      {
+        id: "counseling-referral",
+        title: "學生輔導轉介",
+        audience: "導師、任課教師、輔導相關人員",
+        situation: "學生在情緒、人際、家庭、學習適應或行為表現上需要進一步支持時使用。",
+        summary: ["先蒐集具體觀察與已嘗試的班級支持方式。", "與輔導室討論轉介需要與資料準備。", "保護學生隱私，避免標籤化描述。"],
+        office: "輔導室",
+        task: "student-event",
+        links: [{ label: "輔導轉介表（示範）", url: "#" }],
+        updated: "2026-05-20",
+        tags: ["重要", "表件", "流程"]
+      },
+      {
+        id: "new-teacher-guide",
+        title: "新進教師校園生活指南",
+        audience: "新進教師、代理代課教師、跨校調任教師",
+        situation: "報到前後、開學第一週或不熟悉校內流程時使用。",
+        summary: ["先掌握行事曆、處室分工、差勤與常用系統。", "將教師常用入口與校內聯絡方式加入書籤。", "遇到不確定事項先洽學年主任或承辦處室。"],
+        office: "教務處",
+        task: "new-teacher",
+        links: [{ label: "教師常用網 Padlet", url: "https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns" }],
+        updated: "2026-05-19",
+        tags: ["新進教師必讀", "常用"]
+      },
+      {
+        id: "field-trip",
+        title: "戶外教育與校外教學準備",
+        audience: "活動承辦人、導師、學年團隊",
+        situation: "辦理校外教學、戶外教育、參訪、競賽或移地課程前使用。",
+        summary: ["確認活動計畫、家長同意、交通、保險與安全分工。", "提早送交申請資料並保留核准紀錄。", "行前向學生說明集合、動線與安全注意事項。"],
+        office: "學務處",
+        task: "field-trip",
+        links: [{ label: "戶外教育申請檢核（示範）", url: "#" }],
+        updated: "2026-05-18",
+        tags: ["重要", "表件", "流程"]
+      }
+    ];
+
+    const state = {
+      query: "",
+      task: "all",
+      office: "all",
+      tag: ""
+    };
+
+    const elements = {
+      searchInput: document.getElementById("searchInput"),
+      clearFiltersBtn: document.getElementById("clearFiltersBtn"),
+      showAllBtn: document.getElementById("showAllBtn"),
+      quickEntries: document.getElementById("quickEntries"),
+      taskFilters: document.getElementById("taskFilters"),
+      officeFilters: document.getElementById("officeFilters"),
+      cardGrid: document.getElementById("cardGrid"),
+      resultCount: document.getElementById("resultCount"),
+      recentUpdates: document.getElementById("recentUpdates"),
+      emptyState: document.getElementById("emptyState")
+    };
+
+    function getTaskLabel(taskId) {
+      const match = taskCategories.find((task) => task.id === taskId);
+      return match ? match.label : "";
+    }
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function itemSearchText(item) {
+      return [
+        item.title,
+        item.audience,
+        item.situation,
+        item.office,
+        getTaskLabel(item.task),
+        item.summary.join(" "),
+        item.links.map((link) => link.label).join(" "),
+        item.tags.join(" ")
+      ].join(" ");
+    }
+
+    function itemMatches(item) {
+      const query = normalize(state.query);
+      const matchQuery = !query || normalize(itemSearchText(item)).includes(query);
+      const matchTask = state.task === "all" || item.task === state.task;
+      const matchOffice = state.office === "all" || item.office === state.office;
+      const matchTag = !state.tag || item.tags.includes(state.tag);
+      return matchQuery && matchTask && matchOffice && matchTag;
+    }
+
+    function getFilteredItems() {
+      return handbookItems.filter(itemMatches);
+    }
+
+    function tagKind(tag) {
+      if (tag === "重要") return "important";
+      if (tag === "高風險") return "high-risk";
+      if (tag === "表件") return "form";
+      return "normal";
+    }
+
+    function createTextElement(tagName, className, text) {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function createField(label, valueNode) {
+      const row = document.createElement("div");
+      row.className = "field-row";
+      row.appendChild(createTextElement("dt", "field-label", label));
+      const value = document.createElement("dd");
+      value.className = "field-value";
+      value.appendChild(valueNode);
+      row.appendChild(value);
+      return row;
+    }
+
+    function createSummaryList(items) {
+      const list = document.createElement("ul");
+      items.forEach((text) => {
+        const item = document.createElement("li");
+        item.textContent = text;
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createLinks(links) {
+      const list = document.createElement("ul");
+      list.className = "link-list";
+      links.forEach((link) => {
+        const item = document.createElement("li");
+        const anchor = document.createElement("a");
+        anchor.href = link.url || "#";
+        anchor.textContent = link.label || "未命名連結";
+        if (String(link.url || "").startsWith("http")) {
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+        }
+        item.appendChild(anchor);
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createTags(tags) {
+      const list = document.createElement("ul");
+      list.className = "tag-list";
+      tags.forEach((tag) => {
+        const item = document.createElement("li");
+        item.className = "tag";
+        item.dataset.kind = tagKind(tag);
+        item.textContent = tag;
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createCard(item) {
+      const card = document.createElement("article");
+      card.className = "resource-card";
+      card.id = item.id;
+
+      const top = document.createElement("div");
+      top.className = "card-topline";
+      const titleBlock = document.createElement("div");
+      titleBlock.appendChild(createTextElement("h3", "card-title", item.title));
+      titleBlock.appendChild(createTextElement("p", "section-note", getTaskLabel(item.task)));
+      top.appendChild(titleBlock);
+      top.appendChild(createTextElement("span", "card-office", item.office));
+      card.appendChild(top);
+
+      const fields = document.createElement("dl");
+      fields.className = "field-list";
+      fields.appendChild(createField("適用對象", createTextElement("span", "", item.audience)));
+      fields.appendChild(createField("適用情境", createTextElement("span", "", item.situation)));
+      fields.appendChild(createField("辦理重點", createSummaryList(item.summary)));
+      fields.appendChild(createField("權責處室", createTextElement("span", "", item.office)));
+      fields.appendChild(createField("表件或連結", createLinks(item.links)));
+      fields.appendChild(createField("最後更新", createTextElement("span", "", item.updated)));
+      fields.appendChild(createField("標籤", createTags(item.tags)));
+      card.appendChild(fields);
+
+      return card;
+    }
+
+    function renderCards() {
+      const items = getFilteredItems();
+      elements.cardGrid.replaceChildren(...items.map(createCard));
+      elements.resultCount.textContent = "目前顯示 " + items.length + " 筆，共 " + handbookItems.length + " 筆資料";
+      elements.emptyState.classList.toggle("is-visible", items.length === 0);
+    }
+
+    function createChip(label, value, type) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chip";
+      button.textContent = label;
+      button.dataset.value = value;
+      button.dataset.type = type;
+      button.addEventListener("click", () => {
+        if (type === "task") state.task = value;
+        if (type === "office") state.office = value;
+        state.tag = "";
+        renderAll();
+      });
+      return button;
+    }
+
+    function renderFilters() {
+      elements.taskFilters.replaceChildren(
+        createChip("全部任務", "all", "task"),
+        ...taskCategories.map((task) => createChip(task.label, task.id, "task"))
+      );
+      elements.officeFilters.replaceChildren(
+        createChip("全部處室", "all", "office"),
+        ...officeCategories.map((office) => createChip(office, office, "office"))
+      );
+    }
+
+    function updateFilterActiveState() {
+      document.querySelectorAll("[data-type='task']").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.value === state.task);
+      });
+      document.querySelectorAll("[data-type='office']").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.value === state.office);
+      });
+    }
+
+    function renderQuickEntries() {
+      elements.quickEntries.replaceChildren(...quickEntries.map((entry) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "quick-entry";
+        const label = document.createElement("strong");
+        label.textContent = entry.label;
+        const hint = document.createElement("span");
+        hint.textContent = entry.hint;
+        button.append(label, hint);
+        button.addEventListener("click", () => {
+          state.query = entry.query || "";
+          state.task = entry.task || "all";
+          state.office = entry.office || "all";
+          state.tag = entry.tag || "";
+          elements.searchInput.value = state.query;
+          renderAll();
+          document.getElementById("cardsTitle").scrollIntoView({ block: "start" });
+        });
+        return button;
+      }));
+    }
+
+    function renderRecentUpdates() {
+      const recent = [...handbookItems]
+        .sort((a, b) => b.updated.localeCompare(a.updated))
+        .slice(0, 5);
+      elements.recentUpdates.replaceChildren(...recent.map((item) => {
+        const row = document.createElement("li");
+        row.className = "update-item";
+        const link = document.createElement("a");
+        link.className = "update-title";
+        link.href = "#" + item.id;
+        link.textContent = item.title;
+        const meta = createTextElement("span", "update-meta", item.updated + "｜" + item.office);
+        row.append(link, meta);
+        return row;
+      }));
+    }
+
+    function resetFilters() {
+      state.query = "";
+      state.task = "all";
+      state.office = "all";
+      state.tag = "";
+      elements.searchInput.value = "";
+      renderAll();
+    }
+
+    function renderAll() {
+      renderCards();
+      updateFilterActiveState();
+    }
+
+    elements.searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value;
+      state.tag = "";
+      renderCards();
+    });
+
+    elements.clearFiltersBtn.addEventListener("click", resetFilters);
+    elements.showAllBtn.addEventListener("click", resetFilters);
+
+    renderQuickEntries();
+    renderFilters();
+    renderRecentUpdates();
+    renderAll();
+  </script>
+</body>
+</html>
