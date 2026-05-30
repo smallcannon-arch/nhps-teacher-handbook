@@ -76,6 +76,32 @@
       box-shadow: var(--shadow);
     }
 
+    .mode-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .mode-copy {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .mode-label {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .mode-bar .tabs {
+      margin: 0;
+    }
+
     .sidebar {
       position: sticky;
       top: 18px;
@@ -243,6 +269,44 @@
       background: #f6faf9;
     }
 
+    .bulk-panel summary {
+      color: var(--navy);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .bulk-panel summary + * {
+      margin-top: 12px;
+    }
+
+    .editor-header {
+      margin-bottom: 16px;
+      padding: 16px 18px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+    }
+
+    .editor-kicker {
+      display: inline-block;
+      margin-bottom: 6px;
+      color: var(--ok);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .editor-header h2 {
+      margin-bottom: 6px;
+    }
+
+    .trash-preview {
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+
     .bulk-tools {
       display: grid;
       gap: 10px;
@@ -332,6 +396,11 @@
       background: #f6faf9;
     }
 
+    .mode-bar .user-box {
+      min-width: 260px;
+      margin: 0;
+    }
+
     .user-box .meta {
       margin-bottom: 8px;
     }
@@ -382,6 +451,15 @@
         width: min(100% - 20px, 1280px);
       }
 
+      .mode-bar {
+        display: grid;
+        gap: 14px;
+      }
+
+      .mode-bar .user-box {
+        min-width: 0;
+      }
+
       .sidebar {
         position: static;
       }
@@ -415,16 +493,23 @@
   </header>
 
   <main>
-    <aside class="panel sidebar">
-      <h2 id="listTitle">首頁內容</h2>
+    <section class="panel mode-bar" aria-label="後台主入口">
+      <div class="mode-copy">
+        <p class="mode-label">主入口</p>
+        <div class="tabs" role="tablist" aria-label="後台模式">
+          <button id="resourcesTab" class="tab-button is-active" type="button">首頁內容</button>
+          <button id="shortcutsTab" class="tab-button" type="button">分類按鈕</button>
+          <button id="trashTab" class="tab-button" type="button">回收桶</button>
+        </div>
+      </div>
       <div class="user-box">
         <p class="meta" id="loginState">載入使用者資料...</p>
         <button id="logoutBtn" type="button" class="secondary">登出</button>
       </div>
-      <div class="tabs" role="tablist" aria-label="後台模式">
-        <button id="resourcesTab" class="tab-button is-active" type="button">首頁內容</button>
-        <button id="shortcutsTab" class="tab-button" type="button">分類按鈕</button>
-      </div>
+    </section>
+
+    <aside class="panel sidebar">
+      <h2 id="listTitle">首頁內容清單</h2>
       <div class="field">
         <label for="listSearchInput">搜尋</label>
         <input id="listSearchInput" placeholder="搜尋標題、分類、連結">
@@ -453,6 +538,7 @@
           <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選目前清單</button>
           <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
         </div>
+        <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
         <button id="exportCsvBtn" type="button" class="secondary" disabled>匯出目前清單</button>
       </div>
       <div id="itemList" class="list"></div>
@@ -462,12 +548,15 @@
       <div id="message" class="notice" hidden></div>
 
       <form id="resourceForm">
-        <h2 id="resourceTitle">請先登入並選擇首頁內容</h2>
-        <p class="meta">首頁內容會出現在網站搜尋結果與各處室分類中；勾選「置頂到常用入口」會另外放進首頁最上方的常用入口區。</p>
+        <div class="editor-header">
+          <span id="resourceEditorLabel" class="editor-kicker">正在編輯首頁內容</span>
+          <h2 id="resourceTitle">請先登入並選擇首頁內容</h2>
+          <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
+        </div>
         <input id="resourceIdInput" type="hidden">
 
-        <section id="bulkPanel" class="bulk-panel">
-          <h3>批次整理</h3>
+        <details id="bulkPanel" class="bulk-panel">
+          <summary id="bulkPanelSummary">批次整理（已勾選 0 筆）</summary>
           <p class="meta">先在左側勾選多筆首頁內容，再一次調整處室、分類、常用入口置頂或網站顯示狀態。空白欄位會保持原狀。</p>
           <div class="grid-2">
             <div class="field">
@@ -500,7 +589,7 @@
           <div class="actions">
             <button id="batchApplyBtn" type="button" disabled>套用到已勾選內容</button>
           </div>
-        </section>
+        </details>
 
         <div class="grid-2">
           <div class="field">
@@ -556,20 +645,37 @@
 
         <h3>連結</h3>
         <div id="resourceLinksBox"></div>
-        <button id="addResourceLinkBtn" class="secondary" type="button">新增連結</button>
+          <button id="addResourceLinkBtn" class="secondary" type="button">新增連結</button>
 
         <div class="safety-note">
           高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
         </div>
         <div class="actions">
           <button id="saveResourceBtn" type="button" disabled>儲存並更新網站</button>
-          <button id="archiveResourceBtn" type="button" class="warn" disabled>刪除內容</button>
+          <button id="archiveResourceBtn" type="button" class="warn" disabled>移到回收桶</button>
         </div>
       </form>
 
+      <section id="trashForm" class="hidden">
+        <div class="editor-header">
+          <span class="editor-kicker">回收桶</span>
+          <h2 id="trashTitle">回收桶</h2>
+          <p id="trashContext" class="meta">刪除的首頁內容會先移到這裡，可勾選後還原。</p>
+        </div>
+        <div id="trashPreview" class="trash-preview">
+          <p class="meta">從左側回收桶清單點選一筆內容，可查看基本資料。</p>
+        </div>
+        <div class="actions">
+          <button id="restoreTrashBtn" type="button" disabled>還原已勾選內容</button>
+        </div>
+      </section>
+
       <form id="shortcutForm" class="hidden">
-        <h2 id="shortcutTitle">請先選擇分類按鈕</h2>
-        <p class="meta">分類按鈕是網站上方處室標籤下方那排按鈕，用來把一批首頁內容快速篩出來。常用入口不是分類按鈕，而是由首頁內容勾選置頂後另外抓出來。</p>
+        <div class="editor-header">
+          <span id="shortcutEditorLabel" class="editor-kicker">正在編輯分類按鈕</span>
+          <h2 id="shortcutTitle">請先選擇分類按鈕</h2>
+          <p id="shortcutContext" class="meta">從左側清單點選一個分類按鈕後，就能在這裡修改。</p>
+        </div>
         <input id="shortcutIdInput" type="hidden">
 
         <div class="grid-2">
@@ -640,11 +746,14 @@
     let idToken = "";
     let currentUser = null;
     let resources = [];
+    let trash = [];
     let shortcuts = {};
     let mode = "resources";
     let activeResourceId = "";
+    let activeTrashId = "";
     let activeShortcutId = "";
     let selectedResourceIds = new Set();
+    let selectedTrashIds = new Set();
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -663,18 +772,28 @@
       visibleCountText: document.getElementById("visibleCountText"),
       selectVisibleBtn: document.getElementById("selectVisibleBtn"),
       clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+      batchDeleteBtn: document.getElementById("batchDeleteBtn"),
       exportCsvBtn: document.getElementById("exportCsvBtn"),
       resourcesTab: document.getElementById("resourcesTab"),
       shortcutsTab: document.getElementById("shortcutsTab"),
+      trashTab: document.getElementById("trashTab"),
       resourceForm: document.getElementById("resourceForm"),
       bulkPanel: document.getElementById("bulkPanel"),
+      bulkPanelSummary: document.getElementById("bulkPanelSummary"),
       batchOfficeInput: document.getElementById("batchOfficeInput"),
       batchCategoryInput: document.getElementById("batchCategoryInput"),
       batchFeaturedInput: document.getElementById("batchFeaturedInput"),
       batchVisibleInput: document.getElementById("batchVisibleInput"),
       batchApplyBtn: document.getElementById("batchApplyBtn"),
+      trashForm: document.getElementById("trashForm"),
+      trashTitle: document.getElementById("trashTitle"),
+      trashContext: document.getElementById("trashContext"),
+      trashPreview: document.getElementById("trashPreview"),
+      restoreTrashBtn: document.getElementById("restoreTrashBtn"),
       shortcutForm: document.getElementById("shortcutForm"),
+      resourceEditorLabel: document.getElementById("resourceEditorLabel"),
       resourceTitle: document.getElementById("resourceTitle"),
+      resourceContext: document.getElementById("resourceContext"),
       resourceIdInput: document.getElementById("resourceIdInput"),
       resourceTitleInput: document.getElementById("resourceTitleInput"),
       resourceUpdatedInput: document.getElementById("resourceUpdatedInput"),
@@ -691,7 +810,9 @@
       addResourceLinkBtn: document.getElementById("addResourceLinkBtn"),
       saveResourceBtn: document.getElementById("saveResourceBtn"),
       archiveResourceBtn: document.getElementById("archiveResourceBtn"),
+      shortcutEditorLabel: document.getElementById("shortcutEditorLabel"),
       shortcutTitle: document.getElementById("shortcutTitle"),
+      shortcutContext: document.getElementById("shortcutContext"),
       shortcutIdInput: document.getElementById("shortcutIdInput"),
       shortcutParentInput: document.getElementById("shortcutParentInput"),
       shortcutLabelInput: document.getElementById("shortcutLabelInput"),
@@ -768,7 +889,8 @@
 
     function renderCategoryFilter() {
       const current = el.categoryFilter.value;
-      const categories = [...new Set(resources.map((item) => item.category).filter(Boolean))]
+      const source = mode === "trash" ? trash : resources;
+      const categories = [...new Set(source.map((item) => item.category).filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
       el.categoryFilter.innerHTML = "<option value=''>全部分類</option><option value='__featured'>常用入口（置頂）</option>" + categories.map((category) => (
         "<option value='" + escapeHtml(category) + "'>" + escapeHtml(category) + "</option>"
@@ -793,10 +915,14 @@
       try {
         const data = await api("directoryList");
         resources = Array.isArray(data.resources) ? data.resources : [];
+        trash = Array.isArray(data.trash) ? data.trash : [];
         shortcuts = data.shortcuts || {};
         currentUser = data.user || null;
-        pruneSelectedResources();
+        pruneSelectedItems();
+        if (activeResourceId && !resources.some((item) => item.id === activeResourceId)) activeResourceId = "";
+        if (activeTrashId && !trash.some((item) => item.id === activeTrashId)) activeTrashId = "";
         if (!activeResourceId && resources.length) activeResourceId = resources[0].id;
+        if (!activeTrashId && trash.length) activeTrashId = trash[0].id;
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
         renderOfficeFilter();
         renderCategoryFilter();
@@ -827,17 +953,21 @@
     function renderAll() {
       el.resourcesTab.classList.toggle("is-active", mode === "resources");
       el.shortcutsTab.classList.toggle("is-active", mode === "shortcuts");
+      el.trashTab.classList.toggle("is-active", mode === "trash");
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
       el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
-      el.bulkTools.classList.toggle("hidden", mode !== "resources");
+      el.trashForm.classList.toggle("hidden", mode !== "trash");
+      el.bulkTools.classList.toggle("hidden", mode === "shortcuts");
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
-      el.categoryFilter.classList.toggle("hidden", mode !== "resources");
-      el.categoryFilter.disabled = mode !== "resources";
-      el.officeFilter.setAttribute("aria-label", mode === "resources" ? "處室篩選" : "分類按鈕位置篩選");
-      el.listTitle.textContent = mode === "resources" ? "首頁內容" : "分類按鈕";
+      el.categoryFilter.classList.toggle("hidden", mode === "shortcuts");
+      el.categoryFilter.disabled = mode === "shortcuts";
+      el.officeFilter.setAttribute("aria-label", mode === "shortcuts" ? "分類按鈕位置篩選" : "處室篩選");
+      el.listTitle.textContent = mode === "resources" ? "首頁內容清單" : mode === "trash" ? "回收桶清單" : "分類按鈕清單";
       renderList();
       renderBulkState();
-      mode === "resources" ? renderResourceEditor() : renderShortcutEditor();
+      if (mode === "resources") renderResourceEditor();
+      if (mode === "trash") renderTrashEditor();
+      if (mode === "shortcuts") renderShortcutEditor();
     }
 
     function renderList() {
@@ -852,6 +982,24 @@
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
                 <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用入口置頂" : ""}${item.visible ? "" : "｜已隱藏"}</span>
+              </button>
+            </div>
+          `
+        );
+        return;
+      }
+
+      if (mode === "trash") {
+        const items = getVisibleListItems();
+        el.itemList.innerHTML = renderGroupedList(
+          items,
+          (item) => `${item.office || "其他"}｜${item.category || "未分類"}`,
+          (item) => `
+            <div class="list-entry ${selectedTrashIds.has(item.id) ? "is-selected" : ""}">
+              <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedTrashIds.has(item.id) ? "checked" : ""}>
+              <button class="list-button ${item.id === activeTrashId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+                <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                <span>${escapeHtml(item.category || "未分類")}｜刪除時間 ${escapeHtml(item.deleted_at || "")}</span>
               </button>
             </div>
           `
@@ -884,6 +1032,15 @@
           .slice()
           .sort(compareResourceListOrder);
       }
+      if (mode === "trash") {
+        const category = el.categoryFilter.value;
+        return trash
+          .filter((item) => !office || item.office === office)
+          .filter((item) => !category || (category === "__featured" ? item.featured === true : item.category === category))
+          .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
+          .slice()
+          .sort(compareResourceListOrder);
+      }
       return flattenShortcuts()
         .filter((item) => !office || item.parentOffice === office)
         .filter((item) => matchesAdminQuery(shortcutAdminSearchText(item), query))
@@ -905,23 +1062,32 @@
     }
 
     function renderBulkState(enabled = true) {
-      const visibleItems = mode === "resources" ? getVisibleListItems() : [];
-      const selectedCount = selectedResourceIds.size;
+      const isBulkMode = mode === "resources" || mode === "trash";
+      const visibleItems = isBulkMode ? getVisibleListItems() : [];
+      const selectedCount = mode === "trash" ? selectedTrashIds.size : selectedResourceIds.size;
       el.bulkCountText.textContent = "已勾選 " + selectedCount + " 筆";
       el.visibleCountText.textContent = "目前清單 " + visibleItems.length + " 筆";
+      el.batchDeleteBtn.textContent = mode === "trash" ? "還原已勾選" : "移到回收桶";
+      if (el.bulkPanelSummary) el.bulkPanelSummary.textContent = "批次整理（已勾選 " + selectedResourceIds.size + " 筆）";
       const hasVisibleItems = visibleItems.length > 0;
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
-      const canUseBulk = Boolean(enabled && idToken && canEdit && mode === "resources");
+      const canArchive = ["admin", "reviewer"].includes(role);
+      const canUseBulk = Boolean(enabled && idToken && canEdit && isBulkMode);
+      const canMoveToTrash = Boolean(enabled && idToken && canArchive && isBulkMode && selectedCount > 0);
       el.selectVisibleBtn.disabled = !canUseBulk || !hasVisibleItems;
       el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
-      el.batchApplyBtn.disabled = !canUseBulk || selectedCount === 0;
-      el.exportCsvBtn.disabled = !enabled || !idToken || mode !== "resources" || !hasVisibleItems;
+      el.batchApplyBtn.disabled = mode !== "resources" || !canUseBulk || selectedResourceIds.size === 0;
+      el.batchDeleteBtn.disabled = !canMoveToTrash;
+      el.exportCsvBtn.disabled = !enabled || !idToken || !isBulkMode || !hasVisibleItems;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
     }
 
-    function pruneSelectedResources() {
-      const validIds = new Set(resources.map((item) => item.id));
-      selectedResourceIds = new Set([...selectedResourceIds].filter((id) => validIds.has(id)));
+    function pruneSelectedItems() {
+      const validResourceIds = new Set(resources.map((item) => item.id));
+      const validTrashIds = new Set(trash.map((item) => item.id));
+      selectedResourceIds = new Set([...selectedResourceIds].filter((id) => validResourceIds.has(id)));
+      selectedTrashIds = new Set([...selectedTrashIds].filter((id) => validTrashIds.has(id)));
     }
 
     function compareResourceListOrder(a, b) {
@@ -992,7 +1158,9 @@
         clearResourceEditor();
         return;
       }
+      el.resourceEditorLabel.textContent = "正在編輯首頁內容";
       el.resourceTitle.textContent = item.title || "未命名內容";
+      el.resourceContext.textContent = [item.office || "其他", item.category || "未分類", "ID " + (item.id || "")].join("｜");
       el.resourceIdInput.value = item.id || "";
       el.resourceTitleInput.value = item.title || "";
       el.resourceUpdatedInput.value = normalizeDate(item.updated);
@@ -1009,7 +1177,9 @@
     }
 
     function clearResourceEditor() {
+      el.resourceEditorLabel.textContent = "新增首頁內容";
       el.resourceTitle.textContent = "新增首頁內容";
+      el.resourceContext.textContent = "填寫內容後按「儲存並更新網站」新增。";
       el.resourceIdInput.value = "";
       el.resourceTitleInput.value = "";
       el.resourceUpdatedInput.value = todayText();
@@ -1023,6 +1193,20 @@
       el.resourceVisibleInput.checked = true;
       el.resourceFeaturedInput.checked = false;
       renderLinkRows([]);
+    }
+
+    function renderTrashEditor() {
+      const item = trash.find((resource) => resource.id === activeTrashId);
+      el.trashTitle.textContent = item ? item.title || "未命名內容" : "回收桶";
+      el.trashContext.textContent = item
+        ? [item.office || "其他", item.category || "未分類", "刪除時間 " + (item.deleted_at || "")].join("｜")
+        : "刪除的首頁內容會先移到這裡，可勾選後還原。";
+      el.trashPreview.innerHTML = item ? `
+        <p><strong>標題：</strong>${escapeHtml(item.title || "未命名內容")}</p>
+        <p><strong>處室／分類：</strong>${escapeHtml(item.office || "其他")}｜${escapeHtml(item.category || "未分類")}</p>
+        <p><strong>類型：</strong>${escapeHtml(item.type || "連結")}｜<strong>最後更新：</strong>${escapeHtml(item.updated || "")}</p>
+        <p class="meta">${escapeHtml(item.note || "沒有備註。")}</p>
+      ` : "<p class='meta'>從左側回收桶清單點選一筆內容，可查看基本資料。</p>";
     }
 
     function renderLinkRows(links) {
@@ -1042,7 +1226,9 @@
         clearShortcutEditor();
         return;
       }
+      el.shortcutEditorLabel.textContent = "正在編輯分類按鈕";
       el.shortcutTitle.textContent = item.label || "未命名按鈕";
+      el.shortcutContext.textContent = [item.parentOffice || "常用入口", item.resourceCategory || item.query || "未指定條件", "ID " + (item.id || "")].join("｜");
       el.shortcutIdInput.value = item.id || "";
       el.shortcutParentInput.value = item.parentOffice || "常用入口";
       el.shortcutLabelInput.value = item.label || "";
@@ -1056,7 +1242,9 @@
     }
 
     function clearShortcutEditor() {
+      el.shortcutEditorLabel.textContent = "新增分類按鈕";
       el.shortcutTitle.textContent = "新增分類按鈕";
+      el.shortcutContext.textContent = "填寫後按「儲存分類按鈕」新增。";
       el.shortcutIdInput.value = "";
       el.shortcutParentInput.value = "常用入口";
       el.shortcutLabelInput.value = "";
@@ -1112,9 +1300,9 @@
 
     async function archiveResource() {
       if (!activeResourceId) return;
-      const ok = window.confirm("確定要刪除這筆首頁內容？刪除後會從網站與後台清單移除，試算表仍保留紀錄可備查。");
+      const ok = window.confirm("確定要將這筆首頁內容移到回收桶？網站與首頁內容清單將不再顯示，可從回收桶還原。");
       if (!ok) return;
-      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已刪除內容。");
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已移到回收桶。");
       activeResourceId = "";
     }
 
@@ -1157,27 +1345,61 @@
       setEnabled(true);
     }
 
-    function selectVisibleResources() {
-      if (mode !== "resources") return;
-      getVisibleListItems().forEach((item) => selectedResourceIds.add(item.id));
-      renderList();
-      renderBulkState(enabled);
+    async function batchTrashSelectedItems() {
+      if (mode === "trash") {
+        await restoreSelectedTrash();
+        return;
+      }
+      const resourceIds = [...selectedResourceIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要移到回收桶的首頁內容。", true);
+        return;
+      }
+      const ok = window.confirm("確定要將已勾選的 " + resourceIds.length + " 筆首頁內容移到回收桶？");
+      if (!ok) return;
+      await runCommand("batchDeleteDirectoryResources", { resource_ids: resourceIds }, "已將 " + resourceIds.length + " 筆內容移到回收桶。");
+      selectedResourceIds.clear();
+      activeResourceId = "";
     }
 
-    function clearSelectedResources() {
-      selectedResourceIds.clear();
+    async function restoreSelectedTrash() {
+      const resourceIds = [...selectedTrashIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要還原的內容。", true);
+        return;
+      }
+      const ok = window.confirm("確定要還原已勾選的 " + resourceIds.length + " 筆內容？還原後會回到首頁內容清單並在網站顯示。");
+      if (!ok) return;
+      await runCommand("restoreDirectoryResources", { resource_ids: resourceIds }, "已還原 " + resourceIds.length + " 筆內容。");
+      selectedTrashIds.clear();
+      activeTrashId = "";
+    }
+
+    function selectVisibleItems() {
+      if (mode !== "resources" && mode !== "trash") return;
+      getVisibleListItems().forEach((item) => {
+        if (mode === "trash") selectedTrashIds.add(item.id);
+        if (mode === "resources") selectedResourceIds.add(item.id);
+      });
+      renderList();
+      renderBulkState();
+    }
+
+    function clearSelectedItems() {
+      if (mode === "trash") selectedTrashIds.clear();
+      if (mode === "resources") selectedResourceIds.clear();
       renderList();
       renderBulkState();
     }
 
     function exportVisibleResourcesCsv() {
-      const items = mode === "resources" ? getVisibleListItems() : [];
+      const items = mode === "resources" || mode === "trash" ? getVisibleListItems() : [];
       if (!items.length) {
-        showMessage("目前清單沒有可匯出的首頁內容。", true);
+        showMessage("目前清單沒有可匯出的內容。", true);
         return;
       }
       const rows = [
-        ["ID", "標題", "處室", "分類", "類型", "置頂常用入口", "網站顯示", "最後更新", "標籤", "連結數", "主要連結"],
+        ["ID", "標題", "處室", "分類", "類型", "置頂常用入口", "網站顯示", "最後更新", "刪除時間", "標籤", "連結數", "主要連結"],
         ...items.map((item) => [
           item.id,
           item.title,
@@ -1187,6 +1409,7 @@
           item.featured ? "是" : "否",
           item.visible === false ? "否" : "是",
           item.updated,
+          item.deleted_at || "",
           (item.tags || []).join("、"),
           (item.links || []).length,
           (item.links || [])[0]?.url || ""
@@ -1197,7 +1420,7 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "內湖國小教師手冊首頁內容-" + todayText() + ".csv";
+      link.download = "內湖國小教師手冊" + (mode === "trash" ? "回收桶" : "首頁內容") + "-" + todayText() + ".csv";
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -1211,6 +1434,7 @@
     }
 
     async function moveSelectedItem(direction) {
+      if (mode === "trash") return;
       const items = getVisibleListItems();
       const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
       const currentIndex = items.findIndex((item) => item.id === activeId);
@@ -1240,6 +1464,8 @@
         if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
         if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
         if (cmd === "deleteDirectoryResource") activeResourceId = "";
+        if (cmd === "batchDeleteDirectoryResources") activeResourceId = "";
+        if (cmd === "restoreDirectoryResources") activeTrashId = "";
         if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
         await loadDirectoryData();
         showMessage(successText, false);
@@ -1268,11 +1494,11 @@
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
       const items = getVisibleListItems();
-      const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
+      const activeId = mode === "resources" ? activeResourceId : mode === "trash" ? activeTrashId : activeShortcutId;
       const activeIndex = items.findIndex((item) => item.id === activeId);
-      el.addItemBtn.disabled = !enabled || !idToken || !canEdit;
-      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || activeIndex <= 0;
-      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || activeIndex < 0 || activeIndex >= items.length - 1;
+      el.addItemBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash";
+      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || activeIndex <= 0;
+      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || activeIndex < 0 || activeIndex >= items.length - 1;
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = mode !== "resources" || !enabled || !idToken;
@@ -1284,6 +1510,7 @@
       el.saveShortcutBtn.disabled = !enabled || !idToken || !canEdit;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
       el.deleteShortcutBtn.disabled = !enabled || !idToken || !canArchive || !activeShortcutId;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
       renderBulkState();
     }
 
@@ -1326,21 +1553,24 @@
 
     el.resourcesTab.addEventListener("click", () => setMode("resources"));
     el.shortcutsTab.addEventListener("click", () => setMode("shortcuts"));
+    el.trashTab.addEventListener("click", () => setMode("trash"));
     el.logoutBtn.addEventListener("click", logout);
     el.listSearchInput.addEventListener("input", refreshListView);
     el.officeFilter.addEventListener("change", refreshListView);
     el.categoryFilter.addEventListener("change", refreshListView);
     el.moveUpBtn.addEventListener("click", () => moveSelectedItem(-1));
     el.moveDownBtn.addEventListener("click", () => moveSelectedItem(1));
-    el.selectVisibleBtn.addEventListener("click", selectVisibleResources);
-    el.clearSelectionBtn.addEventListener("click", clearSelectedResources);
+    el.selectVisibleBtn.addEventListener("click", selectVisibleItems);
+    el.clearSelectionBtn.addEventListener("click", clearSelectedItems);
+    el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
     el.exportCsvBtn.addEventListener("click", exportVisibleResourcesCsv);
     el.batchApplyBtn.addEventListener("click", applyBatchResources);
+    el.restoreTrashBtn.addEventListener("click", restoreSelectedTrash);
     el.addItemBtn.addEventListener("click", () => {
       if (mode === "resources") {
         activeResourceId = "";
         clearResourceEditor();
-      } else {
+      } else if (mode === "shortcuts") {
         activeShortcutId = "";
         clearShortcutEditor();
       }
@@ -1352,9 +1582,11 @@
       if (check) {
         const id = check.dataset.selectId;
         if (check.checked) {
-          selectedResourceIds.add(id);
+          if (mode === "trash") selectedTrashIds.add(id);
+          if (mode === "resources") selectedResourceIds.add(id);
         } else {
-          selectedResourceIds.delete(id);
+          if (mode === "trash") selectedTrashIds.delete(id);
+          if (mode === "resources") selectedResourceIds.delete(id);
         }
         const entry = check.closest(".list-entry");
         if (entry) entry.classList.toggle("is-selected", check.checked);
@@ -1365,6 +1597,8 @@
       if (!button) return;
       if (mode === "resources") {
         activeResourceId = button.dataset.id;
+      } else if (mode === "trash") {
+        activeTrashId = button.dataset.id;
       } else {
         activeShortcutId = button.dataset.id;
       }

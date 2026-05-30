@@ -42,6 +42,12 @@ function doPost(e) {
     if (cmd === "deleteDirectoryResource") {
       return jsonResponse(deleteDirectoryResource_(payload, user));
     }
+    if (cmd === "batchDeleteDirectoryResources") {
+      return jsonResponse(batchDeleteDirectoryResources_(payload, user));
+    }
+    if (cmd === "restoreDirectoryResources") {
+      return jsonResponse(restoreDirectoryResources_(payload, user));
+    }
     if (cmd === "reorderDirectoryItems") {
       return jsonResponse(reorderDirectoryItems_(payload, user));
     }

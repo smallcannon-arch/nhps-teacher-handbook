@@ -73,6 +73,7 @@ function getAdminDirectory(user) {
     cache_version: getConfigValue("cache_version", ""),
     user: user || null,
     resources: getDirectoryResources_(true),
+    trash: getDirectoryTrash_(),
     shortcuts: getDirectoryShortcuts_(true)
   };
 }
@@ -164,6 +165,34 @@ function getDirectoryResources_(includeHidden) {
         visible: isTrue_(row.visible),
         featured: isTrue_(row.featured),
         sort_order: Number(row.sort_order || 0)
+      };
+    });
+}
+
+function getDirectoryTrash_() {
+  return readTable(APP.SHEETS.DIRECTORY_RESOURCES)
+    .filter(function(row) {
+      return isTrue_(row.archived);
+    })
+    .sort(function(a, b) {
+      return String(b.updated_at || "").localeCompare(String(a.updated_at || ""));
+    })
+    .map(function(row) {
+      return {
+        id: row.resource_id,
+        category: row.category || row.office || "其他",
+        office: row.office || "",
+        title: row.title || "",
+        type: row.type || "連結",
+        status: row.resource_status || "",
+        note: row.note || "",
+        links: parseJson_(row.links_json, []),
+        updated: row.updated || "",
+        tags: parseJson_(row.tags_json, []),
+        visible: isTrue_(row.visible),
+        featured: isTrue_(row.featured),
+        sort_order: Number(row.sort_order || 0),
+        deleted_at: row.updated_at || ""
       };
     });
 }

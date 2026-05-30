@@ -280,6 +280,70 @@ function deleteDirectoryResource_(payload, user) {
   }
 }
 
+function batchDeleteDirectoryResources_(payload, user) {
+  requireReviewer_(user);
+  var resourceIds = payload.resource_ids || payload.ids || [];
+  if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要移到回收桶的內容");
+  var idSet = {};
+  resourceIds.forEach(function(id) {
+    id = String(id || "").trim();
+    if (id) idSet[id] = true;
+  });
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var count = 0;
+    var rows = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+    rows.forEach(function(row) {
+      if (!idSet[row.resource_id]) return;
+      row.visible = "FALSE";
+      row.archived = "TRUE";
+      row.updated_at = nowText();
+      writeRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, row._row, row);
+      count += 1;
+    });
+    if (count === 0) throw new Error("找不到要移到回收桶的內容");
+    bumpCacheVersion();
+    logAction(user.email, "batchDeleteDirectoryResources", resourceIds.join(","), "ok", "batch archived " + count + " directory resources");
+    return { ok: true, count: count, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function restoreDirectoryResources_(payload, user) {
+  requireReviewer_(user);
+  var resourceIds = payload.resource_ids || payload.ids || [];
+  if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要還原的內容");
+  var idSet = {};
+  resourceIds.forEach(function(id) {
+    id = String(id || "").trim();
+    if (id) idSet[id] = true;
+  });
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var count = 0;
+    var rows = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+    rows.forEach(function(row) {
+      if (!idSet[row.resource_id]) return;
+      row.archived = "FALSE";
+      row.visible = "TRUE";
+      row.updated_at = nowText();
+      writeRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, row._row, row);
+      count += 1;
+    });
+    if (count === 0) throw new Error("找不到要還原的內容");
+    bumpCacheVersion();
+    logAction(user.email, "restoreDirectoryResources", resourceIds.join(","), "ok", "restored " + count + " directory resources");
+    return { ok: true, count: count, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function reorderDirectoryItems_(payload, user) {
   requireEditor_(user);
   var kind = String(payload.kind || "resource");
