@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>內湖國小教師手冊後台</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --ink: #203044;
@@ -325,6 +324,18 @@
       box-shadow: inset 4px 0 0 var(--gold);
     }
 
+    .user-box {
+      margin: 8px 0 14px;
+      padding: 10px 12px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+    }
+
+    .user-box .meta {
+      margin-bottom: 8px;
+    }
+
     .list-group-title {
       margin: 10px 0 0;
       padding: 8px 4px 2px;
@@ -399,15 +410,17 @@
   <header>
     <div class="header-inner">
       <h1>內湖國小教師手冊後台</h1>
-      <p class="meta">請使用 nhps.hc.edu.tw 帳號登入，維護網站首頁內容、連結與分類按鈕。</p>
-      <div id="gsiButton"></div>
+      <p class="meta">維護網站首頁內容、連結與分類按鈕。</p>
     </div>
   </header>
 
   <main>
     <aside class="panel sidebar">
       <h2 id="listTitle">首頁內容</h2>
-      <p class="meta" id="loginState">尚未登入</p>
+      <div class="user-box">
+        <p class="meta" id="loginState">載入使用者資料...</p>
+        <button id="logoutBtn" type="button" class="secondary">登出</button>
+      </div>
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">首頁內容</button>
         <button id="shortcutsTab" class="tab-button" type="button">分類按鈕</button>
@@ -618,8 +631,9 @@
 
   <script>
     const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
-    const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
-    const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
+    const LOGIN_PAGE = "login.html";
+    const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
+    const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
     const OFFICES = ["常用入口", "教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
     const RESOURCE_OFFICES = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
 
@@ -635,6 +649,7 @@
     const el = {
       loginState: document.getElementById("loginState"),
       message: document.getElementById("message"),
+      logoutBtn: document.getElementById("logoutBtn"),
       listTitle: document.getElementById("listTitle"),
       itemList: document.getElementById("itemList"),
       listSearchInput: document.getElementById("listSearchInput"),
@@ -691,50 +706,42 @@
       deleteShortcutBtn: document.getElementById("deleteShortcutBtn")
     };
 
-    window.onload = () => {
+    window.onload = async () => {
       setupSelects();
-      if (GOOGLE_CLIENT_ID.startsWith("PASTE_")) {
-        showMessage("請先設定 GOOGLE_CLIENT_ID 與 GAS_ENDPOINT。", true);
-        return;
-      }
-      if (!window.google || !google.accounts || !google.accounts.id) {
-        showMessage("Google 登入元件尚未載入完成，請重新整理頁面後再試。", true);
-        return;
-      }
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          el.loginState.textContent = "登入中...";
-          showMessage("正在驗證 Google 登入，請稍候...", false, true);
-          setEnabled(false);
-          if (!response || !response.credential) {
-            idToken = "";
-            el.loginState.textContent = "尚未完成登入";
-            showMessage("尚未取得 Google 登入憑證。", true);
-            return;
-          }
-          const profile = decodeJwtPayload(response.credential);
-          const email = String(profile.email || "").toLowerCase();
-          const emailDomain = email.split("@").pop();
-          const hostedDomain = String(profile.hd || "").toLowerCase();
-          if (emailDomain !== ALLOWED_EMAIL_DOMAIN && hostedDomain !== ALLOWED_EMAIL_DOMAIN) {
-            idToken = "";
-            el.loginState.textContent = "登入帳號網域不符";
-            showMessage("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入後台。", true);
-            return;
-          }
-          idToken = response.credential;
-          el.loginState.textContent = "已登入：" + email + "，載入中...";
-          await loadDirectoryData();
-        }
-      });
-      google.accounts.id.renderButton(document.getElementById("gsiButton"), {
-        theme: "outline",
-        size: "large",
-        text: "signin_with",
-        shape: "rectangular"
-      });
+      await initializeAdminSession();
     };
+
+    async function initializeAdminSession() {
+      idToken = sessionStorage.getItem(TOKEN_STORAGE_KEY) || "";
+      if (!idToken) {
+        redirectToLogin();
+        return;
+      }
+      try {
+        const cachedUser = JSON.parse(sessionStorage.getItem(USER_STORAGE_KEY) || "null");
+        if (cachedUser && cachedUser.email) {
+          currentUser = cachedUser;
+          el.loginState.textContent = cachedUser.email + "（" + (cachedUser.role || "使用者") + "）";
+        }
+      } catch (err) {
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+      }
+      showMessage("正在載入後台資料...", false, true);
+      setEnabled(false);
+      await loadDirectoryData();
+    }
+
+    function redirectToLogin(reason = "") {
+      const next = encodeURIComponent("admin.html");
+      const suffix = reason ? "&reason=" + encodeURIComponent(reason) : "";
+      window.location.replace(LOGIN_PAGE + "?next=" + next + suffix);
+    }
+
+    function logout() {
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+      sessionStorage.removeItem(USER_STORAGE_KEY);
+      redirectToLogin("logout");
+    }
 
     function setupSelects() {
       renderOfficeFilter();
@@ -794,14 +801,16 @@
         renderOfficeFilter();
         renderCategoryFilter();
         el.loginState.textContent = currentUser
-          ? "已登入：" + currentUser.email + "（" + currentUser.role + "）"
-          : "已登入";
+          ? currentUser.email + "（" + currentUser.role + "）"
+          : "已授權使用者";
+        if (currentUser) sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
         renderAll();
         setEnabled(true);
-        showMessage("已載入後台資料。", false);
+        hideMessage();
       } catch (err) {
-        showMessage(err.message, true);
-        el.loginState.textContent = "載入失敗";
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+        redirectToLogin("expired");
       }
     }
 
@@ -1285,6 +1294,13 @@
       el.message.setAttribute("aria-busy", isLoading ? "true" : "false");
     }
 
+    function hideMessage() {
+      el.message.hidden = true;
+      el.message.textContent = "";
+      el.message.classList.remove("error");
+      el.message.removeAttribute("aria-busy");
+    }
+
     function splitTags(value) {
       return String(value || "").split(/[,，]/).map((tag) => tag.trim()).filter(Boolean);
     }
@@ -1308,23 +1324,9 @@
       }[char]));
     }
 
-    function decodeJwtPayload(token) {
-      const parts = String(token || "").split(".");
-      if (parts.length < 2) return {};
-      try {
-        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-        const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
-        const json = decodeURIComponent(Array.from(atob(padded)).map((char) => {
-          return "%" + char.charCodeAt(0).toString(16).padStart(2, "0");
-        }).join(""));
-        return JSON.parse(json);
-      } catch (err) {
-        return {};
-      }
-    }
-
     el.resourcesTab.addEventListener("click", () => setMode("resources"));
     el.shortcutsTab.addEventListener("click", () => setMode("shortcuts"));
+    el.logoutBtn.addEventListener("click", logout);
     el.listSearchInput.addEventListener("input", refreshListView);
     el.officeFilter.addEventListener("change", refreshListView);
     el.categoryFilter.addEventListener("change", refreshListView);

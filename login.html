@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>內湖國小教師手冊後台登入</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --ink: #203044;
+      --navy: #17375e;
+      --cream: #f7f1e7;
+      --paper: #fffdf8;
+      --line: #d9e0e3;
+      --muted: #6c7782;
+      --gold: #b28b45;
+      --danger: #8b3a3a;
+      --ok: #3f6f50;
+      --radius: 8px;
+      --shadow: 0 18px 42px rgba(32, 48, 68, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background: linear-gradient(180deg, rgba(23, 55, 94, 0.08), #fbfaf6 52%), var(--cream);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.65;
+    }
+
+    main {
+      width: min(960px, calc(100% - 32px));
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      padding: 40px 0;
+    }
+
+    .login-card {
+      width: min(100%, 520px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .login-head {
+      padding: 30px 30px 24px;
+      background: var(--navy);
+      color: white;
+      border-bottom: 5px solid var(--gold);
+    }
+
+    h1,
+    p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: clamp(1.8rem, 5vw, 2.45rem);
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      margin-bottom: 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 1rem;
+    }
+
+    .login-body {
+      display: grid;
+      gap: 18px;
+      padding: 28px 30px 30px;
+    }
+
+    .login-body p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border: 1px solid #d2ddd5;
+      border-radius: var(--radius);
+      background: #edf3ef;
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .notice.error {
+      border-color: #ead0d0;
+      background: #fbefef;
+      color: var(--danger);
+    }
+
+    .login-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .login-hint {
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100% - 20px, 960px);
+      }
+
+      .login-head,
+      .login-body {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="login-card" aria-labelledby="pageTitle">
+      <div class="login-head">
+        <h1 id="pageTitle">內湖國小教師手冊後台</h1>
+        <p class="meta">請使用 nhps.hc.edu.tw 帳號登入。</p>
+      </div>
+      <div class="login-body">
+        <div id="message" class="notice" hidden></div>
+        <div class="login-actions">
+          <div id="gsiButton"></div>
+          <p class="login-hint">登入後會進入後台工作頁。若使用私人 Google 帳號，系統會拒絕進入。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
+    const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
+    const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
+    const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
+    const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
+
+    const el = {
+      message: document.getElementById("message")
+    };
+
+    window.onload = () => {
+      const reason = new URLSearchParams(window.location.search).get("reason") || "";
+      if (sessionStorage.getItem(TOKEN_STORAGE_KEY) && reason !== "logout" && reason !== "expired") {
+        window.location.replace(nextPath());
+        return;
+      }
+      if (reason === "expired") showMessage("登入狀態已失效，請重新登入。", true);
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        showMessage("Google 登入元件尚未載入完成，請重新整理頁面後再試。", true);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredential
+      });
+      google.accounts.id.renderButton(document.getElementById("gsiButton"), {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular"
+      });
+    };
+
+    async function handleCredential(response) {
+      try {
+        if (!response || !response.credential) throw new Error("尚未取得 Google 登入憑證。");
+        const profile = decodeJwtPayload(response.credential);
+        const email = String(profile.email || "").toLowerCase();
+        const emailDomain = email.split("@").pop();
+        const hostedDomain = String(profile.hd || "").toLowerCase();
+        if (emailDomain !== ALLOWED_EMAIL_DOMAIN && hostedDomain !== ALLOWED_EMAIL_DOMAIN) {
+          throw new Error("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入。");
+        }
+
+        showMessage("正在確認後台權限...", false, true);
+        const data = await api("directoryList", response.credential);
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, response.credential);
+        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user || { email }));
+        window.location.replace(nextPath());
+      } catch (err) {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+        showMessage(err.message || "登入失敗，請稍後再試。", true);
+      }
+    }
+
+    async function api(cmd, idToken) {
+      const payload = JSON.stringify({ cmd, idToken });
+      const response = await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: "payload=" + encodeURIComponent(payload)
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "權限檢查失敗");
+      return data;
+    }
+
+    function nextPath() {
+      const next = new URLSearchParams(window.location.search).get("next") || "admin.html";
+      return next === "admin.html" ? "admin.html" : "admin.html";
+    }
+
+    function showMessage(text, isError, isLoading = false) {
+      el.message.hidden = false;
+      el.message.textContent = text;
+      el.message.classList.toggle("error", Boolean(isError));
+      el.message.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+
+    function decodeJwtPayload(token) {
+      const parts = String(token || "").split(".");
+      if (parts.length < 2) return {};
+      try {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+        const json = decodeURIComponent(Array.from(atob(padded)).map((char) => {
+          return "%" + char.charCodeAt(0).toString(16).padStart(2, "0");
+        }).join(""));
+        return JSON.parse(json);
+      } catch (err) {
+        return {};
+      }
+    }
+  </script>
+</body>
+</html>
