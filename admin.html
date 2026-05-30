@@ -235,6 +235,57 @@
       padding-right: 2px;
     }
 
+    .bulk-tools,
+    .bulk-panel {
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+    }
+
+    .bulk-tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bulk-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .bulk-summary strong {
+      color: var(--navy);
+    }
+
+    .compact-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .compact-actions button {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 10px;
+      font-size: 0.92rem;
+    }
+
+    .list-entry {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .list-check {
+      align-self: center;
+    }
+
     .list-button {
       width: 100%;
       display: grid;
@@ -267,6 +318,11 @@
     .list-button.is-active strong,
     .list-button.is-active span {
       color: white;
+    }
+
+    .list-entry.is-selected .list-button {
+      border-color: #9db8c9;
+      box-shadow: inset 4px 0 0 var(--gold);
     }
 
     .list-group-title {
@@ -332,6 +388,10 @@
       .order-row button {
         flex: 1;
       }
+
+      .compact-actions {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -371,6 +431,17 @@
         <button id="moveUpBtn" type="button" class="secondary" disabled>上移</button>
         <button id="moveDownBtn" type="button" class="secondary" disabled>下移</button>
       </div>
+      <div id="bulkTools" class="bulk-tools">
+        <div class="bulk-summary">
+          <strong id="bulkCountText">已勾選 0 筆</strong>
+          <span id="visibleCountText">目前清單 0 筆</span>
+        </div>
+        <div class="compact-actions">
+          <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選目前清單</button>
+          <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
+        </div>
+        <button id="exportCsvBtn" type="button" class="secondary" disabled>匯出目前清單</button>
+      </div>
       <div id="itemList" class="list"></div>
     </aside>
 
@@ -381,6 +452,42 @@
         <h2 id="resourceTitle">請先登入並選擇首頁內容</h2>
         <p class="meta">首頁內容會出現在網站搜尋結果與各處室分類中；勾選「置頂到常用入口」會另外放進首頁最上方的常用入口區。</p>
         <input id="resourceIdInput" type="hidden">
+
+        <section id="bulkPanel" class="bulk-panel">
+          <h3>批次整理</h3>
+          <p class="meta">先在左側勾選多筆首頁內容，再一次調整處室、分類、常用入口置頂或網站顯示狀態。空白欄位會保持原狀。</p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="batchOfficeInput">批次改處室</label>
+              <select id="batchOfficeInput"></select>
+            </div>
+            <div class="field">
+              <label for="batchCategoryInput">批次改分類</label>
+              <input id="batchCategoryInput" placeholder="留空代表不變更分類">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="batchFeaturedInput">常用入口</label>
+              <select id="batchFeaturedInput">
+                <option value="">不變更</option>
+                <option value="true">置頂到常用入口</option>
+                <option value="false">取消常用入口置頂</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="batchVisibleInput">網站顯示</label>
+              <select id="batchVisibleInput">
+                <option value="">不變更</option>
+                <option value="true">在網站顯示</option>
+                <option value="false">從網站隱藏</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="batchApplyBtn" type="button" disabled>套用到已勾選內容</button>
+          </div>
+        </section>
 
         <div class="grid-2">
           <div class="field">
@@ -523,6 +630,7 @@
     let mode = "resources";
     let activeResourceId = "";
     let activeShortcutId = "";
+    let selectedResourceIds = new Set();
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -535,9 +643,21 @@
       addItemBtn: document.getElementById("addItemBtn"),
       moveUpBtn: document.getElementById("moveUpBtn"),
       moveDownBtn: document.getElementById("moveDownBtn"),
+      bulkTools: document.getElementById("bulkTools"),
+      bulkCountText: document.getElementById("bulkCountText"),
+      visibleCountText: document.getElementById("visibleCountText"),
+      selectVisibleBtn: document.getElementById("selectVisibleBtn"),
+      clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+      exportCsvBtn: document.getElementById("exportCsvBtn"),
       resourcesTab: document.getElementById("resourcesTab"),
       shortcutsTab: document.getElementById("shortcutsTab"),
       resourceForm: document.getElementById("resourceForm"),
+      bulkPanel: document.getElementById("bulkPanel"),
+      batchOfficeInput: document.getElementById("batchOfficeInput"),
+      batchCategoryInput: document.getElementById("batchCategoryInput"),
+      batchFeaturedInput: document.getElementById("batchFeaturedInput"),
+      batchVisibleInput: document.getElementById("batchVisibleInput"),
+      batchApplyBtn: document.getElementById("batchApplyBtn"),
       shortcutForm: document.getElementById("shortcutForm"),
       resourceTitle: document.getElementById("resourceTitle"),
       resourceIdInput: document.getElementById("resourceIdInput"),
@@ -622,6 +742,9 @@
       el.resourceOfficeInput.innerHTML = RESOURCE_OFFICES.map((office) => (
         "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
+      el.batchOfficeInput.innerHTML = "<option value=''>不變更處室</option>" + RESOURCE_OFFICES.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
       el.shortcutParentInput.innerHTML = OFFICES.map((office) => (
         "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
@@ -665,6 +788,7 @@
         resources = Array.isArray(data.resources) ? data.resources : [];
         shortcuts = data.shortcuts || {};
         currentUser = data.user || null;
+        pruneSelectedResources();
         if (!activeResourceId && resources.length) activeResourceId = resources[0].id;
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
         renderOfficeFilter();
@@ -696,11 +820,14 @@
       el.shortcutsTab.classList.toggle("is-active", mode === "shortcuts");
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
       el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
+      el.bulkTools.classList.toggle("hidden", mode !== "resources");
+      el.bulkPanel.classList.toggle("hidden", mode !== "resources");
       el.categoryFilter.classList.toggle("hidden", mode !== "resources");
       el.categoryFilter.disabled = mode !== "resources";
       el.officeFilter.setAttribute("aria-label", mode === "resources" ? "處室篩選" : "分類按鈕位置篩選");
       el.listTitle.textContent = mode === "resources" ? "首頁內容" : "分類按鈕";
       renderList();
+      renderBulkState();
       mode === "resources" ? renderResourceEditor() : renderShortcutEditor();
     }
 
@@ -711,10 +838,13 @@
           items,
           (item) => `${item.office || "其他"}｜${item.category || "未分類"}`,
           (item) => `
-            <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-              <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-              <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用入口置頂" : ""}${item.visible ? "" : "｜已隱藏"}</span>
-            </button>
+            <div class="list-entry ${selectedResourceIds.has(item.id) ? "is-selected" : ""}">
+              <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>
+              <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+                <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用入口置頂" : ""}${item.visible ? "" : "｜已隱藏"}</span>
+              </button>
+            </div>
           `
         );
         return;
@@ -763,6 +893,26 @@
         currentGroup = nextGroup;
         return heading + renderItem(item);
       }).join("");
+    }
+
+    function renderBulkState(enabled = true) {
+      const visibleItems = mode === "resources" ? getVisibleListItems() : [];
+      const selectedCount = selectedResourceIds.size;
+      el.bulkCountText.textContent = "已勾選 " + selectedCount + " 筆";
+      el.visibleCountText.textContent = "目前清單 " + visibleItems.length + " 筆";
+      const hasVisibleItems = visibleItems.length > 0;
+      const role = currentUser && currentUser.role;
+      const canEdit = ["admin", "editor", "reviewer"].includes(role);
+      const canUseBulk = Boolean(enabled && idToken && canEdit && mode === "resources");
+      el.selectVisibleBtn.disabled = !canUseBulk || !hasVisibleItems;
+      el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
+      el.batchApplyBtn.disabled = !canUseBulk || selectedCount === 0;
+      el.exportCsvBtn.disabled = !enabled || !idToken || mode !== "resources" || !hasVisibleItems;
+    }
+
+    function pruneSelectedResources() {
+      const validIds = new Set(resources.map((item) => item.id));
+      selectedResourceIds = new Set([...selectedResourceIds].filter((id) => validIds.has(id)));
     }
 
     function compareResourceListOrder(a, b) {
@@ -971,6 +1121,86 @@
       activeShortcutId = "";
     }
 
+    async function applyBatchResources() {
+      const resourceIds = [...selectedResourceIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要整理的首頁內容。", true);
+        return;
+      }
+      const changes = {};
+      if (el.batchOfficeInput.value) changes.office = el.batchOfficeInput.value;
+      if (el.batchCategoryInput.value.trim()) changes.category = el.batchCategoryInput.value.trim();
+      if (el.batchFeaturedInput.value) changes.featured = el.batchFeaturedInput.value === "true";
+      if (el.batchVisibleInput.value) changes.visible = el.batchVisibleInput.value === "true";
+      if (Object.keys(changes).length === 0) {
+        showMessage("請先選擇至少一個要批次變更的欄位。", true);
+        return;
+      }
+      const ok = window.confirm("確定要套用到已勾選的 " + resourceIds.length + " 筆首頁內容？");
+      if (!ok) return;
+      await runCommand("batchUpdateDirectoryResources", { resource_ids: resourceIds, changes }, "已批次更新 " + resourceIds.length + " 筆首頁內容。");
+      selectedResourceIds.clear();
+      el.batchOfficeInput.value = "";
+      el.batchCategoryInput.value = "";
+      el.batchFeaturedInput.value = "";
+      el.batchVisibleInput.value = "";
+      renderAll();
+      setEnabled(true);
+    }
+
+    function selectVisibleResources() {
+      if (mode !== "resources") return;
+      getVisibleListItems().forEach((item) => selectedResourceIds.add(item.id));
+      renderList();
+      renderBulkState(enabled);
+    }
+
+    function clearSelectedResources() {
+      selectedResourceIds.clear();
+      renderList();
+      renderBulkState();
+    }
+
+    function exportVisibleResourcesCsv() {
+      const items = mode === "resources" ? getVisibleListItems() : [];
+      if (!items.length) {
+        showMessage("目前清單沒有可匯出的首頁內容。", true);
+        return;
+      }
+      const rows = [
+        ["ID", "標題", "處室", "分類", "類型", "置頂常用入口", "網站顯示", "最後更新", "標籤", "連結數", "主要連結"],
+        ...items.map((item) => [
+          item.id,
+          item.title,
+          item.office,
+          item.category,
+          item.type,
+          item.featured ? "是" : "否",
+          item.visible === false ? "否" : "是",
+          item.updated,
+          (item.tags || []).join("、"),
+          (item.links || []).length,
+          (item.links || [])[0]?.url || ""
+        ])
+      ];
+      const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "內湖國小教師手冊首頁內容-" + todayText() + ".csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showMessage("已匯出目前清單 CSV。", false);
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? "");
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
     async function moveSelectedItem(direction) {
       const items = getVisibleListItems();
       const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
@@ -1037,10 +1267,15 @@
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = mode !== "resources" || !enabled || !idToken;
+      el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
+      el.batchCategoryInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
+      el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
+      el.batchVisibleInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
       el.saveShortcutBtn.disabled = !enabled || !idToken || !canEdit;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
       el.deleteShortcutBtn.disabled = !enabled || !idToken || !canArchive || !activeShortcutId;
+      renderBulkState();
     }
 
     function showMessage(text, isError, isLoading = false) {
@@ -1095,6 +1330,10 @@
     el.categoryFilter.addEventListener("change", refreshListView);
     el.moveUpBtn.addEventListener("click", () => moveSelectedItem(-1));
     el.moveDownBtn.addEventListener("click", () => moveSelectedItem(1));
+    el.selectVisibleBtn.addEventListener("click", selectVisibleResources);
+    el.clearSelectionBtn.addEventListener("click", clearSelectedResources);
+    el.exportCsvBtn.addEventListener("click", exportVisibleResourcesCsv);
+    el.batchApplyBtn.addEventListener("click", applyBatchResources);
     el.addItemBtn.addEventListener("click", () => {
       if (mode === "resources") {
         activeResourceId = "";
@@ -1107,6 +1346,19 @@
       setEnabled(true);
     });
     el.itemList.addEventListener("click", (event) => {
+      const check = event.target.closest(".list-check");
+      if (check) {
+        const id = check.dataset.selectId;
+        if (check.checked) {
+          selectedResourceIds.add(id);
+        } else {
+          selectedResourceIds.delete(id);
+        }
+        const entry = check.closest(".list-entry");
+        if (entry) entry.classList.toggle("is-selected", check.checked);
+        renderBulkState();
+        return;
+      }
       const button = event.target.closest(".list-button");
       if (!button) return;
       if (mode === "resources") {

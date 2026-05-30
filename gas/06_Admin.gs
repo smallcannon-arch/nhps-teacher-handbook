@@ -315,6 +315,49 @@ function reorderDirectoryItems_(payload, user) {
   }
 }
 
+function batchUpdateDirectoryResources_(payload, user) {
+  requireEditor_(user);
+  var resourceIds = payload.resource_ids || payload.ids || [];
+  var changes = payload.changes || {};
+  if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要批次整理的內容");
+  if (!changes || Object.keys(changes).length === 0) throw new Error("缺少批次變更欄位");
+
+  var hasOffice = Object.prototype.hasOwnProperty.call(changes, "office") && String(changes.office || "").trim();
+  var hasCategory = Object.prototype.hasOwnProperty.call(changes, "category") && String(changes.category || "").trim();
+  var hasFeatured = Object.prototype.hasOwnProperty.call(changes, "featured");
+  var hasVisible = Object.prototype.hasOwnProperty.call(changes, "visible");
+  if (!hasOffice && !hasCategory && !hasFeatured && !hasVisible) throw new Error("沒有可套用的批次變更");
+
+  var idSet = {};
+  resourceIds.forEach(function(id) {
+    id = String(id || "").trim();
+    if (id) idSet[id] = true;
+  });
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var count = 0;
+    var rows = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+    rows.forEach(function(row) {
+      if (!idSet[row.resource_id]) return;
+      if (hasOffice) row.office = String(changes.office || "").trim();
+      if (hasCategory) row.category = String(changes.category || "").trim();
+      if (hasFeatured) row.featured = changes.featured === true ? "TRUE" : "FALSE";
+      if (hasVisible) row.visible = changes.visible === false ? "FALSE" : "TRUE";
+      row.updated_at = nowText();
+      writeRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, row._row, row);
+      count += 1;
+    });
+    if (count === 0) throw new Error("找不到可批次整理的內容");
+    bumpCacheVersion();
+    logAction(user.email, "batchUpdateDirectoryResources", resourceIds.join(","), "ok", "batch updated " + count + " directory resources");
+    return { ok: true, count: count, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function saveDirectoryShortcut_(payload, user) {
   requireEditor_(user);
   var input = payload.shortcut || payload;

@@ -45,6 +45,9 @@ function doPost(e) {
     if (cmd === "reorderDirectoryItems") {
       return jsonResponse(reorderDirectoryItems_(payload, user));
     }
+    if (cmd === "batchUpdateDirectoryResources") {
+      return jsonResponse(batchUpdateDirectoryResources_(payload, user));
+    }
     if (cmd === "saveDirectoryShortcut") {
       return jsonResponse(saveDirectoryShortcut_(payload, user));
     }
