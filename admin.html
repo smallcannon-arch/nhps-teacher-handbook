@@ -9,6 +9,7 @@
     :root {
       --ink: #203044;
       --navy: #17375e;
+      --navy-2: #0d294a;
       --cream: #f7f1e7;
       --paper: #fffdf8;
       --line: #d9e0e3;
@@ -16,6 +17,7 @@
       --gold: #b28b45;
       --danger: #8b3a3a;
       --ok: #3f6f50;
+      --blue-soft: #eef5f8;
       --radius: 8px;
       --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
     }
@@ -27,7 +29,7 @@
       color: var(--ink);
       background: linear-gradient(180deg, rgba(23, 55, 94, 0.06), #fbfaf6 45%), var(--cream);
       font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
-      line-height: 1.7;
+      line-height: 1.65;
     }
 
     header {
@@ -46,7 +48,7 @@
     .header-inner {
       display: grid;
       gap: 12px;
-      padding: 28px 0;
+      padding: 26px 0;
     }
 
     h1,
@@ -56,26 +58,16 @@
 
     h1 {
       margin-bottom: 0;
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-size: clamp(1.75rem, 3vw, 2.45rem);
       line-height: 1.25;
-    }
-
-    .badge {
-      display: inline-flex;
-      width: fit-content;
-      padding: 5px 10px;
-      border: 1px solid rgba(242, 207, 141, 0.42);
-      border-radius: 999px;
-      color: rgba(255, 255, 255, 0.84);
-      font-weight: 700;
-      font-size: 0.9rem;
+      letter-spacing: 0;
     }
 
     main {
       display: grid;
-      grid-template-columns: 300px minmax(0, 1fr);
-      gap: 24px;
-      padding: 28px 0 48px;
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 22px;
+      padding: 26px 0 46px;
     }
 
     .panel {
@@ -96,10 +88,61 @@
       padding: 22px;
     }
 
-    .field {
-      display: grid;
-      gap: 6px;
-      margin-bottom: 14px;
+    .meta {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .tabs,
+    .actions,
+    .filter-row,
+    .checkbox-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tabs {
+      margin: 4px 0 14px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: var(--navy);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: white;
+      color: var(--navy);
+      border-color: var(--line);
+    }
+
+    button.warn {
+      background: var(--danger);
+    }
+
+    button.tab-button {
+      background: white;
+      color: var(--navy);
+      border-color: #c7d8e7;
+    }
+
+    button.tab-button.is-active {
+      background: var(--navy);
+      color: white;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
     }
 
     label {
@@ -116,77 +159,36 @@
       background: white;
       color: var(--ink);
       font: inherit;
-      padding: 10px 12px;
+      padding: 9px 11px;
     }
 
     textarea {
-      min-height: 130px;
+      min-height: 96px;
       resize: vertical;
     }
 
-    button {
-      min-height: 44px;
-      border: 1px solid transparent;
-      border-radius: var(--radius);
-      background: var(--navy);
-      color: white;
-      font: inherit;
-      font-weight: 800;
-      padding: 9px 14px;
-      cursor: pointer;
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
     }
 
-    button.secondary {
-      background: white;
-      color: var(--navy);
-      border-color: var(--line);
-    }
-
-    button.warn {
-      background: var(--danger);
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.48;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .chapter-button {
-      width: 100%;
+    .field {
       display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
-      background: transparent;
-      border-color: transparent;
-      color: var(--ink);
-      text-align: left;
+      gap: 6px;
+      margin-bottom: 13px;
     }
 
-    .chapter-button.is-active {
-      background: var(--navy);
-      color: white;
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 12px;
     }
 
-    .chapter-number {
-      color: var(--gold);
-      font-weight: 900;
-    }
-
-    .meta {
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
     .notice {
+      margin-bottom: 14px;
       padding: 12px 14px;
       border: 1px solid #d2ddd5;
       border-radius: var(--radius);
@@ -195,13 +197,14 @@
       font-weight: 700;
     }
 
-    .error {
+    .notice.error {
       border-color: #ead0d0;
       background: #fbefef;
       color: var(--danger);
     }
 
     .safety-note {
+      margin-top: 16px;
       padding: 10px 12px;
       border: 1px solid #e3d6bc;
       border-radius: var(--radius);
@@ -211,59 +214,57 @@
       line-height: 1.7;
     }
 
-    .publish-note {
-      margin-top: 16px;
-    }
-
-    .action-help {
+    .list {
       display: grid;
-      gap: 6px;
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.7;
+      gap: 8px;
+      max-height: calc(100vh - 360px);
+      overflow: auto;
+      padding-right: 2px;
     }
 
-    .action-help strong {
+    .list-button {
+      width: 100%;
+      display: grid;
+      gap: 2px;
+      min-height: 0;
+      padding: 10px 12px;
+      background: white;
+      border-color: var(--line);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .list-button strong {
       color: var(--navy);
+      line-height: 1.35;
     }
 
-    .block {
-      padding: 16px 0;
-      border-top: 1px solid var(--line);
+    .list-button span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
     }
 
-    .block-grid {
-      display: grid;
-      grid-template-columns: 1fr 160px 180px;
-      gap: 12px;
-      align-items: end;
+    .list-button.is-active {
+      background: var(--navy);
+      color: white;
+      border-color: var(--navy);
     }
 
-    .status-display {
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      width: fit-content;
-      max-width: 100%;
-      border: 1px solid #d2ddd5;
-      border-radius: 999px;
-      background: #edf3ef;
-      color: var(--ok);
-      font-weight: 800;
-      padding: 8px 14px;
-    }
-
-    .block .block-grid {
-      grid-template-columns: minmax(0, 1fr);
-      align-items: start;
+    .list-button.is-active strong,
+    .list-button.is-active span {
+      color: white;
     }
 
     .link-row {
       display: grid;
-      grid-template-columns: 1fr 1.4fr auto;
+      grid-template-columns: minmax(130px, 0.75fr) minmax(220px, 1.35fr) auto;
       gap: 8px;
       margin-bottom: 8px;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     footer {
@@ -272,7 +273,7 @@
       padding-bottom: 30px;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 900px) {
       main {
         grid-template-columns: 1fr;
         width: min(100% - 20px, 1280px);
@@ -282,19 +283,12 @@
         position: static;
       }
 
-      .chapter-list {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 8px;
+      .list {
+        max-height: 320px;
       }
 
-      .chapter-button {
-        min-width: 200px;
-        min-height: 54px;
-      }
-
-      .block-grid,
+      .grid-2,
+      .grid-3,
       .link-row {
         grid-template-columns: 1fr;
       }
@@ -305,54 +299,155 @@
   <header>
     <div class="header-inner">
       <h1>內湖國小教師手冊後台</h1>
-      <p class="meta">請使用 nhps.hc.edu.tw 帳號登入，即可編輯教師手冊。</p>
+      <p class="meta">請使用 nhps.hc.edu.tw 帳號登入，維護前台的資源卡片、連結與第二層入口。</p>
       <div id="gsiButton"></div>
     </div>
   </header>
 
   <main>
     <aside class="panel sidebar">
-      <h2>章節</h2>
+      <h2 id="listTitle">資源卡片</h2>
       <p class="meta" id="loginState">尚未登入</p>
-      <button id="addChapterBtn" type="button" class="secondary" disabled>新增章節</button>
-      <div class="chapter-list" id="chapterList"></div>
+      <div class="tabs" role="tablist" aria-label="後台模式">
+        <button id="resourcesTab" class="tab-button is-active" type="button">資源卡片</button>
+        <button id="shortcutsTab" class="tab-button" type="button">第二層入口</button>
+      </div>
+      <div class="filter-row">
+        <select id="officeFilter" aria-label="處室篩選">
+          <option value="">全部處室</option>
+        </select>
+        <button id="addItemBtn" type="button" class="secondary" disabled>新增</button>
+      </div>
+      <div id="itemList" class="list"></div>
     </aside>
 
     <section class="panel content">
       <div id="message" class="notice" hidden></div>
-      <h2 id="chapterTitle">請先登入並載入章節</h2>
-      <p class="meta" id="chapterMeta"></p>
-      <div class="block-grid">
-        <div class="field">
-          <label>章節名稱</label>
-          <input id="chapterTitleInput" placeholder="章節名稱">
+
+      <form id="resourceForm">
+        <h2 id="resourceTitle">請先登入並選擇資源卡片</h2>
+        <p class="meta">資源卡片會出現在前台搜尋結果與各處室分類中；勾選常用入口可讓前台優先排序或後續納入常用區。</p>
+        <input id="resourceIdInput" type="hidden">
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="resourceTitleInput">標題</label>
+            <input id="resourceTitleInput" placeholder="例如：差勤系統（請假／補休）">
+          </div>
+          <div class="field">
+            <label for="resourceUpdatedInput">最後更新日期</label>
+            <input id="resourceUpdatedInput" type="date">
+          </div>
         </div>
-        <div class="field">
-          <label>章節編號</label>
-          <input id="chapterNumberInput" placeholder="01">
+
+        <div class="grid-3">
+          <div class="field">
+            <label for="resourceOfficeInput">處室</label>
+            <select id="resourceOfficeInput"></select>
+          </div>
+          <div class="field">
+            <label for="resourceCategoryInput">第二層分類</label>
+            <input id="resourceCategoryInput" placeholder="例如：內湖雲端、竹市常用連結">
+          </div>
+          <div class="field">
+            <label for="resourceTypeInput">類型</label>
+            <input id="resourceTypeInput" placeholder="Google 表單、Drive 資料夾、校網">
+          </div>
         </div>
-        <div class="field">
-          <label>發布狀態</label>
-          <div id="chapterStatusDisplay" class="status-display" aria-live="polite">尚未載入</div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="resourceStatusInput">狀態提醒</label>
+            <input id="resourceStatusInput" placeholder="例如：年度檔案待整理，可留空">
+          </div>
+          <div class="field">
+            <label for="resourceSortInput">排序</label>
+            <input id="resourceSortInput" type="number" min="1" step="1">
+          </div>
         </div>
-      </div>
-      <form id="editorForm"></form>
-      <div class="safety-note publish-note">
-        按下「發布章節」後會直接更新前台。發布前請確認內容已由相關處室確認，且不含學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經確認的高風險資訊。
-      </div>
-      <div class="action-help">
-        <div><strong>儲存草稿</strong>：只保存後台草稿，不影響前台。</div>
-        <div><strong>發布章節</strong>：將目前草稿發布到前台，讀者會看到更新。</div>
-        <div><strong>收回發布</strong>：讓章節暫時不在前台顯示，資料仍保留。</div>
-        <div><strong>封存章節</strong>：將章節從後台清單與前台隱藏，資料仍保留在 Sheets。</div>
-      </div>
-      <div class="actions">
-        <button id="addBlockBtn" type="button" class="secondary" disabled>新增補充小卡</button>
-        <button id="saveBtn" type="button" disabled>儲存草稿</button>
-        <button id="publishBtn" type="button" disabled>發布章節</button>
-        <button id="withdrawBtn" type="button" class="warn" disabled>收回發布</button>
-        <button id="deleteChapterBtn" type="button" class="warn" disabled>封存章節</button>
-      </div>
+
+        <div class="field">
+          <label for="resourceNoteInput">說明或注意事項</label>
+          <textarea id="resourceNoteInput" placeholder="簡短說明，避免放學生個資或未公告資訊。"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="resourceTagsInput">標籤</label>
+          <input id="resourceTagsInput" placeholder="用逗號分隔，例如：常用資源, 學務處, Google 表單">
+        </div>
+
+        <div class="checkbox-row">
+          <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 前台顯示</label>
+          <label class="checkbox-row"><input id="resourceFeaturedInput" type="checkbox"> 放入／保留常用入口候選</label>
+        </div>
+
+        <h3>連結</h3>
+        <div id="resourceLinksBox"></div>
+        <button id="addResourceLinkBtn" class="secondary" type="button">新增連結</button>
+
+        <div class="safety-note">
+          高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
+        </div>
+        <div class="actions">
+          <button id="saveResourceBtn" type="button" disabled>儲存並更新前台</button>
+          <button id="archiveResourceBtn" type="button" class="warn" disabled>封存資源</button>
+        </div>
+      </form>
+
+      <form id="shortcutForm" class="hidden">
+        <h2 id="shortcutTitle">請先選擇第二層入口</h2>
+        <p class="meta">第二層入口是前台處室標籤下方那排按鈕，可設定關鍵字搜尋或指定資源分類。</p>
+        <input id="shortcutIdInput" type="hidden">
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="shortcutParentInput">所屬第一層</label>
+            <select id="shortcutParentInput"></select>
+          </div>
+          <div class="field">
+            <label for="shortcutLabelInput">入口名稱</label>
+            <input id="shortcutLabelInput" placeholder="例如：內湖雲端">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="shortcutHintInput">簡短提示</label>
+            <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
+          </div>
+          <div class="field">
+            <label for="shortcutSortInput">排序</label>
+            <input id="shortcutSortInput" type="number" min="1" step="1">
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label for="shortcutQueryInput">關鍵字搜尋</label>
+            <input id="shortcutQueryInput" placeholder="例如：校安">
+          </div>
+          <div class="field">
+            <label for="shortcutCategoryInput">指定資源分類</label>
+            <input id="shortcutCategoryInput" placeholder="例如：內湖雲端">
+          </div>
+          <div class="field">
+            <label for="shortcutTagInput">指定標籤</label>
+            <input id="shortcutTagInput" placeholder="可留空">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="shortcutTargetInput">指定資源 ID</label>
+          <input id="shortcutTargetInput" placeholder="可留空">
+        </div>
+
+        <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 前台顯示此入口</label>
+
+        <div class="actions">
+          <button id="saveShortcutBtn" type="button" disabled>儲存入口</button>
+          <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用入口</button>
+        </div>
+      </form>
     </section>
   </main>
 
@@ -365,24 +460,62 @@
     const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
     const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
     const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
-    const CORE_BLOCK_KEYS = ["項目說明", "適用情境", "辦理方式", "注意事項", "承辦單位", "相關資源"];
-    let idToken = "";
-    let chapters = [];
-    let activeId = "";
-    let currentUser = null;
-    let deletedBlocks = [];
+    const OFFICES = ["常用入口", "教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
+    const RESOURCE_OFFICES = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
 
-    const chapterList = document.getElementById("chapterList");
-    const editorForm = document.getElementById("editorForm");
-    const message = document.getElementById("message");
-    const loginState = document.getElementById("loginState");
-    const chapterTitle = document.getElementById("chapterTitle");
-    const chapterMeta = document.getElementById("chapterMeta");
-    const chapterTitleInput = document.getElementById("chapterTitleInput");
-    const chapterNumberInput = document.getElementById("chapterNumberInput");
-    const chapterStatusDisplay = document.getElementById("chapterStatusDisplay");
+    let idToken = "";
+    let currentUser = null;
+    let resources = [];
+    let shortcuts = {};
+    let mode = "resources";
+    let activeResourceId = "";
+    let activeShortcutId = "";
+
+    const el = {
+      loginState: document.getElementById("loginState"),
+      message: document.getElementById("message"),
+      listTitle: document.getElementById("listTitle"),
+      itemList: document.getElementById("itemList"),
+      officeFilter: document.getElementById("officeFilter"),
+      addItemBtn: document.getElementById("addItemBtn"),
+      resourcesTab: document.getElementById("resourcesTab"),
+      shortcutsTab: document.getElementById("shortcutsTab"),
+      resourceForm: document.getElementById("resourceForm"),
+      shortcutForm: document.getElementById("shortcutForm"),
+      resourceTitle: document.getElementById("resourceTitle"),
+      resourceIdInput: document.getElementById("resourceIdInput"),
+      resourceTitleInput: document.getElementById("resourceTitleInput"),
+      resourceUpdatedInput: document.getElementById("resourceUpdatedInput"),
+      resourceOfficeInput: document.getElementById("resourceOfficeInput"),
+      resourceCategoryInput: document.getElementById("resourceCategoryInput"),
+      resourceTypeInput: document.getElementById("resourceTypeInput"),
+      resourceStatusInput: document.getElementById("resourceStatusInput"),
+      resourceSortInput: document.getElementById("resourceSortInput"),
+      resourceNoteInput: document.getElementById("resourceNoteInput"),
+      resourceTagsInput: document.getElementById("resourceTagsInput"),
+      resourceVisibleInput: document.getElementById("resourceVisibleInput"),
+      resourceFeaturedInput: document.getElementById("resourceFeaturedInput"),
+      resourceLinksBox: document.getElementById("resourceLinksBox"),
+      addResourceLinkBtn: document.getElementById("addResourceLinkBtn"),
+      saveResourceBtn: document.getElementById("saveResourceBtn"),
+      archiveResourceBtn: document.getElementById("archiveResourceBtn"),
+      shortcutTitle: document.getElementById("shortcutTitle"),
+      shortcutIdInput: document.getElementById("shortcutIdInput"),
+      shortcutParentInput: document.getElementById("shortcutParentInput"),
+      shortcutLabelInput: document.getElementById("shortcutLabelInput"),
+      shortcutHintInput: document.getElementById("shortcutHintInput"),
+      shortcutSortInput: document.getElementById("shortcutSortInput"),
+      shortcutQueryInput: document.getElementById("shortcutQueryInput"),
+      shortcutCategoryInput: document.getElementById("shortcutCategoryInput"),
+      shortcutTagInput: document.getElementById("shortcutTagInput"),
+      shortcutTargetInput: document.getElementById("shortcutTargetInput"),
+      shortcutEnabledInput: document.getElementById("shortcutEnabledInput"),
+      saveShortcutBtn: document.getElementById("saveShortcutBtn"),
+      deleteShortcutBtn: document.getElementById("deleteShortcutBtn")
+    };
 
     window.onload = () => {
+      setupSelects();
       if (GOOGLE_CLIENT_ID.startsWith("PASTE_")) {
         showMessage("請先設定 GOOGLE_CLIENT_ID 與 GAS_ENDPOINT。", true);
         return;
@@ -394,14 +527,13 @@
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: async (response) => {
-          loginState.textContent = "登入中...";
+          el.loginState.textContent = "登入中...";
           showMessage("正在驗證 Google 登入，請稍候...", false, true);
           setEnabled(false);
           if (!response || !response.credential) {
             idToken = "";
-            loginState.textContent = "尚未完成登入";
-            showMessage("尚未取得 Google 登入憑證。請確認 OAuth JavaScript 來源已加入 https://smallcannon-arch.github.io，並重新登入。", true);
-            setEnabled(false);
+            el.loginState.textContent = "尚未完成登入";
+            showMessage("尚未取得 Google 登入憑證。", true);
             return;
           }
           const profile = decodeJwtPayload(response.credential);
@@ -410,15 +542,13 @@
           const hostedDomain = String(profile.hd || "").toLowerCase();
           if (emailDomain !== ALLOWED_EMAIL_DOMAIN && hostedDomain !== ALLOWED_EMAIL_DOMAIN) {
             idToken = "";
-            loginState.textContent = "登入帳號網域不符";
-            showMessage("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入後台。請改用學校 Google 帳號。", true);
-            setEnabled(false);
+            el.loginState.textContent = "登入帳號網域不符";
+            showMessage("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入後台。", true);
             return;
           }
           idToken = response.credential;
-          loginState.textContent = "已登入：" + email + "，載入中...";
-          showMessage("已取得 Google 登入憑證，正在載入後台資料，請稍候...", false, true);
-          await loadAdminData();
+          el.loginState.textContent = "已登入：" + email + "，載入中...";
+          await loadDirectoryData();
         }
       });
       google.accounts.id.renderButton(document.getElementById("gsiButton"), {
@@ -429,150 +559,248 @@
       });
     };
 
+    function setupSelects() {
+      el.officeFilter.innerHTML = "<option value=''>全部處室</option>" + RESOURCE_OFFICES.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.resourceOfficeInput.innerHTML = RESOURCE_OFFICES.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.shortcutParentInput.innerHTML = OFFICES.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+    }
+
     async function api(cmd, extra = {}) {
-      if (GAS_ENDPOINT.startsWith("PASTE_")) throw new Error("尚未設定 GAS_ENDPOINT");
-      if (!idToken) throw new Error("尚未完成 Google 登入，請先按 Google 登入按鈕。");
+      if (!idToken) throw new Error("尚未完成 Google 登入。");
       const payload = JSON.stringify({ cmd, idToken, ...extra });
       const response = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: "payload=" + encodeURIComponent(payload)
-      }).catch((err) => {
-        throw new Error("連線失敗。若目前後台 endpoint 仍是 GAS URL，請改用 Cloudflare Worker URL 代理 POST，避免瀏覽器 CORS 擋下請求。原始訊息：" + err.message);
       });
       const data = await response.json();
       if (!data.ok) throw new Error(data.error || "操作失敗");
       return data;
     }
 
-    async function loadAdminData() {
+    async function loadDirectoryData() {
       try {
-        const data = await api("adminList");
-        chapters = data.chapters || [];
+        const data = await api("directoryList");
+        resources = Array.isArray(data.resources) ? data.resources : [];
+        shortcuts = data.shortcuts || {};
         currentUser = data.user || null;
-        deletedBlocks = [];
-        activeId = activeId || (chapters[0] && chapters[0].id) || "";
-        loginState.textContent = currentUser
+        if (!activeResourceId && resources.length) activeResourceId = resources[0].id;
+        if (!activeShortcutId) activeShortcutId = firstShortcutId();
+        el.loginState.textContent = currentUser
           ? "已登入：" + currentUser.email + "（" + currentUser.role + "）"
           : "已登入";
-        renderChapterList();
-        renderEditor();
+        renderAll();
         setEnabled(true);
+        showMessage("已載入後台資料。", false);
       } catch (err) {
         showMessage(err.message, true);
-        loginState.textContent = "載入失敗";
+        el.loginState.textContent = "載入失敗";
       }
     }
 
-    function renderChapterList() {
-      chapterList.innerHTML = chapters.map((chapter) => `
-        <button class="chapter-button ${chapter.id === activeId ? "is-active" : ""}" type="button" data-id="${chapter.id}">
-          <span class="chapter-number">${escapeHtml(formatChapterNumber(chapter.number))}</span>
-          <span>${escapeHtml(chapter.title)}</span>
+    function firstShortcutId() {
+      return flattenShortcuts()[0]?.id || "";
+    }
+
+    function flattenShortcuts() {
+      return Object.entries(shortcuts).flatMap(([parent, items]) => (
+        (items || []).map((item) => ({ ...item, parentOffice: parent }))
+      ));
+    }
+
+    function renderAll() {
+      el.resourcesTab.classList.toggle("is-active", mode === "resources");
+      el.shortcutsTab.classList.toggle("is-active", mode === "shortcuts");
+      el.resourceForm.classList.toggle("hidden", mode !== "resources");
+      el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
+      el.listTitle.textContent = mode === "resources" ? "資源卡片" : "第二層入口";
+      renderList();
+      mode === "resources" ? renderResourceEditor() : renderShortcutEditor();
+    }
+
+    function renderList() {
+      if (mode === "resources") {
+        const office = el.officeFilter.value;
+        const items = resources.filter((item) => !office || item.office === office);
+        el.itemList.innerHTML = items.map((item) => `
+          <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+            <strong>${escapeHtml(item.title || "未命名資源")}</strong>
+            <span>${escapeHtml(item.office || "其他")}｜${escapeHtml(item.category || "")}｜${escapeHtml(item.updated || "")}${item.visible ? "" : "｜已隱藏"}</span>
+          </button>
+        `).join("");
+        return;
+      }
+
+      const items = flattenShortcuts();
+      el.itemList.innerHTML = items.map((item) => `
+        <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+          <strong>${escapeHtml(item.label || "未命名入口")}</strong>
+          <span>${escapeHtml(item.parentOffice || "常用入口")}｜${escapeHtml(item.hint || "")}${item.enabled ? "" : "｜已停用"}</span>
         </button>
       `).join("");
     }
 
-    function renderEditor() {
-      const chapter = chapters.find((item) => item.id === activeId);
-      if (!chapter) return;
-      chapterTitle.textContent = `${formatChapterNumber(chapter.number)} ${chapter.title}`;
-      chapterMeta.textContent = `狀態：${chapter.status}`;
-      chapterTitleInput.value = chapter.title || "";
-      chapterNumberInput.value = chapter.number || "";
-      chapterStatusDisplay.textContent = chapter.status || "未設定";
-      editorForm.innerHTML = chapter.blocks.map((block, index) => renderBlock(block, index)).join("");
+    function renderResourceEditor() {
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      if (!item) {
+        clearResourceEditor();
+        return;
+      }
+      el.resourceTitle.textContent = item.title || "未命名資源";
+      el.resourceIdInput.value = item.id || "";
+      el.resourceTitleInput.value = item.title || "";
+      el.resourceUpdatedInput.value = normalizeDate(item.updated);
+      el.resourceOfficeInput.value = item.office || "其他";
+      el.resourceCategoryInput.value = item.category || item.office || "";
+      el.resourceTypeInput.value = item.type || "";
+      el.resourceStatusInput.value = item.status || "";
+      el.resourceSortInput.value = item.sort_order || "";
+      el.resourceNoteInput.value = item.note || "";
+      el.resourceTagsInput.value = (item.tags || []).join(", ");
+      el.resourceVisibleInput.checked = item.visible !== false;
+      el.resourceFeaturedInput.checked = item.featured === true;
+      renderLinkRows(item.links || []);
     }
 
-    function renderBlock(block, index) {
-      const isCore = CORE_BLOCK_KEYS.includes(block.key);
-      const links = Array.isArray(block.draft_links) ? block.draft_links : [];
-      return `
-        <section class="block" data-index="${index}">
-          <div class="block-grid">
-            <div class="field">
-              <label>${escapeHtml(block.title)}</label>
-              ${isCore ? "" : `<input data-field="title" value="${escapeHtml(block.title || "補充說明")}" placeholder="小卡標題">`}
-              ${block.key === "相關資源"
-                ? `<div class="links" data-index="${index}">${renderLinks(links)}</div><button class="secondary add-link" type="button" data-index="${index}">新增連結</button>`
-                : `<textarea data-field="draft_body">${escapeHtml(block.draft_body || "")}</textarea>`}
-              <div class="safety-note">
-                提醒：請勿填入學生個資、個案內容、成績、通報細節、採購工程、財產細節或未經處室確認的高風險資訊。
-              </div>
-            </div>
-          </div>
-          ${isCore ? "" : `<div class="actions"><button class="secondary remove-block" type="button" data-index="${index}">移除此小卡</button></div>`}
-        </section>
-      `;
+    function clearResourceEditor() {
+      el.resourceTitle.textContent = "新增資源卡片";
+      el.resourceIdInput.value = "";
+      el.resourceTitleInput.value = "";
+      el.resourceUpdatedInput.value = todayText();
+      el.resourceOfficeInput.value = "其他";
+      el.resourceCategoryInput.value = "";
+      el.resourceTypeInput.value = "連結";
+      el.resourceStatusInput.value = "";
+      el.resourceSortInput.value = String(resources.length + 1);
+      el.resourceNoteInput.value = "";
+      el.resourceTagsInput.value = "常用資源";
+      el.resourceVisibleInput.checked = true;
+      el.resourceFeaturedInput.checked = false;
+      renderLinkRows([]);
     }
 
-    function renderLinks(links) {
+    function renderLinkRows(links) {
       const rows = links.length ? links : [{ label: "", url: "" }];
-      return rows.map((link) => `
+      el.resourceLinksBox.innerHTML = rows.map((link) => `
         <div class="link-row">
-          <input data-link="label" placeholder="連結名稱" value="${escapeHtml(link.label || "")}">
+          <input data-link="label" placeholder="按鈕文字" value="${escapeHtml(link.label || "")}">
           <input data-link="url" placeholder="https://..." value="${escapeHtml(link.url || "")}">
           <button class="secondary remove-link" type="button">移除</button>
         </div>
       `).join("");
     }
 
-    function collectBlocks() {
-      const chapter = chapters.find((item) => item.id === activeId);
-      return [...editorForm.querySelectorAll(".block")].map((section) => {
-        const index = Number(section.dataset.index);
-        const source = chapter.blocks[index];
-        const draftText = section.querySelector("[data-field='draft_body']");
-        const titleInput = section.querySelector("[data-field='title']");
-        const links = [...section.querySelectorAll(".link-row")].map((row) => ({
-          label: row.querySelector("[data-link='label']").value.trim(),
-          url: row.querySelector("[data-link='url']").value.trim()
-        })).filter((link) => link.label && link.url);
-        return {
-          block_id: source.block_id || "",
-          key: source.key,
-          title: titleInput ? titleInput.value.trim() : source.title,
-          draft_body: draftText ? draftText.value : "",
-          draft_links: source.key === "相關資源" ? links : [],
-          risk_level: "低",
-          owner_office: source.owner_office || "",
-          deleted: false
-        };
-      }).concat(deletedBlocks);
+    function renderShortcutEditor() {
+      const item = flattenShortcuts().find((shortcut) => shortcut.id === activeShortcutId);
+      if (!item) {
+        clearShortcutEditor();
+        return;
+      }
+      el.shortcutTitle.textContent = item.label || "未命名入口";
+      el.shortcutIdInput.value = item.id || "";
+      el.shortcutParentInput.value = item.parentOffice || "常用入口";
+      el.shortcutLabelInput.value = item.label || "";
+      el.shortcutHintInput.value = item.hint || "";
+      el.shortcutSortInput.value = item.sort_order || "";
+      el.shortcutQueryInput.value = item.query || "";
+      el.shortcutCategoryInput.value = item.resourceCategory || "";
+      el.shortcutTagInput.value = item.tag || "";
+      el.shortcutTargetInput.value = item.targetId || "";
+      el.shortcutEnabledInput.checked = item.enabled !== false;
     }
 
-    async function saveDraft() {
-      await runCommand("saveDraft", {
-        chapter_id: activeId,
-        chapter_no: chapterNumberInput.value.trim(),
-        chapter_title: chapterTitleInput.value.trim(),
-        blocks: collectBlocks()
-      }, "已儲存草稿");
+    function clearShortcutEditor() {
+      el.shortcutTitle.textContent = "新增第二層入口";
+      el.shortcutIdInput.value = "";
+      el.shortcutParentInput.value = "常用入口";
+      el.shortcutLabelInput.value = "";
+      el.shortcutHintInput.value = "";
+      el.shortcutSortInput.value = String(flattenShortcuts().length + 1);
+      el.shortcutQueryInput.value = "";
+      el.shortcutCategoryInput.value = "";
+      el.shortcutTagInput.value = "";
+      el.shortcutTargetInput.value = "";
+      el.shortcutEnabledInput.checked = true;
     }
 
-    async function publishChapter() {
-      await runCommand("publishChapter", { chapter_id: activeId }, "已發布章節並更新快取版本");
+    function collectResource() {
+      const links = [...el.resourceLinksBox.querySelectorAll(".link-row")].map((row) => ({
+        label: row.querySelector("[data-link='label']").value.trim(),
+        url: row.querySelector("[data-link='url']").value.trim()
+      })).filter((link) => link.label && link.url);
+      return {
+        id: el.resourceIdInput.value.trim(),
+        title: el.resourceTitleInput.value.trim(),
+        office: el.resourceOfficeInput.value,
+        category: el.resourceCategoryInput.value.trim() || el.resourceOfficeInput.value,
+        type: el.resourceTypeInput.value.trim(),
+        status: el.resourceStatusInput.value.trim(),
+        note: el.resourceNoteInput.value.trim(),
+        links,
+        tags: splitTags(el.resourceTagsInput.value),
+        updated: el.resourceUpdatedInput.value || todayText(),
+        visible: el.resourceVisibleInput.checked,
+        featured: el.resourceFeaturedInput.checked,
+        sort_order: Number(el.resourceSortInput.value || resources.length + 1)
+      };
     }
 
-    async function withdrawChapter() {
-      await runCommand("withdrawChapter", { chapter_id: activeId }, "已收回發布並更新快取版本");
+    function collectShortcut() {
+      return {
+        id: el.shortcutIdInput.value.trim(),
+        parentOffice: el.shortcutParentInput.value,
+        label: el.shortcutLabelInput.value.trim(),
+        hint: el.shortcutHintInput.value.trim(),
+        query: el.shortcutQueryInput.value.trim(),
+        resourceCategory: el.shortcutCategoryInput.value.trim(),
+        tag: el.shortcutTagInput.value.trim(),
+        targetId: el.shortcutTargetInput.value.trim(),
+        enabled: el.shortcutEnabledInput.checked,
+        sort_order: Number(el.shortcutSortInput.value || flattenShortcuts().length + 1)
+      };
     }
 
-    async function deleteChapter() {
-      const chapter = chapters.find((item) => item.id === activeId);
-      if (!chapter) return;
-      const ok = window.confirm("確定要封存「" + chapter.title + "」？封存後前台不會顯示，資料仍保留在 Sheets。");
+    async function saveResource() {
+      await runCommand("saveDirectoryResource", { resource: collectResource() }, "已儲存資源並更新前台快取。");
+    }
+
+    async function archiveResource() {
+      if (!activeResourceId) return;
+      const ok = window.confirm("確定要封存這張資源卡片？前台將不再顯示。");
       if (!ok) return;
-      await runCommand("deleteChapter", { chapter_id: activeId }, "已封存章節");
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已封存資源。");
+      activeResourceId = "";
+    }
+
+    async function saveShortcut() {
+      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存第二層入口。");
+    }
+
+    async function deleteShortcut() {
+      if (!activeShortcutId) return;
+      const ok = window.confirm("確定要停用這個第二層入口？");
+      if (!ok) return;
+      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用第二層入口。");
+      activeShortcutId = "";
     }
 
     async function runCommand(cmd, payload, successText) {
       try {
         setEnabled(false);
-        showMessage(getLoadingText(cmd), false, true);
-        await api(cmd, payload);
+        showMessage("正在儲存，請稍候...", false, true);
+        const data = await api(cmd, payload);
+        if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
+        if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
+        if (cmd === "deleteDirectoryResource") activeResourceId = "";
+        if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
+        await loadDirectoryData();
         showMessage(successText, false);
-        await loadAdminData();
       } catch (err) {
         showMessage(err.message, true);
       } finally {
@@ -580,34 +808,40 @@
       }
     }
 
-    function showMessage(text, isError, isLoading = false) {
-      message.hidden = false;
-      message.textContent = text;
-      message.classList.toggle("error", Boolean(isError));
-      message.setAttribute("aria-busy", isLoading ? "true" : "false");
-    }
-
-    function getLoadingText(cmd) {
-      const labels = {
-        saveDraft: "正在儲存草稿，請稍候...",
-        publishChapter: "正在發布章節並更新前台，請稍候...",
-        withdrawChapter: "正在收回發布，請稍候...",
-        deleteChapter: "正在封存章節，請稍候..."
-      };
-      return labels[cmd] || "正在處理，請稍候...";
+    function setMode(nextMode) {
+      mode = nextMode;
+      renderAll();
     }
 
     function setEnabled(enabled) {
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
-      const canPublish = canEdit;
       const canArchive = ["admin", "reviewer"].includes(role);
-      document.getElementById("addChapterBtn").disabled = !enabled || !idToken || !canEdit;
-      document.getElementById("addBlockBtn").disabled = !enabled || !idToken || !canEdit;
-      document.getElementById("saveBtn").disabled = !enabled || !idToken || !canEdit;
-      document.getElementById("publishBtn").disabled = !enabled || !idToken || !canPublish;
-      document.getElementById("withdrawBtn").disabled = !enabled || !idToken || !canArchive;
-      document.getElementById("deleteChapterBtn").disabled = !enabled || !idToken || !canArchive;
+      el.addItemBtn.disabled = !enabled || !idToken || !canEdit;
+      el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
+      el.saveShortcutBtn.disabled = !enabled || !idToken || !canEdit;
+      el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
+      el.deleteShortcutBtn.disabled = !enabled || !idToken || !canArchive || !activeShortcutId;
+    }
+
+    function showMessage(text, isError, isLoading = false) {
+      el.message.hidden = false;
+      el.message.textContent = text;
+      el.message.classList.toggle("error", Boolean(isError));
+      el.message.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+
+    function splitTags(value) {
+      return String(value || "").split(/[,，]/).map((tag) => tag.trim()).filter(Boolean);
+    }
+
+    function todayText() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function normalizeDate(value) {
+      const text = String(value || "").trim();
+      return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : todayText();
     }
 
     function escapeHtml(value) {
@@ -618,11 +852,6 @@
         '"': "&quot;",
         "'": "&#39;"
       }[char]));
-    }
-
-    function formatChapterNumber(value) {
-      const text = String(value || "").trim();
-      return /^\d$/.test(text) ? "0" + text : text;
     }
 
     function decodeJwtPayload(token) {
@@ -640,103 +869,48 @@
       }
     }
 
-    chapterList.addEventListener("click", (event) => {
-      const button = event.target.closest(".chapter-button");
-      if (!button) return;
-      activeId = button.dataset.id;
-      deletedBlocks = [];
-      renderChapterList();
-      renderEditor();
-    });
-
-    editorForm.addEventListener("click", (event) => {
-      if (event.target.classList.contains("add-link")) {
-        const box = event.target.previousElementSibling;
-        box.insertAdjacentHTML("beforeend", renderLinks([{ label: "", url: "" }]));
+    el.resourcesTab.addEventListener("click", () => setMode("resources"));
+    el.shortcutsTab.addEventListener("click", () => setMode("shortcuts"));
+    el.officeFilter.addEventListener("change", renderList);
+    el.addItemBtn.addEventListener("click", () => {
+      if (mode === "resources") {
+        activeResourceId = "";
+        clearResourceEditor();
+      } else {
+        activeShortcutId = "";
+        clearShortcutEditor();
       }
+      setEnabled(true);
+    });
+    el.itemList.addEventListener("click", (event) => {
+      const button = event.target.closest(".list-button");
+      if (!button) return;
+      if (mode === "resources") {
+        activeResourceId = button.dataset.id;
+      } else {
+        activeShortcutId = button.dataset.id;
+      }
+      renderAll();
+      setEnabled(true);
+    });
+    el.addResourceLinkBtn.addEventListener("click", () => {
+      el.resourceLinksBox.insertAdjacentHTML("beforeend", `
+        <div class="link-row">
+          <input data-link="label" placeholder="按鈕文字">
+          <input data-link="url" placeholder="https://...">
+          <button class="secondary remove-link" type="button">移除</button>
+        </div>
+      `);
+    });
+    el.resourceLinksBox.addEventListener("click", (event) => {
       if (event.target.classList.contains("remove-link")) {
         event.target.closest(".link-row").remove();
       }
-      if (event.target.classList.contains("remove-block")) {
-        const chapter = chapters.find((item) => item.id === activeId);
-        const index = Number(event.target.dataset.index);
-        const block = chapter.blocks[index];
-        if (block && block.block_id) {
-          deletedBlocks.push({
-            block_id: block.block_id,
-            key: block.key,
-            title: block.title,
-            deleted: true
-          });
-        }
-        chapter.blocks.splice(index, 1);
-        renderEditor();
-      }
     });
-
-    document.getElementById("addBlockBtn").addEventListener("click", () => {
-      const chapter = chapters.find((item) => item.id === activeId);
-      if (!chapter) return;
-      const current = collectBlocks().filter((block) => !block.deleted).map((block, index) => ({
-        block_id: block.block_id,
-        key: block.key,
-        title: block.title || block.key,
-        draft_body: block.draft_body || "",
-        draft_links: block.draft_links || [],
-        risk_level: block.risk_level || "低",
-        owner_office: block.owner_office || "",
-        review_status: "草稿",
-        sort_order: index + 1
-      }));
-      current.push({
-        block_id: "",
-        key: "custom-" + Date.now(),
-        title: "補充說明",
-        draft_body: "",
-        draft_links: [],
-        risk_level: "低",
-        owner_office: "",
-        review_status: "草稿",
-        sort_order: current.length + 1
-      });
-      chapter.blocks = current;
-      renderEditor();
-    });
-
-    document.getElementById("addChapterBtn").addEventListener("click", () => {
-      const title = window.prompt("請輸入新章節名稱");
-      if (!title) return;
-      const nextNumber = String(chapters.length + 1).padStart(2, "0");
-      const id = "custom-chapter-" + Date.now();
-      chapters.push({
-        id,
-        number: nextNumber,
-        title,
-        status: "草稿",
-        sort_order: chapters.length + 1,
-        blocks: CORE_BLOCK_KEYS.map((key, index) => ({
-          block_id: "",
-          key,
-          title: key,
-          draft_body: "",
-          draft_links: [],
-          risk_level: "低",
-          owner_office: "",
-          review_status: "草稿",
-          sort_order: index + 1
-        }))
-      });
-      activeId = id;
-      deletedBlocks = [];
-      renderChapterList();
-      renderEditor();
-      showMessage("已新增章節草稿，請補內容後按「儲存草稿」。", false);
-    });
-
-    document.getElementById("saveBtn").addEventListener("click", saveDraft);
-    document.getElementById("publishBtn").addEventListener("click", publishChapter);
-    document.getElementById("withdrawBtn").addEventListener("click", withdrawChapter);
-    document.getElementById("deleteChapterBtn").addEventListener("click", deleteChapter);
+    el.saveResourceBtn.addEventListener("click", saveResource);
+    el.archiveResourceBtn.addEventListener("click", archiveResource);
+    el.saveShortcutBtn.addEventListener("click", saveShortcut);
+    el.deleteShortcutBtn.addEventListener("click", deleteShortcut);
   </script>
 </body>
 </html>

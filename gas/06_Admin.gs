@@ -211,3 +211,134 @@ function validatePublish_(chapter, blocks) {
     }
   });
 }
+
+function saveDirectoryResource_(payload, user) {
+  requireEditor_(user);
+  var input = payload.resource || payload;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var resources = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+    var resourceId = String(input.id || input.resource_id || "").trim();
+    if (!resourceId) resourceId = "resource-" + Date.now();
+    var existing = resources.find(function(row) {
+      return row.resource_id === resourceId;
+    });
+    var title = String(input.title || "").trim();
+    if (!title) throw new Error("資源標題不可空白");
+
+    var item = existing || {};
+    item.resource_id = resourceId;
+    item.title = title;
+    item.office = String(input.office || "").trim() || "其他";
+    item.category = String(input.category || input.office || "").trim() || item.office;
+    item.type = String(input.type || "").trim() || "連結";
+    item.resource_status = String(input.status || input.resource_status || "").trim();
+    item.note = String(input.note || "").trim();
+    item.links_json = stringifyLinks_(input.links || []);
+    item.tags_json = stringifyTags_(input.tags || []);
+    item.updated = String(input.updated || "").trim() || Utilities.formatDate(new Date(), APP.TIMEZONE, "yyyy-MM-dd");
+    item.visible = input.visible === false ? "FALSE" : "TRUE";
+    item.featured = input.featured === true ? "TRUE" : "FALSE";
+    item.sort_order = Number(input.sort_order || item.sort_order || resources.length + 1);
+    item.archived = "FALSE";
+    item.updated_at = nowText();
+
+    if (existing) {
+      writeRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, existing._row, item);
+    } else {
+      appendRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, item);
+    }
+    bumpCacheVersion();
+    logAction(user.email, "saveDirectoryResource", resourceId, "ok", "directory resource saved");
+    return { ok: true, resource_id: resourceId, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteDirectoryResource_(payload, user) {
+  requireReviewer_(user);
+  var resourceId = String(payload.resource_id || payload.id || "").trim();
+  if (!resourceId) throw new Error("缺少 resource_id");
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var resource = readTable(APP.SHEETS.DIRECTORY_RESOURCES).find(function(row) {
+      return row.resource_id === resourceId;
+    });
+    if (!resource) throw new Error("找不到資源：" + resourceId);
+    resource.visible = "FALSE";
+    resource.archived = "TRUE";
+    resource.updated_at = nowText();
+    writeRowByHeaders(APP.SHEETS.DIRECTORY_RESOURCES, resource._row, resource);
+    bumpCacheVersion();
+    logAction(user.email, "deleteDirectoryResource", resourceId, "ok", "directory resource archived");
+    return { ok: true, resource_id: resourceId, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function saveDirectoryShortcut_(payload, user) {
+  requireEditor_(user);
+  var input = payload.shortcut || payload;
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var shortcuts = readTable(APP.SHEETS.DIRECTORY_SHORTCUTS);
+    var shortcutId = String(input.id || input.shortcut_id || "").trim();
+    if (!shortcutId) shortcutId = "shortcut-" + Date.now();
+    var existing = shortcuts.find(function(row) {
+      return row.shortcut_id === shortcutId;
+    });
+    var label = String(input.label || "").trim();
+    if (!label) throw new Error("入口名稱不可空白");
+
+    var item = existing || {};
+    item.shortcut_id = shortcutId;
+    item.parent_office = String(input.parent_office || input.parentOffice || "").trim() || "常用入口";
+    item.label = label;
+    item.hint = String(input.hint || "").trim();
+    item.query = String(input.query || "").trim();
+    item.resource_category = String(input.resource_category || input.resourceCategory || "").trim();
+    item.target_id = String(input.target_id || input.targetId || "").trim();
+    item.tag = String(input.tag || "").trim();
+    item.enabled = input.enabled === false ? "FALSE" : "TRUE";
+    item.sort_order = Number(input.sort_order || item.sort_order || shortcuts.length + 1);
+    item.updated_at = nowText();
+
+    if (existing) {
+      writeRowByHeaders(APP.SHEETS.DIRECTORY_SHORTCUTS, existing._row, item);
+    } else {
+      appendRowByHeaders(APP.SHEETS.DIRECTORY_SHORTCUTS, item);
+    }
+    bumpCacheVersion();
+    logAction(user.email, "saveDirectoryShortcut", shortcutId, "ok", "directory shortcut saved");
+    return { ok: true, shortcut_id: shortcutId, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function deleteDirectoryShortcut_(payload, user) {
+  requireReviewer_(user);
+  var shortcutId = String(payload.shortcut_id || payload.id || "").trim();
+  if (!shortcutId) throw new Error("缺少 shortcut_id");
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var shortcut = readTable(APP.SHEETS.DIRECTORY_SHORTCUTS).find(function(row) {
+      return row.shortcut_id === shortcutId;
+    });
+    if (!shortcut) throw new Error("找不到入口：" + shortcutId);
+    shortcut.enabled = "FALSE";
+    shortcut.updated_at = nowText();
+    writeRowByHeaders(APP.SHEETS.DIRECTORY_SHORTCUTS, shortcut._row, shortcut);
+    bumpCacheVersion();
+    logAction(user.email, "deleteDirectoryShortcut", shortcutId, "ok", "directory shortcut disabled");
+    return { ok: true, shortcut_id: shortcutId, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}

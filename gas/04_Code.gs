@@ -10,6 +10,9 @@ function doGet(e) {
     if (action === "getHandbook") {
       return jsonResponse(getPublishedHandbook());
     }
+    if (action === "getDirectory") {
+      return jsonResponse(getPublishedDirectory());
+    }
     return jsonResponse({ ok: false, error: "UNKNOWN_ACTION" });
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err && err.message || err) });
@@ -28,6 +31,22 @@ function doPost(e) {
     if (cmd === "adminList") {
       logAction(email, cmd, "", "ok", "load admin handbook");
       return jsonResponse(getAdminHandbook(user));
+    }
+    if (cmd === "directoryList") {
+      logAction(email, cmd, "", "ok", "load directory admin");
+      return jsonResponse(getAdminDirectory(user));
+    }
+    if (cmd === "saveDirectoryResource") {
+      return jsonResponse(saveDirectoryResource_(payload, user));
+    }
+    if (cmd === "deleteDirectoryResource") {
+      return jsonResponse(deleteDirectoryResource_(payload, user));
+    }
+    if (cmd === "saveDirectoryShortcut") {
+      return jsonResponse(saveDirectoryShortcut_(payload, user));
+    }
+    if (cmd === "deleteDirectoryShortcut") {
+      return jsonResponse(deleteDirectoryShortcut_(payload, user));
     }
     if (cmd === "saveDraft") {
       return jsonResponse(saveDraft_(payload, user));

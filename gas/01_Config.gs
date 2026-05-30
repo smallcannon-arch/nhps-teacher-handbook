@@ -1,14 +1,16 @@
 var APP = {
-  VERSION: "0.1.0-cms-prototype",
+  VERSION: "0.2.0-directory-admin",
   TIMEZONE: "Asia/Taipei",
-  SPREADSHEET_ID: "PASTE_SPREADSHEET_ID_HERE",
-  GOOGLE_CLIENT_ID: "PASTE_GOOGLE_CLIENT_ID_HERE",
+  SPREADSHEET_ID: "1kuS5S6q6Z6sY003L43xKdlgSv7thuVEtgJ4EtIXG7Fg",
+  GOOGLE_CLIENT_ID: "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com",
   ALLOWED_EMAIL_DOMAIN: "nhps.hc.edu.tw",
   AUTO_ALLOW_DOMAIN_USERS: true,
   DEFAULT_DOMAIN_ROLE: "editor",
   SHEETS: {
     CHAPTERS: "Chapters",
     BLOCKS: "ContentBlocks",
+    DIRECTORY_RESOURCES: "DirectoryResources",
+    DIRECTORY_SHORTCUTS: "DirectoryShortcuts",
     USERS: "Users",
     CONFIG: "Config",
     LOGS: "Logs"
@@ -36,6 +38,36 @@ var APP = {
     "sort_order",
     "updated_at",
     "published_at"
+  ],
+  DIRECTORY_RESOURCE_COLUMNS: [
+    "resource_id",
+    "title",
+    "office",
+    "category",
+    "type",
+    "resource_status",
+    "note",
+    "links_json",
+    "tags_json",
+    "updated",
+    "visible",
+    "featured",
+    "sort_order",
+    "archived",
+    "updated_at"
+  ],
+  DIRECTORY_SHORTCUT_COLUMNS: [
+    "shortcut_id",
+    "parent_office",
+    "label",
+    "hint",
+    "query",
+    "resource_category",
+    "target_id",
+    "tag",
+    "enabled",
+    "sort_order",
+    "updated_at"
   ],
   USER_COLUMNS: [
     "email",

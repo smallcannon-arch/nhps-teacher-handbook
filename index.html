@@ -3,23 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>內湖國小教師手冊</title>
+  <title>內湖國小教師手冊｜校務支援站</title>
   <style>
     :root {
       --ink: #203044;
       --navy: #17375e;
       --navy-2: #24496f;
       --blue-soft: #eef4f8;
+      --blue-line: #cbd7df;
       --cream: #f7f1e7;
       --paper: #fffdf8;
       --line: #d9e0e3;
-      --muted: #6c7782;
+      --muted: #66727d;
       --sage: #6f8372;
+      --sage-soft: #edf3ef;
       --gold: #b28b45;
+      --gold-soft: #f4ead8;
       --white: #ffffff;
-      --shadow: 0 16px 40px rgba(32, 48, 68, 0.08);
+      --danger: #9f3f3f;
+      --danger-soft: #f8e9e6;
+      --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
       --radius: 8px;
-      --max: 1320px;
+      --max: 1240px;
     }
 
     * {
@@ -34,7 +39,7 @@
       margin: 0;
       color: var(--ink);
       background:
-        linear-gradient(180deg, rgba(23, 55, 94, 0.06), rgba(247, 241, 231, 0.42) 34%, #fbfaf6 100%),
+        linear-gradient(180deg, rgba(23, 55, 94, 0.06), rgba(247, 241, 231, 0.44) 300px, #fbfaf6 100%),
         var(--cream);
       font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
       line-height: 1.75;
@@ -42,7 +47,7 @@
 
     a {
       color: var(--navy);
-      text-decoration-color: rgba(23, 55, 94, 0.35);
+      text-decoration-color: rgba(23, 55, 94, 0.32);
       text-underline-offset: 0.18em;
     }
 
@@ -53,466 +58,849 @@
     }
 
     button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
     a {
       -webkit-tap-highlight-color: transparent;
     }
 
-    .page-shell {
-      min-height: 100vh;
-    }
-
     .site-header {
-      background: var(--navy);
       color: var(--white);
+      background: var(--navy);
       border-bottom: 5px solid var(--gold);
     }
 
     .header-inner {
       width: min(var(--max), calc(100% - 40px));
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 28px;
-      align-items: center;
-      padding: 42px 0 36px;
+      padding: 36px 0 32px;
     }
 
-    .eyebrow {
-      display: inline-flex;
+    .brand-row {
+      display: flex;
+      gap: 18px;
       align-items: center;
-      gap: 10px;
-      margin: 0 0 12px;
+      max-width: 980px;
+    }
+
+    .school-logo {
+      width: 68px;
+      height: 68px;
+      flex: 0 0 auto;
+      padding: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 14px 30px rgba(8, 33, 63, 0.28);
+      object-fit: contain;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .site-kicker {
+      margin: 0 0 10px;
       color: rgba(255, 255, 255, 0.78);
-      font-size: 0.92rem;
-      letter-spacing: 0;
+      font-size: 0.94rem;
+      font-weight: 700;
     }
 
-    .eyebrow::before {
-      content: "";
-      width: 34px;
-      height: 1px;
-      background: var(--gold);
-      display: inline-block;
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(2rem, 4vw, 3.1rem);
-      line-height: 1.22;
-      font-weight: 800;
+      margin-bottom: 12px;
+      font-size: 2.45rem;
+      line-height: 1.25;
       letter-spacing: 0;
-    }
-
-    .subtitle {
-      margin: 14px 0 0;
-      color: rgba(255, 255, 255, 0.86);
-      font-size: clamp(1rem, 2vw, 1.2rem);
-    }
-
-    .beta-badge {
-      display: inline-flex;
-      align-items: center;
-      max-width: 100%;
-      margin: 18px 0 0;
-      padding: 7px 12px;
-      border: 1px solid rgba(242, 207, 141, 0.42);
-      border-radius: 999px;
-      background: rgba(255, 253, 248, 0.1);
-      color: rgba(255, 255, 255, 0.84);
-      font-size: 0.92rem;
-      font-weight: 700;
-      line-height: 1.45;
-    }
-
-    .header-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 22px;
-    }
-
-    .primary-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 50px;
-      padding: 10px 18px;
-      border: 1px solid rgba(242, 207, 141, 0.72);
-      border-radius: var(--radius);
-      background: #f2cf8d;
-      color: #17375e;
-      font-weight: 800;
-      line-height: 1.45;
-      text-decoration: none;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
-    }
-
-    .primary-link:hover,
-    .primary-link:focus-visible {
-      color: #0f2948;
-      background: #f7d99f;
-      text-decoration: none;
-    }
-
-    .primary-link:focus-visible,
-    .chapter-button:focus-visible {
-      outline: 3px solid rgba(178, 139, 69, 0.35);
-      outline-offset: 2px;
-    }
-
-    .header-mark {
-      width: 178px;
-      height: 118px;
-      color: rgba(255, 255, 255, 0.88);
-    }
-
-    .main-layout {
-      width: min(var(--max), calc(100% - 40px));
-      margin: 34px auto 56px;
-      display: grid;
-      grid-template-columns: 312px minmax(0, 1fr);
-      gap: 28px;
-      align-items: start;
-    }
-
-    .side-nav {
-      position: sticky;
-      top: 18px;
-      padding: 18px;
-      background: rgba(255, 253, 248, 0.92);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .nav-title {
-      margin: 0 0 14px;
-      font-size: 0.94rem;
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .chapter-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .chapter-button {
-      width: 100%;
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      min-height: 48px;
-      padding: 12px 12px;
-      border: 1px solid transparent;
-      border-radius: var(--radius);
-      background: transparent;
-      color: var(--ink);
-      font: inherit;
-      line-height: 1.45;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .chapter-button:hover {
-      background: var(--blue-soft);
-    }
-
-    .chapter-button.is-active {
-      background: var(--navy);
-      border-color: var(--navy);
-      color: var(--white);
-    }
-
-    .chapter-number {
-      font-weight: 800;
-      color: var(--gold);
-      font-size: 0.9rem;
-      white-space: nowrap;
-    }
-
-    .chapter-button.is-active .chapter-number {
-      color: #f2cf8d;
-    }
-
-    .chapter-name {
       overflow-wrap: anywhere;
     }
 
-    .content-card {
-      width: 100%;
-      max-width: 980px;
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      line-height: 1.88;
+    .site-summary {
+      max-width: 780px;
+      margin-bottom: 22px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 1.08rem;
     }
 
-    .chapter-header {
+    .search-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
-      align-items: center;
-      padding: 30px 34px;
-      background: linear-gradient(180deg, #ffffff, #f9f6ee);
-      border-bottom: 1px solid var(--line);
+      gap: 12px;
+      max-width: 860px;
     }
 
-    .chapter-kicker {
-      margin: 0 0 6px;
-      color: var(--sage);
+    .search-field {
+      width: 100%;
+      min-height: 54px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .search-field:focus-visible {
+      border-color: #f2cf8d;
+      box-shadow: 0 0 0 4px rgba(242, 207, 141, 0.25);
+    }
+
+    .clear-button,
+    .chip,
+    .quick-entry {
+      min-height: 42px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .clear-button {
+      padding: 8px 16px;
+      border-color: rgba(242, 207, 141, 0.72);
+      background: #f2cf8d;
+      color: #17375e;
       font-weight: 800;
-      font-size: 0.92rem;
+    }
+
+    .clear-button:hover,
+    .clear-button:focus-visible,
+    .quick-entry:hover,
+    .quick-entry:focus-visible,
+    .chip:hover,
+    .chip:focus-visible {
+      border-color: var(--navy-2);
+      outline: none;
+    }
+
+    main {
+      width: min(var(--max), calc(100% - 40px));
+      margin: 28px auto 56px;
+    }
+
+    .section {
+      margin-top: 30px;
+      scroll-margin-top: 78px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
     }
 
     h2 {
-      margin: 0;
-      font-size: clamp(1.55rem, 2.5vw, 2.15rem);
-      line-height: 1.35;
+      margin-bottom: 0;
+      color: var(--navy);
+      font-size: 1.35rem;
+      line-height: 1.4;
       letter-spacing: 0;
     }
 
-    .chapter-status {
-      justify-self: end;
+    .section-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .entry-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .entry-card {
+      display: grid;
+      gap: 14px;
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.9);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .quick-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .quick-entry {
       display: inline-flex;
       align-items: center;
-      min-height: 34px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: #edf3ef;
-      color: #506b58;
-      border: 1px solid #d2ddd5;
-      font-size: 0.88rem;
-      font-weight: 700;
-      white-space: nowrap;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 12px;
+      text-align: left;
+      box-shadow: 0 8px 20px rgba(32, 48, 68, 0.05);
     }
 
-    .section-grid {
+    .quick-entry strong {
+      color: var(--navy);
+      font-size: 0.94rem;
+      line-height: 1.35;
+    }
+
+    .quick-entry span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .quick-entry.is-active {
+      border-color: var(--navy);
+      background: var(--blue-soft);
+      box-shadow: inset 0 0 0 1px rgba(23, 55, 94, 0.18);
+    }
+
+    .filter-layout {
       display: grid;
-      gap: 1px;
-      background: var(--line);
+      gap: 0;
     }
 
-    .info-section {
+    .filter-band {
       display: grid;
-      grid-template-columns: 172px minmax(0, 1fr);
-      gap: 28px;
-      padding: 28px 34px;
-      background: var(--paper);
+      gap: 10px;
+      padding: 18px 20px;
     }
 
-    .info-section h3 {
+    .office-band {
+      border-bottom: 1px solid #d7e4ef;
+      background: #f3f7fa;
+    }
+
+    .shortcut-band {
+      background: rgba(255, 253, 248, 0.96);
+    }
+
+    .filter-title {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .task-option {
+      display: grid;
+      gap: 4px;
+      min-height: 74px;
+      padding: 12px 14px;
+      text-align: left;
+    }
+
+    .task-option strong {
+      color: inherit;
+      font-size: 0.96rem;
+      line-height: 1.4;
+    }
+
+    .task-option span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .task-option.is-active span {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .chip.is-active {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .resource-results {
+      display: grid;
+      gap: 16px;
+    }
+
+    .padlet-grid {
+      display: grid;
+      gap: 9px;
+    }
+
+    .padlet-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 14px;
+      align-items: center;
+      min-height: 0;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--white);
+    }
+
+    .padlet-card.is-pending {
+      border-color: #e4d0a9;
+      background: #fffaf0;
+    }
+
+    .padlet-card h3 {
       margin: 0;
       color: var(--navy);
-      font-size: 1rem;
-      line-height: 1.5;
+      font-size: 0.98rem;
+      line-height: 1.45;
       letter-spacing: 0;
     }
 
-    .info-section p,
-    .info-section ul {
-      margin: 0;
-      line-height: 1.9;
+    .padlet-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
     }
 
-    .info-section ul {
-      padding-left: 1.25em;
-    }
-
-    .info-section li + li {
-      margin-top: 10px;
-    }
-
-    .todo {
-      display: inline-block;
-      margin-right: 6px;
-      padding: 0 7px;
-      border-radius: 5px;
-      background: #f4ead8;
-      color: #7b5a20;
-      font-size: 0.82em;
+    .padlet-type {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 1px 8px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      color: var(--navy);
+      font-size: 0.78rem;
       font-weight: 800;
-      vertical-align: 0.04em;
     }
 
-    .link-list {
-      display: grid;
-      gap: 10px;
+    .padlet-note {
+      margin: 0;
+      color: #46586d;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .padlet-status {
+      margin: 0;
+      color: #76581e;
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .padlet-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      grid-column: 2;
+      align-self: center;
+      justify-content: flex-end;
+      margin: 0;
       padding: 0;
       list-style: none;
     }
 
-    .link-list li {
+    .padlet-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 5px 13px;
+      border: 1px solid var(--navy);
+      border-radius: var(--radius);
+      background: var(--navy);
+      color: var(--white);
+      font-size: 0.92rem;
+      font-weight: 900;
+      text-decoration: none;
+      box-shadow: 0 8px 18px rgba(23, 55, 94, 0.16);
+    }
+
+    .padlet-links a::after {
+      content: "→";
+      margin-left: 6px;
+      font-weight: 900;
+    }
+
+    .padlet-links a:hover,
+    .padlet-links a:focus-visible {
+      background: var(--navy-2);
+      outline: none;
+    }
+
+    .padlet-empty,
+    .padlet-warning {
       margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .padlet-empty[hidden] {
+      display: none;
+    }
+
+    .content-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .result-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-count {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .guide-state {
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.86);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .guide-state[hidden] {
+      display: none;
+    }
+
+    .guide-state strong {
+      color: var(--navy);
+      font-size: 1.06rem;
+    }
+
+    .guide-state p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .guide-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .guide-steps li {
+      padding: 12px;
+      border-left: 4px solid var(--sage);
+      border-radius: var(--radius);
+      background: var(--sage-soft);
+      color: #475f50;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card-grid[hidden] {
+      display: none;
+    }
+
+    .resource-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .card-topline {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-title {
+      margin-bottom: 4px;
+      color: var(--navy);
+      font-size: 1.14rem;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    .card-office {
+      flex: 0 0 auto;
+      padding: 4px 9px;
+      border-radius: var(--radius);
+      background: var(--blue-soft);
+      color: var(--navy);
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .field-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 12px;
+      font-size: 0.94rem;
+    }
+
+    .field-label {
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .field-value {
+      min-width: 0;
+    }
+
+    .field-value ul {
+      margin: 0;
+      padding-left: 1.15em;
+    }
+
+    .field-value li + li {
+      margin-top: 4px;
+    }
+
+    .link-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
     .link-list a {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      min-height: 34px;
-      padding: 3px 0;
+      min-height: 32px;
+      padding: 3px 9px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
       font-weight: 700;
+      text-decoration: none;
     }
 
-    .link-list a::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--gold);
-      flex: 0 0 auto;
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
-    .footer-note {
-      width: min(var(--max), calc(100% - 40px));
-      margin: -26px auto 36px;
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 8px;
+      border: 1px solid #d8ded6;
+      border-radius: var(--radius);
+      background: var(--sage-soft);
+      color: #506b58;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .tag[data-kind="important"],
+    .tag[data-kind="high-risk"] {
+      border-color: #edc7c0;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .tag[data-kind="form"] {
+      border-color: #e4d0a9;
+      background: var(--gold-soft);
+      color: #76581e;
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .info-panel {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .info-panel h3 {
+      margin-bottom: 12px;
+      color: var(--navy);
+      font-size: 1.04rem;
+      line-height: 1.45;
+      letter-spacing: 0;
+    }
+
+    .school-info-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .school-info-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .school-info-list li {
+      padding: 12px 14px;
+      border-left: 4px solid var(--sage);
+      border-radius: var(--radius);
+      background: var(--sage-soft);
+    }
+
+    .school-info-label {
+      display: block;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.84rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .school-info-value {
+      display: block;
+      margin-top: 3px;
+      color: var(--navy);
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .school-info-value a {
+      color: inherit;
+      text-decoration-color: rgba(23, 55, 94, 0.35);
+      text-underline-offset: 3px;
+    }
+
+    .school-info-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 3px 10px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--navy);
+      font-size: 0.95rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .update-list,
+    .reminder-list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .update-item {
+      display: grid;
+      gap: 2px;
+    }
+
+    .update-title {
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .update-meta {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .reminder-list li {
+      padding-left: 12px;
+      border-left: 4px solid var(--gold);
+      font-size: 0.94rem;
+    }
+
+    .empty-state {
+      display: none;
+      padding: 28px;
+      border: 1px dashed var(--blue-line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.76);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state.is-visible {
+      display: block;
     }
 
     .site-footer {
       width: min(var(--max), calc(100% - 40px));
-      margin: 0 auto 38px;
-      padding: 20px 0 0;
+      margin: 0 auto 34px;
+      padding-top: 20px;
       border-top: 1px solid var(--line);
       color: var(--muted);
       font-size: 0.9rem;
     }
 
-    .site-footer p {
+    .footer-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-row p {
       margin: 0;
     }
 
-    .site-footer p + p {
-      margin-top: 4px;
-    }
+    @media (max-width: 980px) {
+      .quick-grid,
+      .card-grid,
+      .padlet-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
 
-    @media (max-width: 900px) {
-      .header-inner {
+      .entry-layout,
+      .content-layout {
         grid-template-columns: 1fr;
-        gap: 22px;
-        padding: 34px 0 30px;
       }
 
-      .header-mark {
-        width: 150px;
-        height: 96px;
-        justify-self: start;
-      }
-
-      .main-layout {
-        grid-template-columns: 1fr;
-        gap: 18px;
-        margin-top: 22px;
-      }
-
-      .side-nav {
-        position: static;
-        padding: 14px;
-      }
-
-      .chapter-list {
-        display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        padding-bottom: 8px;
-        scroll-snap-type: x proximity;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .chapter-button {
-        min-width: 214px;
-        min-height: 56px;
-        scroll-snap-align: start;
-      }
-
-      .chapter-header {
-        grid-template-columns: 1fr;
-        padding: 24px 24px;
-      }
-
-      .chapter-status {
-        justify-self: start;
-      }
-
-      .info-section {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 24px;
+      .side-stack {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       }
     }
 
-    @media (max-width: 540px) {
+    @media (max-width: 720px) {
       .header-inner,
-      .main-layout,
-      .footer-note,
+      main,
       .site-footer {
-        width: min(100% - 20px, var(--max));
-      }
-
-      .site-header {
-        border-bottom-width: 4px;
+        width: min(100% - 24px, var(--max));
       }
 
       .header-inner {
         padding: 28px 0 26px;
       }
 
-      h1 {
-        font-size: 1.82rem;
-        line-height: 1.28;
-      }
-
-      .subtitle {
-        margin-top: 12px;
-        font-size: 0.98rem;
-        line-height: 1.65;
-      }
-
-      .beta-badge {
-        width: 100%;
-        border-radius: var(--radius);
-        padding: 8px 10px;
-        font-size: 0.86rem;
-      }
-
-      .primary-link {
-        width: 100%;
-        min-height: 54px;
-        padding: 11px 14px;
-      }
-
-      .header-mark {
-        display: none;
-      }
-
-      .chapter-button {
-        min-width: 196px;
-        min-height: 56px;
-        padding: 12px;
-      }
-
-      h2 {
-        font-size: 1.42rem;
-      }
-
-      .chapter-status {
-        min-height: 32px;
-        white-space: normal;
-      }
-
-      .chapter-header,
-      .info-section {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-
-      .info-section {
+      .brand-row {
         gap: 12px;
+        align-items: flex-start;
+      }
+
+      .school-logo {
+        width: 54px;
+        height: 54px;
+        padding: 4px;
+      }
+
+      h1 {
+        font-size: 1.85rem;
+        word-break: break-all;
+      }
+
+      .site-summary {
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+      }
+
+      .search-row,
+      .filter-layout,
+      .card-grid,
+      .padlet-grid,
+      .guide-steps,
+      .side-stack {
+        grid-template-columns: 1fr;
+      }
+
+      .result-toolbar,
+      .section-heading,
+      .card-topline {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .padlet-card {
+        grid-template-columns: 1fr;
+      }
+
+      .padlet-links {
+        grid-column: auto;
+        justify-content: flex-start;
+      }
+
+      .clear-button {
+        width: 100%;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+
+      .resource-card,
+      .padlet-card,
+      .school-info-card,
+      .info-panel {
+        padding: 16px;
+      }
+
+      .filter-band {
+        padding: 14px;
       }
     }
 
@@ -524,381 +912,2185 @@
   </style>
 </head>
 <body>
-  <div class="page-shell">
-    <header class="site-header">
-      <div class="header-inner">
-        <div>
-          <p class="eyebrow">內湖國小校內工作手冊</p>
-          <h1>內湖國小教師手冊</h1>
-          <p class="subtitle">從日常流程到重要提醒，找到在內湖工作的方向</p>
-          <p class="beta-badge">測試版｜內容建置中，將依各處室提供資料持續更新</p>
-          <div class="header-actions">
-            <a class="primary-link" href="https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns" target="_blank" rel="noopener">前往教師常用網 Padlet</a>
-          </div>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <img class="school-logo" src="assets/nhps-icon.png" alt="內湖國小校徽">
+        <div class="brand-copy">
+          <p class="site-kicker">測試版｜一般教師校務支援原型</p>
+          <h1>內湖國小教師手冊｜校務支援站</h1>
+          <p class="site-summary">整合一般教師常用規定、流程、表件與資源連結，協助快速找到所需資訊。</p>
         </div>
-        <svg class="header-mark" viewBox="0 0 220 148" role="img" aria-label="校園與行政流程示意">
-          <path d="M18 121h184" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" opacity=".55"></path>
-          <path d="M36 112V62l74-34 74 34v50" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"></path>
-          <path d="M62 112V76h32v36M126 112V76h32v36" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round" opacity=".86"></path>
-          <path d="M89 52h42M110 34v36" fill="none" stroke="#f2cf8d" stroke-width="6" stroke-linecap="round"></path>
-          <circle cx="40" cy="35" r="10" fill="#f2cf8d" opacity=".92"></circle>
-          <path d="M174 28c10 8 16 20 16 34" fill="none" stroke="#f2cf8d" stroke-width="5" stroke-linecap="round" opacity=".85"></path>
-        </svg>
       </div>
-    </header>
+      <div class="search-row" role="search">
+        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：差勤、硬體報修、資訊報修、校安、統編、表單">
+        <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
+      </div>
+    </div>
+  </header>
 
-    <main class="main-layout">
-      <nav class="side-nav" aria-label="章節目錄">
-        <p class="nav-title">流程目錄</p>
-        <div class="chapter-list" id="chapterList" role="tablist" aria-orientation="vertical"></div>
-      </nav>
-
-      <article class="content-card" aria-live="polite">
-        <header class="chapter-header">
-          <div>
-            <p class="chapter-kicker" id="chapterKicker"></p>
-            <h2 id="chapterTitle"></h2>
+  <main>
+    <section id="entryPanels" class="section" aria-label="處室入口">
+      <div class="entry-layout">
+        <section class="entry-card" aria-label="處室分類">
+          <div class="filter-layout">
+            <div class="filter-band office-band">
+              <div id="officeFilters" class="chip-list"></div>
+            </div>
+            <div class="filter-band shortcut-band">
+              <div id="quickEntries" class="quick-grid"></div>
+              <p id="shortcutEmpty" class="section-note"></p>
+            </div>
           </div>
-          <span class="chapter-status" id="chapterStatus"></span>
-        </header>
-        <div class="section-grid" id="chapterContent"></div>
-      </article>
-    </main>
+        </section>
+      </div>
+    </section>
 
-    <p class="footer-note">本手冊提供校內常用流程、入口與提醒。涉及法規判斷、通報、個資或內部流程時，請以承辦處室最新公告為準。</p>
-    <footer class="site-footer">
+    <section id="resourceResults" class="section resource-results" aria-label="連結清單">
+      <p id="padletCount" class="result-count"></p>
+      <div id="padletGrid" class="padlet-grid"></div>
+      <p id="padletEmpty" class="padlet-empty"></p>
+      <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
+    </section>
+
+    <section class="section school-info-card" aria-labelledby="schoolInfoTitle">
+      <div>
+        <h2 id="schoolInfoTitle">學校資料</h2>
+        <p class="section-note">需要填寫學校基本資料時，直接使用以下欄位。</p>
+      </div>
+      <ul class="school-info-list">
+        <li>
+          <span class="school-info-label">抬頭</span>
+          <span class="school-info-value">新竹市香山區內湖國小</span>
+        </li>
+        <li>
+          <span class="school-info-label">統一編號</span>
+          <span class="school-info-value">47208311</span>
+        </li>
+        <li>
+          <span class="school-info-label">代碼</span>
+          <span class="school-info-value">183622</span>
+        </li>
+        <li>
+          <span class="school-info-label">電話</span>
+          <span class="school-info-value">03-5373184</span>
+        </li>
+        <li>
+          <span class="school-info-label">校網首頁</span>
+          <span class="school-info-value"><a class="school-info-link" href="https://www.nhps.hc.edu.tw/nss/p/index" target="_blank" rel="noopener noreferrer">前往校網首頁</a></span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" aria-label="近期更新與重要提醒">
+      <aside class="side-stack">
+        <section class="info-panel" aria-labelledby="recentTitle">
+          <h3 id="recentTitle">近期更新</h3>
+          <ul id="recentUpdates" class="update-list"></ul>
+        </section>
+
+        <section class="info-panel" aria-labelledby="remindersTitle">
+          <h3 id="remindersTitle">重要提醒</h3>
+          <ul class="reminder-list">
+            <li>疑似性平、霸凌、兒少保護事件應即時通報，不宜自行判斷後延誤。</li>
+            <li>需填寫學校資料時，請使用本頁「學校資料」欄位；其他細節依承辦處室公告。</li>
+            <li>校園施工或危險區域應依公告避開並提醒學生。</li>
+          </ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-row">
       <p>COPYRIGHT © 2026 HSINCHU NEI HU PRIMARY SCHOOL</p>
-      <p>維護：總務主任 江志宏</p>
-      <p>Email：<a href="mailto:smallcannon@nhps.hc.edu.tw">smallcannon@nhps.hc.edu.tw</a></p>
-      <p>Tel：03-5373184#130</p>
-    </footer>
-  </div>
+      <p>維護：總務主任 江志宏｜<a href="mailto:smallcannon@nhps.hc.edu.tw">smallcannon@nhps.hc.edu.tw</a>｜<a href="admin.html">後台管理</a></p>
+    </div>
+  </footer>
 
   <script>
-    const sectionLabels = [
-      "項目說明",
-      "適用情境",
-      "辦理方式",
-      "注意事項",
-      "承辦單位",
-      "相關資源"
+    // 後續要新增任務分類，可在 taskCategories 加一筆 { id, label }，並讓資料卡片的 task 使用同一個 id。
+    const taskCategories = [
+      { id: "student-event", label: "學生事件", hint: "受傷、校安、霸凌、性平" },
+      { id: "field-trip", label: "戶外教育", hint: "校外教學、保險、安全分工" },
+      { id: "space-equipment", label: "場地設備", hint: "報修、冷氣、借用、復原" },
+      { id: "teaching-assessment", label: "課務與教學", hint: "調課、代課、教學資料" },
+      { id: "new-teacher", label: "常用入口", hint: "行事曆、表單、常用系統" }
     ];
 
-    const padletUrl = "https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns";
-    const handbookApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getHandbook";
+    const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
+    const defaultOfficeTab = "常用入口";
+    const realOfficeCategories = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
+    const officeCategories = [defaultOfficeTab, ...realOfficeCategories];
+    const padletPendingAttachmentCount = 10;
+    const padletPendingExternalCount = 1;
+    const padletExcludedUntitledCount = 4;
+    const defaultFeaturedResourceIds = new Set([
+      "padlet-001",
+      "padlet-002",
+      "padlet-004",
+      "padlet-009",
+      "padlet-037",
+      "padlet-050",
+      "padlet-054",
+      "padlet-061"
+    ]);
 
-    const chapters = [
-      {
-        id: "week-one",
-        number: "01",
-        title: "新進教師第一週",
-        status: "入校起步",
-        content: {
-          "項目說明": "協助新進教師先掌握三類資訊：114學年度行事曆、行政處室分工與教師常用入口，讓第一週能快速知道該看哪裡、問哪裡、先完成哪些事。",
-          "適用情境": "報到前後、開學準備日、第一次進班、第一次參加校務或學年會議，以及不確定某項工作應洽詢哪個處室時使用。",
-          "辦理方式": ["查看 114學年度全校行事曆與教師版行事曆，先掌握開學、會議、研習與重要活動。", "對照行政處室工作職掌，確認課務、學生生活、場地設備、帳號系統等問題應洽詢的承辦處室。", "與學年夥伴確認任課、教室、班級例行事項與共備方式。", "將 Padlet 教師常用網加入書籤，作為日常查詢入口。"],
-          "注意事項": ["行事曆與處室公告可能更新，辦理前請以最新公告或承辦處室說明為準。", "本手冊提供方向與入口，不取代各處室正式公告。", "涉及個人資料、內部簽核或尚未公告事項，不放入網站內容，請直接洽承辦處室。"],
-          "承辦單位": "人事室、教務處、學務處、總務處、資訊組與所屬學年主任。實際承辦人與分機請依 114學年度行政處室工作職掌或最新公告確認。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "114學年度行事曆與處室工作職掌（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      },
-      {
-        id: "campus-safety",
-        number: "02",
-        title: "校園空間與安全",
-        status: "安全基礎",
-        content: {
-          "項目說明": "整理校園日常使用與共同生活提醒，包含主要空間、公共設備、班級移動、行動載具使用與遇到疑問時的詢問窗口。",
-          "適用情境": "帶班級移動、使用公共空間、借用設備、處理學生行動載具或特殊物品、需要確認校園日常規範時使用。",
-          "辦理方式": ["先熟悉教室、辦公室、健康中心、警衛室、總務處與常用公共空間。", "校園日常管理以安全、尊重與共同秩序為原則；具體規範請依學務處最新公告。", "學生使用行動載具、特殊物品或公共設備時，先確認校內規範與班級管理方式。", "遇到需要行政判斷的狀況，請洽學務處、總務處或相關承辦單位。"],
-          "注意事項": ["本章只放日常提醒與詢問入口，不放高風險事件處理細節。", "校園空間、動線、門禁、公共設備等規範可能依年度調整，請以承辦處室最新說明為準。", "遇到緊急或需立即協助的狀況，先確保現場安全，再依學校正式流程聯繫相關處室。"],
-          "承辦單位": "學務處、總務處、警衛室、健康中心。校園空間與設備問題通常洽總務處，學生生活與日常規範通常洽學務處。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "校園日常規範與空間資訊（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      },
-      {
-        id: "academic-affairs",
-        number: "03",
-        title: "教務工作",
-        status: "課務教學",
-        content: {
-          "項目說明": "彙整教師日常教務入口，包含課程發展、公開授課、教學巡視、教科書選用與校外人士協助教學或活動等流程提醒。",
-          "適用情境": "需要查詢課程文件、公開授課與觀議課安排、教科書相關作業、校外人士協助教學或活動申請，以及確認教務處公告時使用。",
-          "辦理方式": ["課程、公開授課、教科書與校外人士協助教學相關事項，先查教務處公告或 Padlet 入口。", "需要申請校外人士協助教學或活動時，先確認要點、申請表與入校須知，再洽教務處。", "教科書選用、循環使用與教學巡視，依教務處最新期程與表單辦理。", "遇到教務流程不確定時，先確認來源年度與承辦單位，不自行引用舊表單。"],
-          "注意事項": ["本章提供流程入口，不完整轉載各項辦法。", "教務文件若涉及個別資料、評量細節或學生資料，不放入網站，請直接洽承辦處室。", "表單與期程可能更新，正式辦理前請以 114學年度教務處公告為準。"],
-          "承辦單位": "教務處各組與資訊組。課程、公開授課、教科書、校外人士協助教學等事項，請依教務處最新分工洽詢。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "教務表單與教務公告（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      },
-      {
-        id: "student-affairs",
-        number: "04",
-        title: "學務與學生事件",
-        status: "事件處理",
-        content: {
-          "項目說明": "提供學生生活事件、衝突、傷病、重大疑慮與需行政協助狀況的初步分流方向。本章僅作入口提醒，不取代正式通報或承辦處室判斷。",
-          "適用情境": "學生受傷、衝突、情緒失控、缺曠異常或其他需要行政協助的狀況發生時使用。",
-          "辦理方式": ["先安置學生並確認立即安全，必要時通知健康中心或學務處。", "客觀記錄時間、地點、在場人員、學生陳述與已採取措施。", "依事件性質通知導師、家長、學務處或輔導室，避免自行判定結案。", "<span class='todo'>TODO</span>由學務處補上正式分流表或連結。"],
-          "注意事項": ["涉及疑似重大事件、通報責任或保護性議題時，請立即聯繫承辦處室。", "紀錄以事實為主，避免加入推測或評價性語句。", "對外說明請依校內分工，避免個別教師單獨承擔。"],
-          "承辦單位": "<span class='todo'>TODO</span>學務處、健康中心、輔導室等正式承辦分工待處室確認。",
-          "相關資源": [{ label: "學生事件相關流程（待承辦處室確認）", url: "#todo-student-event-record" }, { label: "Padlet 教師常用網", url: padletUrl }]
-        }
-      },
-      {
-        id: "counseling-special",
-        number: "05",
-        title: "輔導與特教支持",
-        status: "支持資源",
-        content: {
-          "項目說明": "整理學生輔導轉介、親師溝通、特殊教育支持、資源班協作與班級適應策略的入口方向。本章不放個案內容。",
-          "適用情境": "學生有情緒、人際、家庭、學習適應、特殊需求或班級經營困難，需要跨處室支持時使用。",
-          "辦理方式": ["先蒐集學生在課堂、下課、作業與人際互動的具體觀察。", "與學年夥伴、輔導室或特教教師討論可行支持策略。", "需要轉介時，依校內流程填寫資料並保護學生隱私。", "<span class='todo'>TODO</span>由輔導室或特教組補上正式轉介入口。"],
-          "注意事項": ["學生狀況請使用具體行為描述，不以標籤稱呼。", "與家長溝通前，可先和輔導室討論說法與資料準備。", "特殊需求支持通常需要持續調整，請保留觀察紀錄並保護個資。"],
-          "承辦單位": "<span class='todo'>TODO</span>輔導室、特教組、資源班教師等正式承辦分工待確認。",
-          "相關資源": [{ label: "輔導與特教支持資源（待承辦處室確認）", url: "#todo-special-support" }, { label: "Padlet 教師常用網", url: padletUrl }]
-        }
-      },
-      {
-        id: "general-affairs",
-        number: "06",
-        title: "總務設備與場地",
-        status: "設備場地",
-        content: {
-          "項目說明": "提供總務相關事項的入口提醒，包含教室設備、場地借用、修繕通報、物品需求、鑰匙與公共空間復原等日常工作。",
-          "適用情境": "設備故障、場地或桌椅音響需求、公共空間借用、教室環境問題、需要確認總務處承辦單位時使用。",
-          "辦理方式": ["設備故障時，先記錄地點、設備名稱、故障情形與照片，再依總務處指定方式通報。", "場地借用、桌椅音響、鑰匙與復原責任，請依總務處最新規範辦理。", "借用公共空間後，確認復原、清潔、門窗與電源。", "涉及採購請購、校產、工程或校舍安全時，教師手冊只提供承辦入口，不提供細部判斷。"],
-          "注意事項": ["不要自行拆修電器、網路或固定設備。", "活動場地需提早預約，並確認是否需要桌椅、音響、清潔或開關門協助。", "本章不放採購金額、估價、驗收、合約、工程圖說或財產清冊等細節。"],
-          "承辦單位": "總務處。設備、場地、修繕、鑰匙與公共空間相關事項，請依總務處最新分工洽詢；涉及經費或內部流程者請由承辦處室說明。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "總務表單與場地設備入口（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      },
-      {
-        id: "accounts",
-        number: "07",
-        title: "資訊系統與帳號",
-        status: "數位工具",
-        content: {
-          "項目說明": "彙整校內常用帳號、資訊設備、無線網路、教學平台、行政系統與基本資安注意事項。",
-          "適用情境": "首次登入校內系統、忘記密碼、使用教室資訊設備、建立線上課程、處理學生帳號或遇到系統問題時使用。",
-          "辦理方式": ["確認校務行政、電子郵件、教學平台與通訊工具帳號是否可登入。", "保存資訊組聯絡方式，遇到帳號或設備問題先描述錯誤畫面與操作步驟。", "定期更新密碼，避免共用帳號或公開學生個資。", "<span class='todo'>TODO</span>補上系統入口清單與帳號申請流程。"],
-          "注意事項": ["不要將個人密碼交給學生或張貼在教室明顯處。", "學生資料、照片與評量紀錄上傳前，請確認平台與權限設定。", "外接設備與不明連結請保持資安警覺。"],
-          "承辦單位": "<span class='todo'>TODO</span>資訊組、教務處設備組、相關系統承辦人。",
-          "相關資源": [{ label: "校務行政系統（待補）", url: "#todo-school-system" }, { label: "Padlet 教師常用網", url: padletUrl }]
-        }
-      },
-      {
-        id: "forms-padlet",
-        number: "08",
-        title: "常用表單與 Padlet 入口",
-        status: "入口整合",
-        content: {
-          "項目說明": "Padlet 為本校既有教師常用網，提供常用連結、表單、處室資料與資訊分享。本網站作為教師手冊，整理校內常用流程、重要提醒與承辦單位，兩者相互整合使用。",
-          "適用情境": "需要查詢最新校內連結、下載表單、找行事曆、查處室工作職掌、回看週報提醒，或不知道某項流程應從哪裡開始時使用。",
-          "辦理方式": ["先從 Padlet 教師常用網查找最新入口。", "若需行事曆、教務表單或處室工作職掌，請優先確認 114學年度版本。", "若表單涉及個別資料、內部流程或敏感事項，請先洽承辦處室，不直接下載轉傳。", "本網站只整理流程脈絡與提醒，最新檔案與正式表單仍以承辦處室公告為準。"],
-          "注意事項": ["Padlet 適合放最新入口，教師手冊適合整理使用時機與注意事項。", "網站不放本機絕對路徑，也不放未確認權限的雲端連結。", "表單若涉及學生資料、人事會計、採購請購或通報事件，應由承辦處室確認可公開範圍。"],
-          "承辦單位": "各處室表單承辦人、資訊組或教師常用網維護人。表單版本、公開權限與連結更新請由原承辦處室確認。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "行事曆、表單與處室資料（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      },
-      {
-        id: "faq",
-        number: "09",
-        title: "常見問題 FAQ",
-        status: "快速查找",
-        content: {
-          "項目說明": "整理教師日常最常遇到的查詢型問題，先提供分流方向：行事曆去哪看、表單去哪找、設備故障怎麼辦、教務流程問誰、Padlet 怎麼用。",
-          "適用情境": "遇到流程不確定、找不到表單、不知道該問哪一處室，或需要快速回到 Padlet 與處室公告查詢最新資訊時使用。",
-          "辦理方式": ["先用章節目錄判斷問題屬於教務、學務、總務、資訊或常用入口。", "不知道問哪個處室時，先查行政處室工作職掌與 Padlet 教師常用網；仍不確定時，可詢問學年主任或總務主任協助分流。", "最新行事曆以 114學年度行事曆與處室公告為準，Padlet 可作入口查詢。", "教師週報適合追蹤近期處室提醒、活動期程與例行行政事項。"],
-          "注意事項": ["FAQ 只放適合全體教師共同查閱的通用問題。", "週報中若涉及個別學生、家長、教師、人事或財務資訊，不摘要到網站。", "高風險或需正式判斷的問題，不由 FAQ 自行解釋，請洽承辦處室最新說明。"],
-          "承辦單位": "依問題類型分派：教務事項洽教務處，學生生活與日常規範洽學務處，設備場地洽總務處，帳號系統洽資訊組；不確定時可先由學年主任或總務主任協助分流。",
-          "相關資源": [{ label: "Padlet 教師常用網", url: padletUrl }, { label: "行事曆與處室工作職掌（請於 Padlet 查詢最新版）", url: padletUrl }]
-        }
-      }
+    // 由既有教師常用網匯出資料轉成靜態資源。新增或修正資源時，只要維持 id/category/title/links/updated 這幾個欄位即可。
+    let directoryApiResources = null;
+
+    let padletResources = [
+          {
+                "id": "padlet-001",
+                "category": "內小常用連結",
+                "title": "線上週會、教師會議用meet",
+                "type": "Meet",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Meet",
+                            "url": "https://meet.google.com/vvf-djns-hzd?authuser=0"
+                      }
+                ],
+                "updated": "2026-01-22",
+                "tags": [
+                      "常用資源",
+                      "內小常用連結",
+                      "Meet"
+                ]
+          },
+          {
+                "id": "padlet-002",
+                "category": "內小常用連結",
+                "title": "校內行事曆(google calender)",
+                "type": "Google 行事曆",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 行事曆",
+                            "url": "https://calendar.google.com/calendar/u/0?cid=Y19hNmZlZTI0Yjg4MTIwMDUzNmQwMmQ0MTFkNjY4ODRmZWVhYzFmZGNiMDdlMTQ1ZTdmZjc4N2Q5MzAwOWI3ODUxQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20"
+                      }
+                ],
+                "updated": "2026-01-22",
+                "tags": [
+                      "常用資源",
+                      "內小常用連結",
+                      "Google 行事曆"
+                ]
+          },
+          {
+                "id": "padlet-003",
+                "category": "內小常用連結",
+                "title": "114校內行事曆",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/1mvz0OoVCu-3UvJAaa4kVNspvMn3sQf9l/edit?gid=580215559#gid=580215559"
+                      }
+                ],
+                "updated": "2025-08-26",
+                "tags": [
+                      "常用資源",
+                      "內小常用連結",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-004",
+                "category": "內小常用連結",
+                "title": "導師每日疾病通報",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://docs.google.com/forms/d/e/1FAIpQLSeJPtKtPnW2xkIOcIlE20YrGG9Q6XWRenKvlE3LwqLXf8ZzzA/viewform"
+                      }
+                ],
+                "updated": "2024-08-28",
+                "tags": [
+                      "常用資源",
+                      "內小常用連結",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-005",
+                "category": "學務處",
+                "title": "團隊練習時間&名單",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/15uF-JBO4Zca_YGUeFPXkwHRwtdFXJZgr9IWRWrxxT20/edit#gid=0"
+                      }
+                ],
+                "updated": "2025-07-08",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-006",
+                "category": "竹市常用連結",
+                "title": "114學年寒假期間行政輪值表",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/1brxttnJskCkHtPjfYoZo4TR1MAaYmIoP/htmlview#gid=1245515016"
+                      }
+                ],
+                "updated": "2026-01-22",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-007",
+                "category": "竹市常用連結",
+                "title": "新竹市教育單一入口網",
+                "type": "單一入口",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟單一入口",
+                            "url": "https://gportal.hc.edu.tw/"
+                      }
+                ],
+                "updated": "2024-08-28",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "單一入口"
+                ]
+          },
+          {
+                "id": "padlet-008",
+                "category": "竹市常用連結",
+                "title": "校務系統",
+                "type": "校務系統",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟校務系統",
+                            "url": "https://cloudschool.hc.edu.tw/"
+                      }
+                ],
+                "updated": "2025-08-19",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "校務系統"
+                ]
+          },
+          {
+                "id": "padlet-009",
+                "category": "竹市常用連結",
+                "title": "差勤系統（請假／補休）",
+                "type": "差勤系統",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟差勤系統",
+                            "url": "https://www.webitr.com.tw/WebITR/plugins/app/login/login.jsp.htm"
+                      }
+                ],
+                "updated": "2025-09-09",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "差勤系統"
+                ]
+          },
+          {
+                "id": "padlet-010",
+                "category": "竹市常用連結",
+                "title": "校園新聞網",
+                "type": "網站",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟網站",
+                            "url": "https://schnews.hc.edu.tw/"
+                      }
+                ],
+                "updated": "2026-01-22",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "網站"
+                ]
+          },
+          {
+                "id": "padlet-011",
+                "category": "教務處",
+                "title": "研習護照",
+                "type": "研習系統",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟研習系統",
+                            "url": "https://study.hc.edu.tw/Login.aspx"
+                      }
+                ],
+                "updated": "2023-08-27",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "研習系統"
+                ]
+          },
+          {
+                "id": "padlet-012",
+                "category": "竹市常用連結",
+                "title": "新竹市教育網路中心",
+                "type": "教育網路中心",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟教育網路中心",
+                            "url": "https://center.hc.edu.tw/"
+                      }
+                ],
+                "updated": "2024-08-28",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "教育網路中心"
+                ]
+          },
+          {
+                "id": "padlet-013",
+                "category": "竹市常用連結",
+                "title": "Onedrive365 教育版",
+                "type": "Microsoft 365",
+                "status": "",
+                "note": "不會自動跳轉教育雲端登入介面，需自行輸入xxxxx(教育漫遊帳號).hc@ms.edu.tw",
+                "links": [
+                      {
+                            "label": "開啟Microsoft 365",
+                            "url": "https://o365.k12cc.tw/"
+                      }
+                ],
+                "updated": "2023-08-28",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "Microsoft 365"
+                ]
+          },
+          {
+                "id": "padlet-014",
+                "category": "竹市常用連結",
+                "title": "新竹市教師認證系統",
+                "type": "網站",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟網站",
+                            "url": "https://iden.hc.edu.tw/relatedWeb.aspx"
+                      }
+                ],
+                "updated": "2023-08-28",
+                "tags": [
+                      "常用資源",
+                      "竹市常用連結",
+                      "網站"
+                ]
+          },
+          {
+                "id": "padlet-015",
+                "category": "教務處",
+                "title": "114學年度寒假 學習扶助教師、班級配置表",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-016",
+                "category": "教務處",
+                "title": "114學年下學期(1/21-1/23、2/23-6/29)特教課後班教室安排、學生名單",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-017",
+                "category": "教務處",
+                "title": "全校學生帳號統計",
+                "type": "附件待整理",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2025-10-31",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "附件待整理"
+                ]
+          },
+          {
+                "id": "padlet-018",
+                "category": "教務處",
+                "title": "特教生入校接送時間",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/1P5_V7--LFnQ9DRZSFtCYwgWx_dCbI2boJsuj8hzH7Dw/edit?usp=sharing"
+                      }
+                ],
+                "updated": "2025-09-09",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-019",
+                "category": "教務處",
+                "title": "學扶科技化評量平台",
+                "type": "網站",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟網站",
+                            "url": "https://exam.tcte.edu.tw/tbt_html/"
+                      }
+                ],
+                "updated": "2025-09-09",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "網站"
+                ]
+          },
+          {
+                "id": "padlet-020",
+                "category": "學務處",
+                "title": "學生管教提報單",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://docs.google.com/forms/d/e/1FAIpQLSfw-I1rBT_rdRVrUpCdNtPFHjWLiK3S8Ihq3ocYjnP5bb3G7w/viewform?usp=send_form"
+                      }
+                ],
+                "updated": "2026-05-19",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-021",
+                "category": "學務處",
+                "title": "114榮譽兒童填報表單",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://forms.gle/gcYtof31m9q96M7E6"
+                      }
+                ],
+                "updated": "2026-05-19",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-022",
+                "category": "學務處",
+                "title": "申請學生平安保險理賠需檢附文件",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-04-21",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-023",
+                "category": "學務處",
+                "title": "學生平安保險理賠申請書",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-04-21",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-024",
+                "category": "學務處",
+                "title": "提名115學年度學生代表表單",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://forms.gle/JwiVUJ5F9cCzYZw99"
+                      }
+                ],
+                "updated": "2026-03-10",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-025",
+                "category": "學務處",
+                "title": "模範/榮譽兒童選拔辦法",
+                "type": "Google 文件",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 文件",
+                            "url": "https://docs.google.com/document/d/1mmOReJTqgr4N-PZJl9yHKMXd71njrOlJ/edit?usp=drive_link&ouid=103661001207837139719&rtpof=true&sd=true"
+                      }
+                ],
+                "updated": "2026-03-03",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 文件"
+                ]
+          },
+          {
+                "id": "padlet-026",
+                "category": "學務處",
+                "title": "114學年度交通安全課程及教師研習事項匯整檔",
+                "type": "Drive 檔案",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 檔案",
+                            "url": "https://drive.google.com/file/d/1tgj6M7gpIPo6GlrucGdJP7J1gvjx2ubu/view?usp=drive_link"
+                      }
+                ],
+                "updated": "2026-02-26",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 檔案"
+                ]
+          },
+          {
+                "id": "padlet-027",
+                "category": "學務處",
+                "title": "114下學生糾察值勤排班表",
+                "type": "Drive 檔案",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 檔案",
+                            "url": "https://drive.google.com/file/d/13u6l-LMo62gGgtNohtsUVeNT6F5a3h92/view?usp=drive_link"
+                      }
+                ],
+                "updated": "2026-02-24",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 檔案"
+                ]
+          },
+          {
+                "id": "padlet-028",
+                "category": "學務處",
+                "title": "行政處室寒暑假作業資料夾",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1cO98k2Zt8Ntpq5OU0v0akVNJvmpTYWhD?usp=drive_link"
+                      }
+                ],
+                "updated": "2026-01-27",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-029",
+                "category": "學務處",
+                "title": "班會記錄指導注意事項及優良作品參考",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1RfJa5YkUk_BX-xpK-gzv9MPciL0CKI4R?usp=drive_link"
+                      }
+                ],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-030",
+                "category": "學務處",
+                "title": "114通學方式調查:請家長填寫",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://forms.gle/zVRmuU5zZfdxXf3n6"
+                      }
+                ],
+                "updated": "2025-08-26",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-031",
+                "category": "學務處",
+                "title": "潔牙影片",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1a6mnjxfytI48MWHSvquTGYmGFtpVOTx6?usp=sharing"
+                      }
+                ],
+                "updated": "2025-08-22",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-032",
+                "category": "學務處",
+                "title": "前門校巡導護填寫導護週誌",
+                "type": "Google 表單",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 表單",
+                            "url": "https://forms.gle/DHEKu22STGanrzBL7"
+                      }
+                ],
+                "updated": "2025-07-14",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 表單"
+                ]
+          },
+          {
+                "id": "padlet-033",
+                "category": "學務處",
+                "title": "導護及糾察值勤排班表",
+                "type": "短網址",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟短網址",
+                            "url": "https://reurl.cc/2Q4gXm"
+                      }
+                ],
+                "updated": "2025-07-04",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "短網址"
+                ]
+          },
+          {
+                "id": "padlet-034",
+                "category": "學務處",
+                "title": "114學生朝會各班動線位置圖",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-01-23",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-035",
+                "category": "學務處",
+                "title": "中心德目雙週指導檔(上下學期各一檔,置於N114->300學務->302生教)",
+                "type": "Drive 檔案",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 檔案",
+                            "url": "https://drive.google.com/file/d/1BVe5KC4Fh4xjAQMQfj2KyKThJpNDtqkj/view?usp=drive_link"
+                      }
+                ],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 檔案"
+                ]
+          },
+          {
+                "id": "padlet-036",
+                "category": "學務處",
+                "title": "生教組聯繫事項檔:N114->300->302",
+                "type": "Drive 檔案",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 檔案",
+                            "url": "https://drive.google.com/file/d/1PgHQrQt-48P1mULJbv9VuHZIJVx5jC7L/view?usp=drive_link"
+                      }
+                ],
+                "updated": "2025-08-27",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 檔案"
+                ]
+          },
+          {
+                "id": "padlet-037",
+                "category": "學務處",
+                "title": "校安事件通報類別",
+                "type": "流程參考",
+                "status": "",
+                "note": "先確認人員安全並通知學務處；此資料用於判斷校安通報類別，正式處理依校內流程辦理。",
+                "links": [
+                      {
+                            "label": "查看通報類別",
+                            "url": "https://osa.nccu.edu.tw/CSRC/files/00.pdf"
+                      }
+                ],
+                "updated": "2025-02-05",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "PDF"
+                ]
+          },
+          {
+                "id": "padlet-038",
+                "category": "學務處",
+                "title": "歷年榮譽/模範兒童及學生代表名冊(僅供參考,請勿更動內容)",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/15L79f5vQC5F3OGe_8-O8sc1g48LS8jHI/edit?usp=drive_link&ouid=103661001207837139719&rtpof=true&sd=true"
+                      }
+                ],
+                "updated": "2025-08-25",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-039",
+                "category": "學務處",
+                "title": "114行動載具申請學生名冊(通過後更新)",
+                "type": "Drive 檔案",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 檔案",
+                            "url": "https://drive.google.com/file/d/1ic57kQthvMrYdo2V_zALvn_c-kjae36N/view?usp=drive_link"
+                      }
+                ],
+                "updated": "2025-09-06",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 檔案"
+                ]
+          },
+          {
+                "id": "padlet-040",
+                "category": "學務處",
+                "title": "學務處共享資料匣",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1JlvwG_lNZaJCKnoGQUBX4MZ4xFwFOqJ2?usp=drive_link"
+                      }
+                ],
+                "updated": "2025-08-25",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-041",
+                "category": "學務處",
+                "title": "學務處常用表單",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/1eiX5eiPcstVPKh_kQSQtyobNUcNCJJkEWJe4IukVoxo/edit?usp=sharing"
+                      }
+                ],
+                "updated": "2024-08-28",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-042",
+                "category": "學務處",
+                "title": "放學英語口令練習",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://youtu.be/n97SBaQ5BuM"
+                      }
+                ],
+                "updated": "2025-09-02",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-043",
+                "category": "學務處",
+                "title": "升旗相關口令練習",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://youtu.be/jcQ3yvDDN8Y"
+                      }
+                ],
+                "updated": "2025-09-02",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-044",
+                "category": "學務處",
+                "title": "內湖國小校門口交通安全宣導",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://youtu.be/JIPaXf6u2cY"
+                      }
+                ],
+                "updated": "2025-09-02",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-045",
+                "category": "學務處",
+                "title": "111服儀宣導",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://youtu.be/KpAKdc94_6E"
+                      }
+                ],
+                "updated": "2025-09-02",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-046",
+                "category": "學務處",
+                "title": "111愛心服務站宣導",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://youtu.be/8hjl3ZVinas"
+                      }
+                ],
+                "updated": "2025-09-02",
+                "tags": [
+                      "常用資源",
+                      "學務處",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-049",
+                "category": "總務處",
+                "title": "總務處空間教室借用",
+                "type": "校網",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟校網",
+                            "url": "https://www.nhps.hc.edu.tw/nss/p/up24"
+                      }
+                ],
+                "updated": "2024-10-28",
+                "tags": [
+                      "常用資源",
+                      "總務處",
+                      "校網"
+                ]
+          },
+          {
+                "id": "padlet-050",
+                "category": "總務處",
+                "title": "11408校園防災地圖",
+                "type": "年度圖檔",
+                "status": "",
+                "note": "114.08 總務處製；每學年檢查版本並更新圖檔。",
+                "links": [
+                      {
+                            "label": "開啟防災地圖",
+                            "url": "assets/114-campus-disaster-map.jpg"
+                      }
+                ],
+                "updated": "2025-08-20",
+                "tags": [
+                      "常用資源",
+                      "總務處",
+                      "年度圖檔"
+                ]
+          },
+          {
+                "id": "padlet-051",
+                "category": "輔導室",
+                "title": "11402課後班學生名單及班級資訊",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆含學生名單，不直接放成公開靜態檔；正式上線前請改接校內權限 Drive 或後台受控連結。",
+                "links": [],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "輔導室",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-052",
+                "category": "輔導室",
+                "title": "114下學期課後班教室分配表",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "輔導室",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-053",
+                "category": "輔導室",
+                "title": "寒假課後掃區",
+                "type": "年度文件",
+                "status": "年度檔案待整理",
+                "note": "這筆原本是匯出附件，網址帶期限；正式上線前請改放校內 Drive 或網站檔案區，每學年更新一次檔案。",
+                "links": [],
+                "updated": "2026-01-21",
+                "tags": [
+                      "常用資源",
+                      "輔導室",
+                      "年度文件"
+                ]
+          },
+          {
+                "id": "padlet-054",
+                "category": "輔導室",
+                "title": "課後班資訊（114學年度）",
+                "type": "Google 試算表",
+                "status": "",
+                "note": "課後班年度資訊請以此試算表與輔導室公告為準。",
+                "links": [
+                      {
+                            "label": "開啟Google 試算表",
+                            "url": "https://docs.google.com/spreadsheets/d/1RWTDlOY1z7p9zASaZw3R7lbSmrG8KNZw/edit?usp=drivesdk&ouid=102774195921890754122&rtpof=true&sd=true"
+                      }
+                ],
+                "updated": "2025-08-28",
+                "tags": [
+                      "常用資源",
+                      "輔導室",
+                      "114學年度",
+                      "Google 試算表"
+                ]
+          },
+          {
+                "id": "padlet-055",
+                "category": "資訊分享",
+                "title": "更新google聯絡人(114)",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1ORjFEJ5Nnq_NFkYes5viQdpru6CI3HzJ?usp=drive_link"
+                      }
+                ],
+                "updated": "2025-09-16",
+                "tags": [
+                      "常用資源",
+                      "資訊分享",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-058",
+                "category": "資訊分享",
+                "title": "教室/平板借用模組介紹",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1Qsf_TXWt6IrMutK7cFnuBwJQKbTqzCSJ?usp=sharing"
+                      }
+                ],
+                "updated": "2025-08-19",
+                "tags": [
+                      "常用資源",
+                      "資訊分享",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-059",
+                "category": "教務處",
+                "title": "平板車更新",
+                "type": "Canva",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Canva",
+                            "url": "https://www.canva.com/design/DAGfac2JfmA/Rb0uMkCqhaNvRpFny4WJtQ/view?utm_content=DAGfac2JfmA&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hc0b90a9757"
+                      }
+                ],
+                "updated": "2025-04-08",
+                "tags": [
+                      "常用資源",
+                      "教務處",
+                      "Canva"
+                ]
+          },
+          {
+                "id": "padlet-060",
+                "category": "資訊分享",
+                "title": "好用注音軟體分享",
+                "type": "影片",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟影片",
+                            "url": "https://www.youtube.com/watch?v=cfksKJfn0c8&ab_channel=生活活動組羅森"
+                      }
+                ],
+                "updated": "2025-04-08",
+                "tags": [
+                      "常用資源",
+                      "資訊分享",
+                      "影片"
+                ]
+          },
+          {
+                "id": "padlet-061",
+                "category": "內湖雲端",
+                "title": "內湖雲端N114",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1T_p5wI7EnLVdXLu8hUl0LHEvXSKrV1-_"
+                      }
+                ],
+                "updated": "2025-07-08",
+                "tags": [
+                      "常用資源",
+                      "內湖雲端",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-062",
+                "category": "內湖雲端",
+                "title": "內湖雲端N113",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/13B59Y0pP-crA49zJkh84wc2rZMrMtDaa?usp=drive_link"
+                      }
+                ],
+                "updated": "2024-08-22",
+                "tags": [
+                      "常用資源",
+                      "內湖雲端",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-063",
+                "category": "內湖雲端",
+                "title": "內湖雲端N112",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/1mWeo3hMg8Xw67_aeUO_QEIA_nGLr4b4a?usp=drive_link"
+                      }
+                ],
+                "updated": "2023-08-27",
+                "tags": [
+                      "常用資源",
+                      "內湖雲端",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-064",
+                "category": "內湖雲端",
+                "title": "N111",
+                "type": "Drive 資料夾",
+                "status": "",
+                "note": "",
+                "links": [
+                      {
+                            "label": "開啟Drive 資料夾",
+                            "url": "https://drive.google.com/drive/folders/197wHvxvsFxLhC_UVwqTNX9HDERrZtkbp?usp=drive_link"
+                      }
+                ],
+                "updated": "2023-08-27",
+                "tags": [
+                      "常用資源",
+                      "內湖雲端",
+                      "Drive 資料夾"
+                ]
+          },
+          {
+                "id": "padlet-065",
+                "category": "內湖雲端",
+                "title": "1131018AI研習資料",
+                "type": "外部資料",
+                "status": "資料待整理",
+                "note": "原連結為外部白板，正式納入前建議改存校內資料夾或整理成摘要頁。",
+                "links": [],
+                "updated": "2025-07-08",
+                "tags": [
+                      "常用資源",
+                      "內湖雲端",
+                      "外部資料"
+                ]
+          }
     ];
 
-    const chapterList = document.getElementById("chapterList");
-    const chapterKicker = document.getElementById("chapterKicker");
-    const chapterTitle = document.getElementById("chapterTitle");
-    const chapterStatus = document.getElementById("chapterStatus");
-    const chapterContent = document.getElementById("chapterContent");
-    let handbookChapters = chapters;
-    let handbookSectionLabels = sectionLabels;
-    let navigationEventsBound = false;
-
-    function contentToHtml(value) {
-      if (Array.isArray(value)) {
-        return "<ul>" + value.map((item) => "<li>" + item + "</li>").join("") + "</ul>";
-      }
-
-      if (typeof value === "string" && value.split("\n").some((line) => line.trim().indexOf("- ") === 0)) {
-        const items = value.split("\n").filter((line) => line.trim()).map((line) => line.replace(/^\s*-\s*/, ""));
-        return "<ul>" + items.map((item) => "<li>" + item + "</li>").join("") + "</ul>";
-      }
-
-      return "<p>" + value + "</p>";
-    }
-
-    function linksToHtml(links) {
-      if (!Array.isArray(links) || links.length === 0) return "<p>暫無相關資源。</p>";
-      return "<ul class='link-list'>" + links.map((link) => (
-        "<li><a href='" + String(link.url || "#") + "'" + (String(link.url || "").indexOf("http") === 0 ? " target='_blank' rel='noopener'" : "") + ">" + String(link.label || "未命名連結") + "</a></li>"
-      )).join("") + "</ul>";
-    }
-
-    function formatChapterNumber(value) {
-      const text = String(value || "").trim();
-      return /^\d$/.test(text) ? "0" + text : text;
-    }
-
-    function hasMeaningfulContent(value, isLinks) {
-      if (isLinks) return Array.isArray(value) && value.length > 0;
-      if (Array.isArray(value)) return value.some((item) => String(item || "").trim());
-      return String(value || "").trim().length > 0;
-    }
-
-    function hasChapterContent(chapter) {
-      if (!chapter) return false;
-      if (Array.isArray(chapter.blocks) && chapter.blocks.some((block) => (
-        hasMeaningfulContent(block.key === "相關資源" ? block.links : block.body, block.key === "相關資源")
-      ))) {
-        return true;
-      }
-      return Object.keys(chapter.content || {}).some((label) => (
-        hasMeaningfulContent(chapter.content[label], label === "相關資源")
-      ));
-    }
-
-    function mergeWithStaticFallback(dynamicChapters) {
-      return dynamicChapters.map((chapter) => {
-        if (hasChapterContent(chapter)) return chapter;
-        const fallback = chapters.find((item) => item.id === chapter.id || formatChapterNumber(item.number) === formatChapterNumber(chapter.number));
-        if (!fallback) return chapter;
-        return {
-          ...fallback,
-          id: chapter.id || fallback.id,
-          number: chapter.number || fallback.number,
-          title: chapter.title || fallback.title,
-          status: chapter.status || fallback.status
-        };
-      });
-    }
-
-    function getChapterSections(chapter) {
-      if (Array.isArray(chapter.blocks) && chapter.blocks.length > 0) {
-        return chapter.blocks.map((block) => ({
-          label: block.title || block.key,
-          value: block.key === "相關資源" ? block.links : block.body,
-          isLinks: block.key === "相關資源"
-        }));
-      }
-
-      const extraLabels = Object.keys(chapter.content || {}).filter((label) => handbookSectionLabels.indexOf(label) < 0);
-      return handbookSectionLabels.concat(extraLabels).map((label) => ({
-        label,
-        value: chapter.content[label],
-        isLinks: label === "相關資源"
+    function resourceLinks(resourceId, labels = []) {
+      const resource = padletResources.find((item) => item.id === resourceId);
+      if (!resource) return [];
+      return resource.links.map((link, index) => ({
+        label: labels[index] || resource.title,
+        url: link.url
       }));
     }
 
-    function renderChapter(chapterId, shouldFocus) {
-      const chapter = handbookChapters.find((item) => item.id === chapterId) || handbookChapters[0];
-      if (!chapter) return;
+    let officeShortcuts = {
+      "常用入口": [
+        { label: "差勤系統", hint: "請假、補休", query: "差勤" },
+        { label: "硬體設備報修", hint: "門窗、燈具、桌椅", query: "硬體 報修" },
+        { label: "資訊設備報修", hint: "電腦、網路、平板", query: "資訊 報修" },
+        { label: "學校資料", hint: "抬頭、統編、電話", query: "學校資料" },
+        { label: "114年度資料", hint: "防災、課後班、行事曆", query: "114" },
+        { label: "校安／學生事件", hint: "校安、受傷、通報", query: "校安" },
+        { label: "場地／平板借用", hint: "場地、平板、平板車", query: "借用" },
+        { label: "戶外教育", hint: "校外教學、保險", query: "戶外" },
+        { label: "輔導轉介", hint: "轉介、支持", query: "輔導 轉介" },
+        { label: "常用系統", hint: "Meet、行事曆、通報", resourceCategory: "內小常用連結" }
+      ],
+      "教務處": [
+        { label: "資訊設備報修", hint: "電腦、網路、平板", query: "資訊 報修" },
+        { label: "調課代課", hint: "調課、代課", query: "調課 代課" },
+        { label: "教學與評量", hint: "學扶、評量、課務", query: "學扶 評量" }
+      ],
+      "學務處": [
+        { label: "校安／學生事件", hint: "校安、受傷、通報", query: "校安" },
+        { label: "學生平安保險", hint: "保險、理賠", query: "保險" },
+        { label: "導護與交通", hint: "導護、交通、安全", query: "導護 交通" },
+        { label: "學務常用表單", hint: "表單、名冊", query: "學務 表單" }
+      ],
+      "總務處": [
+        { label: "硬體設備報修", hint: "門窗、燈具、桌椅", query: "硬體 報修" },
+        { label: "場地／平板借用", hint: "場地、平板、平板車", query: "借用" },
+        { label: "冷氣使用", hint: "冷氣、異常", query: "冷氣" },
+        { label: "防災與校園安全", hint: "防災、施工、區域", query: "防災" }
+      ],
+      "輔導室": [
+        { label: "輔導轉介", hint: "轉介、支持", query: "輔導 轉介" },
+        { label: "課後班資訊", hint: "課後班、教室", query: "課後班" }
+      ],
+      "人事室": [
+        { label: "差勤系統", hint: "請假、補休、代理", query: "差勤" }
+      ],
+      "會計室": [
+        { label: "學校資料", hint: "抬頭、統編、電話", query: "學校資料" }
+      ],
+      "其他": [
+        { label: "校內常用連結", hint: "Meet、行事曆、通報", resourceCategory: "內小常用連結" },
+        { label: "市府常用系統", hint: "校務、研習、單一入口", resourceCategory: "竹市常用連結" },
+        { label: "內湖雲端", hint: "N114、N113、N112", resourceCategory: "內湖雲端" },
+        { label: "資訊分享", hint: "教學工具、影片", resourceCategory: "資訊分享" }
+      ]
+    };
 
-      document.querySelectorAll(".chapter-button").forEach((button) => {
-        const isActive = button.dataset.chapterId === chapter.id;
-        button.classList.toggle("is-active", isActive);
-        button.setAttribute("aria-selected", String(isActive));
-        button.tabIndex = isActive ? 0 : -1;
-      });
-
-      chapterKicker.textContent = formatChapterNumber(chapter.number) + " 工作流程";
-      chapterTitle.textContent = chapter.title;
-      chapterStatus.textContent = chapter.status;
-
-      chapterContent.innerHTML = getChapterSections(chapter).map((section) => {
-        const body = section.isLinks
-          ? linksToHtml(section.value)
-          : contentToHtml(section.value || "");
-
-        return "<section class='info-section'>" +
-          "<h3>" + section.label + "</h3>" +
-          "<div>" + body + "</div>" +
-        "</section>";
-      }).join("");
-
-      if (location.hash !== "#" + chapter.id) {
-        history.replaceState(null, "", "#" + chapter.id);
+    // 資料卡片先放在 JavaScript 陣列。日後若改接 Google Sheets / GAS / Worker，可把 API 回傳資料轉成同樣欄位後再呼叫 renderAll()。
+    const handbookItems = [
+      {
+        id: "leave-compensatory",
+        title: "差勤系統與請假補休",
+        audience: "一般教師、代理代課教師",
+        situation: "需要辦理事假、病假、公假、補休或課務代理安排時使用。",
+        summary: ["先確認假別、日期、節數與是否影響課務。", "依差勤系統或人事室公告完成申請。", "涉及課務時同步確認調課、代課或補課安排。"],
+        office: "人事室",
+        task: "new-teacher",
+        links: resourceLinks("padlet-009", ["差勤系統"]),
+        updated: "2026-05-30",
+        tags: ["常用", "表件", "新進教師必讀"]
+      },
+      {
+        id: "classroom-repair",
+        title: "硬體設備報修流程",
+        audience: "一般教師、導師、專科教室使用教師",
+        situation: "教室燈具、門窗、桌椅、白板、電源或公共設施故障時使用。",
+        summary: ["先確認安全並暫停使用異常設備。", "拍照記錄地點、設備名稱與故障情形。", "填寫硬體設備報修；急迫狀況同步通知總務處。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [{ label: "硬體設備報修表（待補）", url: "#" }],
+        updated: "2026-05-30",
+        tags: ["常用", "流程", "表件"]
+      },
+      {
+        id: "it-equipment-repair",
+        title: "資訊設備報修流程",
+        audience: "一般教師、導師、專科教室使用教師",
+        situation: "教室電腦、網路、平板、印表機或資訊周邊異常時使用。",
+        summary: ["先確認電源、網路連線與基本操作狀態。", "記錄設備位置、財產標籤或螢幕錯誤訊息。", "填寫資訊設備報修或通知資訊業務承辦人協助判斷。"],
+        office: "教務處",
+        task: "space-equipment",
+        links: [{ label: "資訊設備報修表（待補）", url: "#" }],
+        updated: "2026-05-30",
+        tags: ["常用", "流程", "表件"]
+      },
+      {
+        id: "air-conditioner",
+        title: "冷氣使用與異常處理",
+        audience: "各班導師、專科教室使用教師",
+        situation: "冷氣無法啟動、漏水、異音、遙控器或電力異常時使用。",
+        summary: ["先確認電源、遙控器與基本設定。", "發現漏水或異音時停止使用並保留現場。", "登記異常情形後通知總務處安排檢修。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [{ label: "冷氣異常回報（示範）", url: "#" }],
+        updated: "2026-05-29",
+        tags: ["常用", "重要", "流程"]
+      },
+      {
+        id: "space-booking",
+        title: "場地／平板借用流程",
+        audience: "辦理活動、會議、研習或班級課程之教師",
+        situation: "需要使用會議室、視聽教室、操場、活動中心、平板或平板車時使用。",
+        summary: ["先查詢場地、平板或平板車可借用時段。", "提出借用需求並說明人數、設備、時間與復原責任。", "使用後確認門窗、電源、桌椅、設備數量與充電狀態。"],
+        office: "總務處",
+        task: "space-equipment",
+        links: [
+          ...resourceLinks("padlet-049", ["總務處空間教室借用"]),
+          ...resourceLinks("padlet-058", ["教室／平板借用模組介紹"])
+        ],
+        updated: "2026-05-26",
+        tags: ["常用", "表件"]
+      },
+      {
+        id: "student-injury",
+        title: "學生受傷處理流程",
+        audience: "導師、任課教師、活動承辦人",
+        situation: "學生在課堂、下課、活動或校外教學中受傷時使用。",
+        summary: ["先照顧學生安全並通知健康中心。", "客觀記錄時間、地點、經過、在場人員與處置情形。", "依狀況通知家長與相關處室，避免自行判定結案。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "學生事件紀錄表（示範）", url: "#" }],
+        updated: "2026-05-25",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "campus-security",
+        title: "校安事件通報",
+        audience: "一般教師、導師、活動承辦教師",
+        situation: "發生校園安全、學生重大事件、外力介入、災害或需通報主管機關事項時使用。",
+        summary: ["先確保現場安全並通報校內行政窗口。", "保留客觀事實，不擴散未確認訊息。", "依校安流程由權責人員完成正式通報。"],
+        office: "學務處",
+        task: "student-event",
+        links: resourceLinks("padlet-037", ["校安通報類別"]),
+        updated: "2026-05-24",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "bullying",
+        title: "疑似霸凌事件處理",
+        audience: "導師、任課教師、學務與輔導相關人員",
+        situation: "疑似出現反覆欺負、排擠、威脅、網路攻擊或身心傷害情形時使用。",
+        summary: ["先保護學生安全並記錄可觀察事實。", "不得以私下和解取代正式受理或通報判斷。", "儘速交由權責處室依規定啟動後續程序。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "霸凌事件處理入口（示範）", url: "#" }],
+        updated: "2026-05-23",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "gender-equity",
+        title: "疑似性平事件處理",
+        audience: "一般教師、導師、任課教師",
+        situation: "疑似校園性別事件、性騷擾、性侵害、性霸凌或不當互動時使用。",
+        summary: ["立即保護當事人安全與隱私。", "避免自行調查、詢問細節或要求雙方對質。", "依校內性平與通報流程交由權責單位處理。"],
+        office: "學務處",
+        task: "student-event",
+        links: [{ label: "性平事件校內窗口（示範）", url: "#" }],
+        updated: "2026-05-22",
+        tags: ["重要", "高風險", "流程"]
+      },
+      {
+        id: "class-substitution",
+        title: "調課代課流程",
+        audience: "任課教師、導師、教務處承辦人",
+        situation: "因公假、事病假、研習、活動或課務需求需要調課或代課時使用。",
+        summary: ["先確認課務影響與代課需求。", "依教務處規定提出調課或代課資料。", "完成核定後通知相關班級與協同人員。"],
+        office: "教務處",
+        task: "teaching-assessment",
+        links: [{ label: "調課代課申請（示範）", url: "#" }],
+        updated: "2026-05-21",
+        tags: ["常用", "表件", "流程"]
+      },
+      {
+        id: "counseling-referral",
+        title: "學生輔導轉介",
+        audience: "導師、任課教師、輔導相關人員",
+        situation: "學生在情緒、人際、家庭、學習適應或行為表現上需要進一步支持時使用。",
+        summary: ["先蒐集具體觀察與已嘗試的班級支持方式。", "與輔導室討論轉介需要與資料準備。", "保護學生隱私，避免標籤化描述。"],
+        office: "輔導室",
+        task: "student-event",
+        links: [{ label: "輔導轉介表（示範）", url: "#" }],
+        updated: "2026-05-20",
+        tags: ["重要", "表件", "流程"]
+      },
+      {
+        id: "new-teacher-guide",
+        title: "新進教師校園生活指南",
+        audience: "新進教師、代理代課教師、跨校調任教師",
+        situation: "報到前後、開學第一週或不熟悉校內流程時使用。",
+        summary: ["先掌握行事曆、處室分工、差勤與常用系統。", "將教師常用入口與校內聯絡方式加入書籤。", "遇到不確定事項先洽學年主任或承辦處室。"],
+        office: "教務處",
+        task: "new-teacher",
+        links: [
+          ...resourceLinks("padlet-002", ["校內行事曆"]),
+          ...resourceLinks("padlet-008", ["校務系統"]),
+          ...resourceLinks("padlet-009", ["差勤系統"]),
+          ...resourceLinks("padlet-061", ["內湖雲端N114"])
+        ],
+        updated: "2026-05-19",
+        tags: ["新進教師必讀", "常用"]
+      },
+      {
+        id: "common-resource-entry",
+        title: "常用系統與表件入口",
+        audience: "一般教師、代理代課教師、新進教師",
+        situation: "需要找行事曆、處室表單、常用系統、處室資料或最新入口時使用。",
+        summary: ["本頁已將既有常用連結整理為常用資源，可用搜尋或資源分類查找。", "年度文件只保留大標題與更新提示；正式檔案需改存校內 Drive 或網站檔案區後再更新。", "涉及學生資料、人事會計或通報事件時，不自行轉傳未確認權限的連結。"],
+        office: "各處室",
+        task: "new-teacher",
+        links: [
+          ...resourceLinks("padlet-001", ["線上會議 Meet"]),
+          ...resourceLinks("padlet-002", ["校內行事曆"]),
+          ...resourceLinks("padlet-004", ["導師每日疾病通報"])
+        ],
+        updated: "2026-05-30",
+        tags: ["常用", "表件", "新進教師必讀"]
+      },
+      {
+        id: "field-trip",
+        title: "戶外教育與校外教學準備",
+        audience: "活動承辦人、導師、學年團隊",
+        situation: "辦理校外教學、戶外教育、參訪、競賽或移地課程前使用。",
+        summary: ["確認活動計畫、家長同意、交通、保險與安全分工。", "提早送交申請資料並保留核准紀錄。", "行前向學生說明集合、動線與安全注意事項。"],
+        office: "學務處",
+        task: "field-trip",
+        links: [{ label: "戶外教育申請檢核（示範）", url: "#" }],
+        updated: "2026-05-18",
+        tags: ["重要", "表件", "流程"]
       }
+    ];
 
-      if (shouldFocus) {
-        document.querySelector(".content-card").scrollIntoView({ block: "start", behavior: "smooth" });
-      }
+    const state = {
+      query: "",
+      task: "all",
+      office: defaultOfficeTab,
+      padletCategory: "none",
+      tag: "",
+      resultsMode: "directory",
+      activeShortcut: ""
+    };
+
+    let padletCategories = getPadletCategories();
+
+    const elements = {
+      searchInput: document.getElementById("searchInput"),
+      clearFiltersBtn: document.getElementById("clearFiltersBtn"),
+      quickEntries: document.getElementById("quickEntries"),
+      shortcutEmpty: document.getElementById("shortcutEmpty"),
+      officeFilters: document.getElementById("officeFilters"),
+      padletGrid: document.getElementById("padletGrid"),
+      padletCount: document.getElementById("padletCount"),
+      padletEmpty: document.getElementById("padletEmpty"),
+      recentUpdates: document.getElementById("recentUpdates"),
+      emptyState: document.getElementById("emptyState")
+    };
+
+    function getTaskLabel(taskId) {
+      const match = taskCategories.find((task) => task.id === taskId);
+      return match ? match.label : "";
     }
 
-    function buildNavigation() {
-      chapterList.innerHTML = handbookChapters.map((chapter) => (
-        "<button class='chapter-button' type='button' role='tab' data-chapter-id='" + chapter.id + "'>" +
-          "<span class='chapter-number'>" + formatChapterNumber(chapter.number) + "</span>" +
-          "<span class='chapter-name'>" + chapter.title + "</span>" +
-        "</button>"
-      )).join("");
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
 
-      if (navigationEventsBound) return;
-      navigationEventsBound = true;
+    function queryTokens(value) {
+      return normalize(value).split(/\s+/).filter(Boolean);
+    }
 
-      chapterList.addEventListener("click", (event) => {
-        const button = event.target.closest(".chapter-button");
-        if (!button) return;
-        renderChapter(button.dataset.chapterId, window.matchMedia("(max-width: 900px)").matches);
+    function matchesQuery(searchText, queryValue) {
+      const tokens = queryTokens(queryValue);
+      if (tokens.length === 0) return true;
+      const text = normalize(searchText);
+      return tokens.every((token) => text.includes(token));
+    }
+
+    function getPadletCategories() {
+      return [...new Set(padletResources.map((resource) => resource.category))];
+    }
+
+    function itemSearchText(item) {
+      return [
+        item.title,
+        item.audience,
+        item.situation,
+        item.office,
+        getTaskLabel(item.task),
+        item.summary.join(" "),
+        item.links.map((link) => link.label).join(" "),
+        item.tags.join(" ")
+      ].join(" ");
+    }
+
+    function itemMatches(item) {
+      const query = normalize(state.query);
+      const matchQuery = matchesQuery(itemSearchText(item), query);
+      const matchTask = state.task === "all" || item.task === state.task;
+      const matchOffice = state.office === "all" || state.office === defaultOfficeTab || item.office === state.office;
+      const matchTag = !state.tag || item.tags.includes(state.tag);
+      return matchQuery && matchTask && matchOffice && matchTag;
+    }
+
+    function padletSearchText(resource) {
+      return [
+        resource.title,
+        resource.category,
+        resource.type,
+        resource.status,
+        resource.note,
+        resource.updated,
+        resource.links.map((link) => link.label + " " + link.url).join(" "),
+        resource.tags.join(" ")
+      ].join(" ");
+    }
+
+    function padletMatches(resource) {
+      const query = normalize(state.query);
+      const matchQuery = matchesQuery(padletSearchText(resource), query);
+      const category = state.padletCategory === "none" && padletCategories.includes(state.office) ? state.office : state.padletCategory;
+      const matchCategory = category === "none" || category === "featured" || category === "all" || resource.category === category;
+      return matchQuery && matchCategory;
+    }
+
+    function normalizeOffice(office) {
+      return realOfficeCategories.includes(office) ? office : "其他";
+    }
+
+    function resourceOffice(resource) {
+      if (realOfficeCategories.includes(resource.category)) return resource.category;
+      if (resource.title.includes("差勤") || resource.title.includes("請假")) return "人事室";
+      if (resource.title.includes("平板借用") || resource.title.includes("平板車")) return "總務處";
+      if (resource.category === "資訊分享") return "教務處";
+      return "其他";
+    }
+
+    function canonicalUrl(url) {
+      return String(url || "").trim().split("#")[0].replace(/\/$/, "");
+    }
+
+    function cleanLinks(links) {
+      return (links || []).filter((link) => {
+        const url = String(link.url || "").trim();
+        return url && url !== "#";
       });
+    }
 
-      chapterList.addEventListener("keydown", (event) => {
-        const current = event.target.closest(".chapter-button");
-        if (!current) return;
+    function firstResourceLink(resourceId) {
+      const resource = padletResources.find((item) => item.id === resourceId);
+      return resource && resource.links && resource.links[0] ? resource.links[0].url : "";
+    }
 
-        const buttons = Array.from(document.querySelectorAll(".chapter-button"));
-        const currentIndex = buttons.indexOf(current);
-        const keyMap = {
-          ArrowDown: 1,
-          ArrowRight: 1,
-          ArrowUp: -1,
-          ArrowLeft: -1
+    function getDirectoryItems() {
+      if (Array.isArray(directoryApiResources)) {
+        return directoryApiResources.map((resource) => ({
+          ...resource,
+          links: cleanLinks(resource.links),
+          office: resource.office || resourceOffice(resource),
+          source: "api"
+        }));
+      }
+      const hiddenResourceIds = new Set(["padlet-041", "padlet-049", "padlet-058"]);
+      const resourceItems = padletResources
+        .filter((resource) => !hiddenResourceIds.has(resource.id))
+        .map((resource) => ({
+          ...resource,
+          links: cleanLinks(resource.links),
+          office: resourceOffice(resource),
+          featured: defaultFeaturedResourceIds.has(resource.id),
+          source: "resource"
+        }));
+      const resourceUrls = new Set(padletResources.flatMap((item) => cleanLinks(item.links).map((link) => canonicalUrl(link.url))).filter(Boolean));
+      const spaceBookingItem = {
+        id: "space-booking-entry",
+        category: "總務處",
+        office: "總務處",
+        title: "場地／平板借用流程",
+        type: "操作與申請",
+        status: "",
+        note: "先看借用網頁說明確認操作方式，再到借用網址辦理。",
+        links: [
+          { label: "借用網頁說明", url: firstResourceLink("padlet-058") },
+          { label: "借用網址連結", url: firstResourceLink("padlet-049") }
+        ],
+        updated: "2025-08-19",
+        tags: ["常用資源", "總務處", "操作說明", "借用"],
+        featured: true,
+        source: "paired"
+      };
+      const schoolInfoItem = {
+        id: "school-info-directory",
+        category: "學校資料",
+        office: "會計室",
+        title: "學校資料",
+        type: "基本資料",
+        status: "",
+        note: "抬頭：新竹市香山區內湖國小；統一編號：47208311；代碼：183622；電話：03-5373184。",
+        links: [{ label: "前往校網首頁", url: "https://www.nhps.hc.edu.tw/nss/p/index" }],
+        updated: "2026-05-30",
+        tags: ["常用資源", "學校資料"],
+        featured: true,
+        source: "school"
+      };
+      const linkItems = handbookItems.map((item) => {
+        const links = cleanLinks(item.links);
+        const uniqueLinks = links.filter((link) => !resourceUrls.has(canonicalUrl(link.url)));
+        return {
+          id: "link-" + item.id,
+          category: normalizeOffice(item.office),
+          office: normalizeOffice(item.office),
+          title: item.title,
+          type: "連結",
+          status: uniqueLinks.length ? "" : "連結待補",
+          note: "",
+          links: uniqueLinks,
+          updated: item.updated,
+          tags: item.tags,
+          source: "handbook",
+          hasOnlyDuplicateLinks: links.length > 0 && uniqueLinks.length === 0
         };
+      }).filter((item) => !item.hasOnlyDuplicateLinks);
+      return [...resourceItems, spaceBookingItem, schoolInfoItem, ...linkItems];
+    }
 
-        if (!(event.key in keyMap)) return;
-        event.preventDefault();
+    function directorySearchText(item) {
+      return [
+        item.title,
+        item.office,
+        item.category,
+        item.type,
+        item.status,
+        item.note,
+        item.updated,
+        item.links.map((link) => link.label + " " + link.url).join(" "),
+        item.tags.join(" ")
+      ].join(" ");
+    }
 
-        const nextIndex = (currentIndex + keyMap[event.key] + buttons.length) % buttons.length;
-        buttons[nextIndex].focus();
-        renderChapter(buttons[nextIndex].dataset.chapterId, false);
+    function directoryItemMatches(item) {
+      const query = normalize(state.query);
+      const matchQuery = matchesQuery(directorySearchText(item), query);
+      const matchOffice = state.office === "all" || state.office === defaultOfficeTab || item.office === state.office;
+      const matchCategory = state.padletCategory === "none" || state.padletCategory === "all" || item.category === state.padletCategory;
+      return matchQuery && matchOffice && matchCategory;
+    }
+
+    function sortDirectoryItems(a, b) {
+      const linkDiff = Number(b.links.length > 0) - Number(a.links.length > 0);
+      if (linkDiff !== 0) return linkDiff;
+      return String(b.updated || "").localeCompare(String(a.updated || ""));
+    }
+
+    function hasActiveFilters() {
+      return Boolean(normalize(state.query)) || state.task !== "all" || state.office !== defaultOfficeTab || Boolean(state.tag);
+    }
+
+    function shouldShowResults() {
+      return state.resultsMode === "all" || hasActiveFilters();
+    }
+
+    function getFilteredItems() {
+      return handbookItems.filter(itemMatches);
+    }
+
+    function tagKind(tag) {
+      if (tag === "重要") return "important";
+      if (tag === "高風險") return "high-risk";
+      if (tag === "表件") return "form";
+      return "normal";
+    }
+
+    function createTextElement(tagName, className, text) {
+      const element = document.createElement(tagName);
+      if (className) element.className = className;
+      element.textContent = text;
+      return element;
+    }
+
+    function createField(label, valueNode) {
+      const row = document.createElement("div");
+      row.className = "field-row";
+      row.appendChild(createTextElement("dt", "field-label", label));
+      const value = document.createElement("dd");
+      value.className = "field-value";
+      value.appendChild(valueNode);
+      row.appendChild(value);
+      return row;
+    }
+
+    function createSummaryList(items) {
+      const list = document.createElement("ul");
+      items.forEach((text) => {
+        const item = document.createElement("li");
+        item.textContent = text;
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createLinks(links) {
+      const list = document.createElement("ul");
+      list.className = "link-list";
+      links.forEach((link) => {
+        const item = document.createElement("li");
+        const anchor = document.createElement("a");
+        anchor.href = link.url || "#";
+        anchor.textContent = link.label || "未命名連結";
+        if (String(link.url || "").startsWith("http")) {
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+        }
+        item.appendChild(anchor);
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createTags(tags) {
+      const list = document.createElement("ul");
+      list.className = "tag-list";
+      tags.forEach((tag) => {
+        const item = document.createElement("li");
+        item.className = "tag";
+        item.dataset.kind = tagKind(tag);
+        item.textContent = tag;
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createCard(item) {
+      const card = document.createElement("article");
+      card.className = "resource-card";
+      card.id = item.id;
+
+      const top = document.createElement("div");
+      top.className = "card-topline";
+      const titleBlock = document.createElement("div");
+      titleBlock.appendChild(createTextElement("h3", "card-title", item.title));
+      titleBlock.appendChild(createTextElement("p", "section-note", getTaskLabel(item.task)));
+      top.appendChild(titleBlock);
+      top.appendChild(createTextElement("span", "card-office", item.office));
+      card.appendChild(top);
+
+      const fields = document.createElement("dl");
+      fields.className = "field-list";
+      fields.appendChild(createField("適用對象", createTextElement("span", "", item.audience)));
+      fields.appendChild(createField("適用情境", createTextElement("span", "", item.situation)));
+      fields.appendChild(createField("辦理重點", createSummaryList(item.summary)));
+      fields.appendChild(createField("權責處室", createTextElement("span", "", item.office)));
+      fields.appendChild(createField("表件或連結", createLinks(item.links)));
+      fields.appendChild(createField("最後更新", createTextElement("span", "", item.updated)));
+      fields.appendChild(createField("標籤", createTags(item.tags)));
+      card.appendChild(fields);
+
+      return card;
+    }
+
+    function getLinkActionLabel(resource, link) {
+      const current = String(link.label || "").trim();
+      if (current && !/^開啟/.test(current)) return current;
+      const title = String(resource.title || "");
+      const type = String(resource.type || "");
+
+      if (title.includes("差勤")) return "前往差勤系統";
+      if (title.includes("校務系統")) return "前往校務系統";
+      if (title.includes("單一入口")) return "前往單一入口";
+      if (title.includes("研習護照")) return "前往研習護照";
+      if (title.includes("校園新聞")) return "前往新聞網";
+      if (title.includes("疾病通報")) return "填寫疾病通報";
+      if (title.includes("管教")) return "填寫提報單";
+      if (title.includes("校安")) return "查看通報類別";
+      if (title.includes("課後班")) return "查看課後班資訊";
+      if (title.includes("防災地圖")) return "查看防災地圖";
+      if (title.includes("行事曆")) return "查看行事曆";
+      if (title.includes("學務處常用表單")) return "查看常用表單";
+      if (title.includes("學扶")) return "前往評量平台";
+
+      if (type.includes("表單")) return "填寫表單";
+      if (type.includes("試算表")) return "查看表格";
+      if (type.includes("文件") || type.includes("PDF")) return "查看文件";
+      if (type.includes("Drive 檔案")) return "查看檔案";
+      if (type.includes("Drive 資料夾")) return "開啟資料夾";
+      if (type.includes("影片")) return "觀看影片";
+      if (type.includes("Canva")) return "查看設計";
+      if (type.includes("Meet")) return "進入會議室";
+      if (type.includes("Microsoft")) return "前往 Microsoft 365";
+      if (type.includes("教育網路中心")) return "前往網路中心";
+      if (type.includes("研習系統")) return "前往研習系統";
+      if (type.includes("校網") || type.includes("網站") || type.includes("短網址")) return "前往頁面";
+      return current || "開啟連結";
+    }
+
+    function createCommonResourceLinks(resource) {
+      const list = document.createElement("ul");
+      list.className = "padlet-links";
+      resource.links.forEach((link) => {
+        const item = document.createElement("li");
+        const anchor = document.createElement("a");
+        anchor.href = link.url;
+        anchor.textContent = getLinkActionLabel(resource, link);
+        if (String(link.url || "").startsWith("http")) {
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+        }
+        item.appendChild(anchor);
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createCommonResourceCard(resource) {
+      const card = document.createElement("article");
+      card.className = "padlet-card";
+      if (resource.status) card.classList.add("is-pending");
+      card.id = resource.id;
+
+      const title = createTextElement("h3", "", resource.title);
+      const meta = document.createElement("div");
+      meta.className = "padlet-meta";
+      meta.append(
+        createTextElement("span", "padlet-type", resource.type),
+        createTextElement("span", "", resource.category),
+        createTextElement("span", "", "更新 " + resource.updated)
+      );
+
+      card.append(title, meta);
+      if (resource.note) card.appendChild(createTextElement("p", "padlet-note", resource.note));
+      if (resource.status) card.appendChild(createTextElement("p", "padlet-status", resource.status + "，每學年更換一次檔案或連結。"));
+      if (resource.links.length) {
+        card.appendChild(createCommonResourceLinks(resource));
+      }
+
+      return card;
+    }
+
+    function renderCards() {
+      if (!shouldShowResults()) {
+        elements.cardGrid.replaceChildren();
+        elements.cardGrid.hidden = true;
+        elements.guideState.hidden = false;
+        elements.emptyState.classList.remove("is-visible");
+        elements.resultCount.textContent = "請先使用搜尋、常用入口、處室或資源分類。";
+        return;
+      }
+
+      const items = getFilteredItems();
+      elements.cardGrid.hidden = false;
+      elements.guideState.hidden = true;
+      elements.cardGrid.replaceChildren(...items.map(createCard));
+      elements.resultCount.textContent = "目前顯示 " + items.length + " 筆，共 " + handbookItems.length + " 筆資料";
+      elements.emptyState.classList.toggle("is-visible", items.length === 0);
+    }
+
+    function renderCommonResources() {
+      const query = normalize(state.query);
+      const isIdle = state.padletCategory === "none" && state.office === defaultOfficeTab && !query;
+      const directoryItems = getDirectoryItems();
+      const visible = (isIdle
+        ? directoryItems.filter((item) => item.featured)
+        : directoryItems.filter(directoryItemMatches)
+      ).sort(sortDirectoryItems);
+
+      elements.padletGrid.replaceChildren(...visible.map(createCommonResourceCard));
+      elements.padletEmpty.hidden = visible.length > 0;
+      if (visible.length === 0) {
+        elements.padletEmpty.textContent = isIdle ? "目前尚未設定常用入口資源。" : "目前沒有符合條件的連結。";
+      }
+
+      elements.padletCount.textContent = "";
+    }
+
+    function createChip(label, value, type, hint = "") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "chip";
+      if (type === "task" && value !== "all") {
+        button.classList.add("task-option");
+        const title = document.createElement("strong");
+        title.textContent = label;
+        const detail = document.createElement("span");
+        detail.textContent = hint;
+        button.append(title, detail);
+      } else {
+        button.textContent = label;
+      }
+      button.dataset.value = value;
+      button.dataset.type = type;
+      button.addEventListener("click", () => {
+        if (type === "task") state.task = value;
+        if (type === "office") {
+          state.office = value;
+          state.padletCategory = "none";
+          state.query = "";
+          state.task = "all";
+          state.activeShortcut = "";
+          elements.searchInput.value = "";
+        }
+        if (type === "padlet") state.padletCategory = value;
+        state.tag = "";
+        state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
+        renderAll();
+      });
+      return button;
+    }
+
+    function renderFilters() {
+      elements.officeFilters.replaceChildren(
+        ...officeCategories.map((office) => createChip(office, office, "office"))
+      );
+    }
+
+    function updateFilterActiveState() {
+      document.querySelectorAll("[data-type='office']").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.value === state.office);
       });
     }
 
-    function applyDynamicHandbook(data) {
-      if (!data || data.ok !== true || !Array.isArray(data.chapters) || data.chapters.length === 0) return false;
-      handbookSectionLabels = Array.isArray(data.section_labels) && data.section_labels.length > 0
-        ? data.section_labels
-        : sectionLabels;
-      handbookChapters = mergeWithStaticFallback(data.chapters);
-      buildNavigation();
-      renderChapter((location.hash || "").replace("#", ""), false);
-      return true;
+    function shortcutKey(entry) {
+      return [
+        entry.label || "",
+        entry.query || "",
+        entry.resourceCategory || "",
+        entry.targetId || ""
+      ].join("|");
     }
 
-    async function loadDynamicHandbook() {
+    function renderQuickEntries() {
+      const shortcuts = officeShortcuts[state.office] || [];
+      elements.shortcutEmpty.hidden = state.office !== defaultOfficeTab || shortcuts.length > 0;
+      elements.quickEntries.replaceChildren(...shortcuts.map((entry) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "quick-entry";
+        const label = document.createElement("strong");
+        label.textContent = entry.label;
+        const hint = document.createElement("span");
+        hint.textContent = entry.hint;
+        button.append(label, hint);
+        button.classList.toggle("is-active", shortcutKey(entry) === state.activeShortcut);
+        button.addEventListener("click", () => {
+          state.query = entry.query || "";
+          state.task = "all";
+          state.padletCategory = entry.resourceCategory || "none";
+          state.tag = entry.tag || "";
+          state.activeShortcut = shortcutKey(entry);
+          state.resultsMode = entry.targetId && !entry.query && !entry.resourceCategory ? "directory" : "filtered";
+          elements.searchInput.value = state.query;
+          renderAll();
+        });
+        return button;
+      }));
+    }
+
+    function renderRecentUpdates() {
+      const recent = getDirectoryItems()
+        .filter((item) => item.updated)
+        .sort((a, b) => b.updated.localeCompare(a.updated))
+        .slice(0, 5);
+      elements.recentUpdates.replaceChildren(...recent.map((item) => {
+        const row = document.createElement("li");
+        row.className = "update-item";
+        const link = document.createElement("a");
+        link.className = "update-title";
+        link.href = "#resourceResults";
+        link.textContent = item.title;
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          state.query = item.title;
+          state.task = "all";
+          state.office = item.office || "all";
+          state.padletCategory = "none";
+          state.tag = "";
+          state.activeShortcut = "";
+          state.resultsMode = "filtered";
+          elements.searchInput.value = state.query;
+          renderAll();
+          document.getElementById("resourceResults").scrollIntoView({ block: "start" });
+        });
+        const meta = createTextElement("span", "update-meta", item.updated + "｜" + item.office);
+        row.append(link, meta);
+        return row;
+      }));
+    }
+
+    function resetFilters() {
+      state.query = "";
+      state.task = "all";
+      state.office = defaultOfficeTab;
+      state.padletCategory = "none";
+      state.tag = "";
+      state.resultsMode = "directory";
+      state.activeShortcut = "";
+      elements.searchInput.value = "";
+      renderAll();
+    }
+
+    function renderAll() {
+      renderQuickEntries();
+      renderCommonResources();
+      updateFilterActiveState();
+    }
+
+    function normalizeResourceFromApi(resource) {
+      return {
+        id: String(resource.id || resource.resource_id || ""),
+        category: resource.category || resource.office || "其他",
+        office: resource.office || resource.category || "其他",
+        title: resource.title || "",
+        type: resource.type || "連結",
+        status: resource.status || resource.resource_status || "",
+        note: resource.note || "",
+        links: Array.isArray(resource.links) ? resource.links : [],
+        updated: resource.updated || "",
+        tags: Array.isArray(resource.tags) ? resource.tags : [],
+        visible: resource.visible !== false,
+        featured: resource.featured === true,
+        sort_order: Number(resource.sort_order || 0)
+      };
+    }
+
+    function normalizeShortcutsFromApi(shortcuts) {
+      if (!shortcuts || typeof shortcuts !== "object") return null;
+      const normalized = {};
+      Object.keys(shortcuts).forEach((office) => {
+        normalized[office] = (shortcuts[office] || []).filter((entry) => entry.enabled !== false).map((entry) => ({
+          label: entry.label || "",
+          hint: entry.hint || "",
+          query: entry.query || "",
+          resourceCategory: entry.resourceCategory || entry.resource_category || "",
+          targetId: entry.targetId || entry.target_id || "",
+          tag: entry.tag || ""
+        }));
+      });
+      return normalized;
+    }
+
+    async function loadDirectoryFromApi() {
       try {
-        const response = await fetch(handbookApiUrl, { method: "GET", headers: { "Accept": "application/json" } });
+        const response = await fetch(directoryApiUrl, { method: "GET", headers: { "Accept": "application/json" } });
         const data = await response.json();
-        applyDynamicHandbook(data);
+        if (!data || data.ok !== true || !Array.isArray(data.resources) || data.resources.length === 0) return false;
+        directoryApiResources = data.resources.map(normalizeResourceFromApi).filter((resource) => resource.visible);
+        padletResources = directoryApiResources;
+        const dynamicShortcuts = normalizeShortcutsFromApi(data.shortcuts);
+        if (dynamicShortcuts) officeShortcuts = dynamicShortcuts;
+        padletCategories = getPadletCategories();
+        renderRecentUpdates();
+        renderAll();
+        return true;
       } catch (err) {
-        handbookChapters = chapters;
-        handbookSectionLabels = sectionLabels;
+        return false;
       }
     }
 
-    buildNavigation();
-    renderChapter((location.hash || "").replace("#", ""), false);
-    loadDynamicHandbook();
+    elements.searchInput.addEventListener("input", (event) => {
+      state.query = event.target.value;
+      state.tag = "";
+      state.activeShortcut = "";
+      state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
+      renderAll();
+    });
+
+    elements.clearFiltersBtn.addEventListener("click", resetFilters);
+
+    renderFilters();
+    renderRecentUpdates();
+    renderAll();
+    loadDirectoryFromApi();
   </script>
 </body>
 </html>

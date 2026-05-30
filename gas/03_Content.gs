@@ -53,6 +53,48 @@ function getConfigPayload() {
   };
 }
 
+function getPublishedDirectory() {
+  ensureDirectoryCmsReady_();
+  return {
+    ok: true,
+    app_version: getConfigValue("app_version", APP.VERSION),
+    cache_version: getConfigValue("cache_version", ""),
+    generated_at: nowText(),
+    resources: getDirectoryResources_(false),
+    shortcuts: getDirectoryShortcuts_(false)
+  };
+}
+
+function getAdminDirectory(user) {
+  ensureDirectoryCmsReady_();
+  return {
+    ok: true,
+    app_version: getConfigValue("app_version", APP.VERSION),
+    cache_version: getConfigValue("cache_version", ""),
+    user: user || null,
+    resources: getDirectoryResources_(true),
+    shortcuts: getDirectoryShortcuts_(true)
+  };
+}
+
+function ensureDirectoryCmsReady_() {
+  var ss = openSpreadsheet();
+  ensureSheet_(ss, APP.SHEETS.DIRECTORY_RESOURCES, APP.DIRECTORY_RESOURCE_COLUMNS);
+  ensureSheet_(ss, APP.SHEETS.DIRECTORY_SHORTCUTS, APP.DIRECTORY_SHORTCUT_COLUMNS);
+  ensureSheet_(ss, APP.SHEETS.CONFIG, APP.CONFIG_COLUMNS);
+  ensureSheet_(ss, APP.SHEETS.LOGS, APP.LOG_COLUMNS);
+  if (getConfigValue("app_version", "") !== APP.VERSION) {
+    setConfigValue("app_version", APP.VERSION);
+    bumpCacheVersion();
+  }
+  var resources = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+  if (resources.length === 0 && typeof importCurrentDirectoryContent_ === "function") {
+    importCurrentDirectoryContent_(false);
+  } else {
+    seedDirectoryShortcuts_();
+  }
+}
+
 function getAdminHandbook(user) {
   var chapters = readTable(APP.SHEETS.CHAPTERS)
     .filter(function(chapter) { return chapter.status !== "deleted"; })
@@ -96,6 +138,61 @@ function getAdminHandbook(user) {
   };
 }
 
+function getDirectoryResources_(includeHidden) {
+  return readTable(APP.SHEETS.DIRECTORY_RESOURCES)
+    .filter(function(row) {
+      if (isTrue_(row.archived)) return false;
+      return includeHidden || isTrue_(row.visible);
+    })
+    .sort(function(a, b) {
+      var sortDiff = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+      if (sortDiff !== 0) return sortDiff;
+      return String(b.updated || "").localeCompare(String(a.updated || ""));
+    })
+    .map(function(row) {
+      return {
+        id: row.resource_id,
+        category: row.category || row.office || "其他",
+        office: row.office || "",
+        title: row.title || "",
+        type: row.type || "連結",
+        status: row.resource_status || "",
+        note: row.note || "",
+        links: parseJson_(row.links_json, []),
+        updated: row.updated || "",
+        tags: parseJson_(row.tags_json, []),
+        visible: isTrue_(row.visible),
+        featured: isTrue_(row.featured),
+        sort_order: Number(row.sort_order || 0)
+      };
+    });
+}
+
+function getDirectoryShortcuts_(includeDisabled) {
+  var rows = readTable(APP.SHEETS.DIRECTORY_SHORTCUTS)
+    .filter(function(row) { return includeDisabled || isTrue_(row.enabled); })
+    .sort(function(a, b) {
+      return Number(a.sort_order || 0) - Number(b.sort_order || 0);
+    });
+  var grouped = {};
+  rows.forEach(function(row) {
+    var parent = row.parent_office || "常用入口";
+    if (!grouped[parent]) grouped[parent] = [];
+    grouped[parent].push({
+      id: row.shortcut_id || "",
+      label: row.label || "",
+      hint: row.hint || "",
+      query: row.query || "",
+      resourceCategory: row.resource_category || "",
+      targetId: row.target_id || "",
+      tag: row.tag || "",
+      enabled: isTrue_(row.enabled),
+      sort_order: Number(row.sort_order || 0)
+    });
+  });
+  return grouped;
+}
+
 function parseJson_(value, fallback) {
   if (!value) return fallback;
   try {
@@ -116,6 +213,20 @@ function stringifyLinks_(links) {
   }).filter(function(link) {
     return link.label && link.url;
   }));
+}
+
+function stringifyTags_(tags) {
+  if (!tags) return "[]";
+  if (!Array.isArray(tags)) return "[]";
+  return JSON.stringify(tags.map(function(tag) {
+    return String(tag || "").trim();
+  }).filter(Boolean));
+}
+
+function isTrue_(value) {
+  if (value === true) return true;
+  var text = String(value || "").trim().toUpperCase();
+  return text === "TRUE" || text === "Y" || text === "YES" || text === "1";
 }
 
 function formatChapterNo_(value) {

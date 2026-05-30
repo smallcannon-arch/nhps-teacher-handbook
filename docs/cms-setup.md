@@ -40,6 +40,7 @@
    - `05_Auth.gs`
    - `06_Admin.gs`
    - `07_CurrentContentSeed.gs`
+   - `08_DirectoryCurrentSeed.gs`
 
 ## 三、填入 Apps Script 設定
 
@@ -88,9 +89,12 @@ DEFAULT_DOMAIN_ROLE: "editor",
 5. 執行後 Google Sheet 會建立：
    - `Chapters`
    - `ContentBlocks`
+   - `DirectoryResources`
+   - `DirectoryShortcuts`
    - `Users`
    - `Config`
    - `Logs`
+6. `setupTeacherHandbookCms` 會同步建立目前前台用到的資源目錄資料；若之後只想補缺漏、不覆蓋已修改內容，可再執行 `importCurrentDirectoryContent`。
 
 ## 六、匯入目前前台內容
 
@@ -106,6 +110,13 @@ DEFAULT_DOMAIN_ROLE: "editor",
 5. 之後若只想補缺漏、不覆蓋已修改內容，可執行 `importCurrentFrontendContent`。
 
 注意：這一步只匯入後台資料，不會直接改寫 `index.html`。前台會優先讀 Worker/GAS 的已發布內容；若沒有可用資料，仍會回退到靜態內容。
+
+資源目錄另有兩個匯入函式：
+
+- `importCurrentDirectoryContent`：只補目前缺少的資源卡片與第二層入口。
+- `forceImportCurrentDirectoryContent`：用目前 GitHub 版本覆蓋 `DirectoryResources` 與 `DirectoryShortcuts` 中同 ID 的資料。
+
+通常第一次部署只要執行 `setupTeacherHandbookCms` 即可；若前台原型資料又大幅調整，才需要執行 `forceImportCurrentDirectoryContent`。
 
 ## 七、加入第一位後台管理者
 
@@ -171,6 +182,14 @@ Worker 對 GET 讀取會依 `cache_version` 快取；對 POST 後台寫入一律
 - 目前 `DEFAULT_DOMAIN_ROLE` 設為 `editor`，校內網域帳號可編輯與直接發布；需要收回或封存的人，再於 `Users` 工作表指定 `reviewer` 或 `admin`。
 
 ## 十一、小卡管理原則
+
+目前新版首頁主要使用「資源目錄」：
+
+- `DirectoryResources`：一列就是前台一張資源卡片，可控制標題、處室、第二層分類、連結、是否顯示、是否列入常用入口候選。
+- `DirectoryShortcuts`：控制前台第一層處室標籤下方的第二層入口。
+- 後台 `admin.html` 會優先維護這兩張表。
+
+以下章節/小卡 CMS 是舊版手冊內容架構，仍保留供既有 `index.html` 使用。
 
 - 核心六段小卡固定保留：`項目說明`、`適用情境`、`辦理方式`、`注意事項`、`承辦單位`、`相關資源`。
 - 後台可以新增「補充小卡」，例如 `處室提醒`、`版本紀錄`、`附件說明`。

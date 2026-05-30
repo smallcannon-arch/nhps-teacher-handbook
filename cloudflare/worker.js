@@ -1,5 +1,5 @@
 const DEFAULT_CACHE_SECONDS = 300;
-const ALLOWED_ACTIONS = new Set(["getHandbook", "getConfig", "health"]);
+const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "health"]);
 
 export default {
   async fetch(request, env, ctx) {
