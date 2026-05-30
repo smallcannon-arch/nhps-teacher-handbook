@@ -200,6 +200,20 @@
       padding: 9px 11px;
     }
 
+    input.suggest-input {
+      padding-right: 34px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 53%, calc(100% - 12px) 53%;
+      background-repeat: no-repeat;
+      background-size: 6px 6px;
+    }
+
+    input.suggest-input::-webkit-calendar-picker-indicator {
+      opacity: 0;
+    }
+
     textarea {
       min-height: 96px;
       resize: vertical;
@@ -433,6 +447,17 @@
       grid-template-columns: minmax(130px, 0.75fr) minmax(220px, 1.35fr) auto;
       gap: 8px;
       margin-bottom: 8px;
+      align-items: end;
+    }
+
+    .link-field {
+      display: grid;
+      gap: 4px;
+    }
+
+    .link-field label {
+      color: var(--muted);
+      font-size: 0.82rem;
     }
 
     .hidden {
@@ -565,7 +590,7 @@
             </div>
             <div class="field">
               <label for="batchCategoryInput">批次改分類</label>
-              <input id="batchCategoryInput" placeholder="留空代表不變更分類">
+              <input id="batchCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類；留空不變更">
             </div>
           </div>
           <div class="grid-2">
@@ -591,7 +616,7 @@
           </div>
         </details>
 
-        <div class="grid-2">
+        <div class="grid-3">
           <div class="field">
             <label for="resourceTitleInput">標題</label>
             <input id="resourceTitleInput" placeholder="例如：差勤系統（請假／補休）">
@@ -599,6 +624,10 @@
           <div class="field">
             <label for="resourceUpdatedInput">最後更新日期</label>
             <input id="resourceUpdatedInput" type="date">
+          </div>
+          <div class="field">
+            <label for="resourceSortInput">顯示順序</label>
+            <input id="resourceSortInput" type="number" min="1" step="1">
           </div>
         </div>
 
@@ -609,22 +638,11 @@
           </div>
           <div class="field">
             <label for="resourceCategoryInput">所屬分類</label>
-            <input id="resourceCategoryInput" placeholder="例如：內湖雲端、竹市常用連結">
+            <input id="resourceCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類">
           </div>
           <div class="field">
             <label for="resourceTypeInput">類型</label>
-            <input id="resourceTypeInput" placeholder="Google 表單、Drive 資料夾、校網">
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label for="resourceStatusInput">狀態提醒</label>
-            <input id="resourceStatusInput" placeholder="例如：年度檔案待整理，可留空">
-          </div>
-          <div class="field">
-            <label for="resourceSortInput">顯示順序</label>
-            <input id="resourceSortInput" type="number" min="1" step="1">
+            <input id="resourceTypeInput" class="suggest-input" list="typeOptions" autocomplete="off" placeholder="可選既有類型，也可輸入新類型">
           </div>
         </div>
 
@@ -635,7 +653,7 @@
 
         <div class="field">
           <label for="resourceTagsInput">標籤</label>
-          <input id="resourceTagsInput" placeholder="用逗號分隔，例如：常用, 學務處, Google 表單">
+          <input id="resourceTagsInput" class="suggest-input" list="tagOptions" autocomplete="off" placeholder="可選既有標籤，也可用逗號新增多個標籤">
         </div>
 
         <div class="checkbox-row">
@@ -707,11 +725,11 @@
           </div>
           <div class="field">
             <label for="shortcutCategoryInput">指定內容分類</label>
-            <input id="shortcutCategoryInput" placeholder="例如：內湖雲端">
+            <input id="shortcutCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類">
           </div>
           <div class="field">
             <label for="shortcutTagInput">指定標籤</label>
-            <input id="shortcutTagInput" placeholder="可留空">
+            <input id="shortcutTagInput" class="suggest-input" list="tagOptions" autocomplete="off" placeholder="可選既有標籤，也可輸入新標籤；可留空">
           </div>
         </div>
 
@@ -735,6 +753,10 @@
     <p>本後台不應放入學生個資、個案內容、成績、通報細節、採購工程細節或未經確認的高風險資訊。</p>
   </footer>
 
+  <datalist id="categoryOptions"></datalist>
+  <datalist id="typeOptions"></datalist>
+  <datalist id="tagOptions"></datalist>
+
   <script>
     const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
     const LOGIN_PAGE = "login.html";
@@ -742,6 +764,18 @@
     const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
     const OFFICES = ["常用入口", "教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
     const RESOURCE_OFFICES = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
+    const DEFAULT_CATEGORIES = [
+      "學校資料", "差勤系統", "硬體設備報修", "資訊設備報修", "場地／平板借用", "校安／學生事件",
+      "戶外教育", "輔導轉介", "常用系統", "114年度資料", "內湖雲端", "竹市常用連結", "表件下載", "研習進修"
+    ];
+    const DEFAULT_TYPES = [
+      "連結", "常用系統", "校網", "Google 表單", "Google 文件", "Google 試算表",
+      "Drive 資料夾", "PDF", "年度文件", "操作與申請", "資訊分享", "公告頁", "外部系統"
+    ];
+    const DEFAULT_TAGS = [
+      "常用", "重要", "高風險", "表件", "流程", "新進教師必讀", "教務處", "學務處", "總務處",
+      "輔導室", "人事室", "會計室", "資訊設備", "硬體設備", "場地借用", "平板借用", "校安", "性平", "霸凌"
+    ];
 
     let idToken = "";
     let currentUser = null;
@@ -800,7 +834,6 @@
       resourceOfficeInput: document.getElementById("resourceOfficeInput"),
       resourceCategoryInput: document.getElementById("resourceCategoryInput"),
       resourceTypeInput: document.getElementById("resourceTypeInput"),
-      resourceStatusInput: document.getElementById("resourceStatusInput"),
       resourceSortInput: document.getElementById("resourceSortInput"),
       resourceNoteInput: document.getElementById("resourceNoteInput"),
       resourceTagsInput: document.getElementById("resourceTagsInput"),
@@ -824,7 +857,10 @@
       shortcutTargetInput: document.getElementById("shortcutTargetInput"),
       shortcutEnabledInput: document.getElementById("shortcutEnabledInput"),
       saveShortcutBtn: document.getElementById("saveShortcutBtn"),
-      deleteShortcutBtn: document.getElementById("deleteShortcutBtn")
+      deleteShortcutBtn: document.getElementById("deleteShortcutBtn"),
+      categoryOptions: document.getElementById("categoryOptions"),
+      typeOptions: document.getElementById("typeOptions"),
+      tagOptions: document.getElementById("tagOptions")
     };
 
     window.onload = async () => {
@@ -876,6 +912,7 @@
       el.shortcutParentInput.innerHTML = OFFICES.map((office) => (
         "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
+      renderSuggestionLists();
     }
 
     function renderOfficeFilter() {
@@ -926,6 +963,7 @@
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
         renderOfficeFilter();
         renderCategoryFilter();
+        renderSuggestionLists();
         el.loginState.textContent = currentUser
           ? currentUser.email + "（" + currentUser.role + "）"
           : "已授權使用者";
@@ -1167,7 +1205,6 @@
       el.resourceOfficeInput.value = item.office || "其他";
       el.resourceCategoryInput.value = item.category || item.office || "";
       el.resourceTypeInput.value = item.type || "";
-      el.resourceStatusInput.value = item.status || "";
       el.resourceSortInput.value = item.sort_order || "";
       el.resourceNoteInput.value = item.note || "";
       el.resourceTagsInput.value = (item.tags || []).join(", ");
@@ -1186,7 +1223,6 @@
       el.resourceOfficeInput.value = "其他";
       el.resourceCategoryInput.value = "";
       el.resourceTypeInput.value = "連結";
-      el.resourceStatusInput.value = "";
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
       el.resourceTagsInput.value = "常用";
@@ -1213,8 +1249,14 @@
       const rows = links.length ? links : [{ label: "", url: "" }];
       el.resourceLinksBox.innerHTML = rows.map((link) => `
         <div class="link-row">
-          <input data-link="label" placeholder="按鈕文字" value="${escapeHtml(link.label || "")}">
-          <input data-link="url" placeholder="https://..." value="${escapeHtml(link.url || "")}">
+          <div class="link-field">
+            <label>連結名稱</label>
+            <input data-link="label" placeholder="例如：借用網頁說明" value="${escapeHtml(link.label || "")}">
+          </div>
+          <div class="link-field">
+            <label>網址</label>
+            <input data-link="url" placeholder="https://..." value="${escapeHtml(link.url || "")}">
+          </div>
           <button class="secondary remove-link" type="button">移除</button>
         </div>
       `).join("");
@@ -1262,13 +1304,15 @@
         label: row.querySelector("[data-link='label']").value.trim(),
         url: row.querySelector("[data-link='url']").value.trim()
       })).filter((link) => link.label && link.url);
+      const resourceId = el.resourceIdInput.value.trim();
+      const existing = resources.find((resource) => resource.id === resourceId);
       return {
-        id: el.resourceIdInput.value.trim(),
+        id: resourceId,
         title: el.resourceTitleInput.value.trim(),
         office: el.resourceOfficeInput.value,
         category: el.resourceCategoryInput.value.trim() || el.resourceOfficeInput.value,
         type: el.resourceTypeInput.value.trim(),
-        status: el.resourceStatusInput.value.trim(),
+        status: existing ? existing.status || "" : "",
         note: el.resourceNoteInput.value.trim(),
         links,
         tags: splitTags(el.resourceTagsInput.value),
@@ -1501,7 +1545,7 @@
       el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || activeIndex < 0 || activeIndex >= items.length - 1;
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
-      el.categoryFilter.disabled = mode !== "resources" || !enabled || !idToken;
+      el.categoryFilter.disabled = mode === "shortcuts" || !enabled || !idToken;
       el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.batchCategoryInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
@@ -1530,6 +1574,54 @@
 
     function splitTags(value) {
       return String(value || "").split(/[,，]/).map((tag) => tag.trim()).filter(Boolean);
+    }
+
+    function renderSuggestionLists() {
+      const resourceItems = [...resources, ...trash];
+      const shortcutItems = flattenShortcuts();
+      const categoryOptions = mergeOptions(
+        DEFAULT_CATEGORIES,
+        resourceItems.map((item) => item.category),
+        shortcutItems.map((item) => item.resourceCategory)
+      );
+      const typeOptions = mergeOptions(
+        DEFAULT_TYPES,
+        resourceItems.map((item) => item.type)
+      );
+      const tagOptions = mergeOptions(
+        DEFAULT_TAGS,
+        resourceItems.flatMap((item) => item.tags || []),
+        shortcutItems.map((item) => item.tag)
+      );
+      renderDatalist(el.categoryOptions, categoryOptions);
+      renderDatalist(el.typeOptions, typeOptions);
+      renderDatalist(el.tagOptions, tagOptions);
+    }
+
+    function mergeOptions(defaults, ...groups) {
+      const seen = new Set();
+      const output = [];
+      defaults.forEach(addOption);
+      groups
+        .flatMap((group) => group || [])
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .forEach(addOption);
+      return output;
+
+      function addOption(value) {
+        const text = String(value || "").trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        output.push(text);
+      }
+    }
+
+    function renderDatalist(target, options) {
+      target.innerHTML = options.map((value) => (
+        "<option value='" + escapeHtml(value) + "'></option>"
+      )).join("");
     }
 
     function todayText() {
@@ -1608,8 +1700,14 @@
     el.addResourceLinkBtn.addEventListener("click", () => {
       el.resourceLinksBox.insertAdjacentHTML("beforeend", `
         <div class="link-row">
-          <input data-link="label" placeholder="按鈕文字">
-          <input data-link="url" placeholder="https://...">
+          <div class="link-field">
+            <label>連結名稱</label>
+            <input data-link="label" placeholder="例如：借用網頁說明">
+          </div>
+          <div class="link-field">
+            <label>網址</label>
+            <input data-link="url" placeholder="https://...">
+          </div>
           <button class="secondary remove-link" type="button">移除</button>
         </div>
       `);
