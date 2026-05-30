@@ -221,7 +221,7 @@
 
     .filter-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
       gap: 20px;
     }
 
@@ -249,6 +249,35 @@
       padding: 8px 12px;
       font-size: 0.92rem;
       line-height: 1.4;
+    }
+
+    #taskFilters {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .task-option {
+      display: grid;
+      gap: 4px;
+      min-height: 74px;
+      padding: 12px 14px;
+      text-align: left;
+    }
+
+    .task-option strong {
+      color: inherit;
+      font-size: 0.96rem;
+      line-height: 1.4;
+    }
+
+    .task-option span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .task-option.is-active span {
+      color: rgba(255, 255, 255, 0.78);
     }
 
     .chip.is-active {
@@ -582,6 +611,7 @@
       .filter-layout,
       .quick-grid,
       .card-grid,
+      #taskFilters,
       .guide-steps,
       .side-stack {
         grid-template-columns: 1fr;
@@ -620,11 +650,11 @@
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <p class="site-kicker">測試版｜任務導向目錄原型</p>
+      <p class="site-kicker">測試版｜一般教師校務支援原型</p>
       <h1>內湖國小教師手冊｜校務支援站</h1>
-      <p class="site-summary">整合校內常用規定、流程、表件與資源連結，協助教師快速找到所需資訊。</p>
+      <p class="site-summary">整合一般教師常用規定、流程、表件與資源連結，協助快速找到所需資訊。</p>
       <div class="search-row" role="search">
-        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：報修、請假、校安、採購、戶外教育">
+        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：報修、請假、校安、經費、Padlet">
         <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
       </div>
     </div>
@@ -644,13 +674,13 @@
     <section class="section" aria-labelledby="filterTitle">
       <div class="section-heading">
         <div>
-          <h2 id="filterTitle">依任務與處室找</h2>
-          <p class="section-note">可先選任務，再用處室縮小範圍。</p>
+          <h2 id="filterTitle">依需求與處室找</h2>
+          <p class="section-note">先選一種常見需求，再視需要用處室縮小範圍。</p>
         </div>
       </div>
       <div class="filter-layout">
         <div class="filter-band">
-          <p class="filter-title">依任務找</p>
+          <p class="filter-title">常見需求</p>
           <div id="taskFilters" class="chip-list"></div>
         </div>
         <div class="filter-band">
@@ -671,11 +701,11 @@
         </div>
         <div id="guideState" class="guide-state">
           <strong>先從目錄進入，再看資料卡片</strong>
-          <p>首頁保留任務入口與處室目錄。老師可以先搜尋或點選分類，再閱讀符合需求的資料卡片。</p>
+          <p>首頁保留常用入口與處室目錄。一般教師可以先搜尋或點選分類，再閱讀符合需求的資料卡片。</p>
           <ul class="guide-steps">
-            <li>搜尋關鍵字，例如請假、校安、採購。</li>
+            <li>搜尋關鍵字，例如請假、校安、經費、Padlet。</li>
             <li>點常用入口，快速帶出相關流程。</li>
-            <li>依任務或處室縮小查詢範圍。</li>
+            <li>依需求或處室縮小查詢範圍。</li>
           </ul>
         </div>
         <div id="cardGrid" class="card-grid"></div>
@@ -692,7 +722,7 @@
           <h3 id="remindersTitle">重要提醒</h3>
           <ul class="reminder-list">
             <li>疑似性平、霸凌、兒少保護事件應即時通報，不宜自行判斷後延誤。</li>
-            <li>採購請購應先確認需求、經費來源與估價資料。</li>
+            <li>經費或採購請先確認承辦處室與經費來源；需開立發票或收據時，抬頭「新竹市香山區內湖國小」、統編「47208311」。</li>
             <li>校園施工或危險區域應依公告避開並提醒學生。</li>
           </ul>
         </section>
@@ -710,25 +740,26 @@
   <script>
     // 後續要新增任務分類，可在 taskCategories 加一筆 { id, label }，並讓資料卡片的 task 使用同一個 id。
     const taskCategories = [
-      { id: "student-event", label: "我要處理學生事件" },
-      { id: "funding", label: "我要申請經費或採購" },
-      { id: "field-trip", label: "我要帶學生外出" },
-      { id: "space-equipment", label: "我要借用場地設備" },
-      { id: "teaching-assessment", label: "我要找教學與評量資料" },
-      { id: "new-teacher", label: "我是新進教師" }
+      { id: "student-event", label: "學生事件", hint: "受傷、校安、霸凌、性平" },
+      { id: "funding", label: "經費／採購", hint: "抬頭、統編、請購與核銷" },
+      { id: "field-trip", label: "戶外教育", hint: "校外教學、保險、安全分工" },
+      { id: "space-equipment", label: "場地設備", hint: "報修、冷氣、借用、復原" },
+      { id: "teaching-assessment", label: "課務與教學", hint: "調課、代課、教學資料" },
+      { id: "new-teacher", label: "常用入口", hint: "Padlet、行事曆、表單入口" }
     ];
 
-    const officeCategories = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室"];
+    const officeCategories = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "各處室"];
+    const padletUrl = "https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns";
 
     const quickEntries = [
       { label: "請假／補休", hint: "假別、代理、差勤", query: "請假 補休", office: "人事室" },
       { label: "報修／設備", hint: "教室、冷氣、設備", query: "報修 設備", task: "space-equipment" },
-      { label: "採購／核銷", hint: "請購、驗收、核銷", task: "funding" },
+      { label: "經費／採購", hint: "統編、抬頭、請購", task: "funding" },
       { label: "校安／學生事件", hint: "受傷、通報、紀錄", task: "student-event" },
       { label: "場地借用", hint: "活動、會議、設備", query: "場地 借用", task: "space-equipment" },
       { label: "戶外教育", hint: "校外教學、保險", task: "field-trip" },
       { label: "輔導轉介", hint: "觀察、晤談、支持", query: "輔導 轉介", office: "輔導室" },
-      { label: "常用表件", hint: "表單、附件、連結", tag: "表件" }
+      { label: "Padlet／表件", hint: "行事曆、表單、入口", query: "Padlet 表單 行事曆 常用入口" }
     ];
 
     // 資料卡片先放在 JavaScript 陣列。日後若改接 Google Sheets / GAS / Worker，可把 API 回傳資料轉成同樣欄位後再呼叫 renderAll()。
@@ -736,7 +767,7 @@
       {
         id: "leave-compensatory",
         title: "請假與補休申請流程",
-        audience: "全體教職員",
+        audience: "一般教師、代理代課教師",
         situation: "需要辦理事假、病假、公假、補休或課務代理安排時使用。",
         summary: ["先確認假別、日期、節數與是否影響課務。", "依差勤系統或人事室公告完成申請。", "涉及課務時同步確認調課、代課或補課安排。"],
         office: "人事室",
@@ -748,7 +779,7 @@
       {
         id: "classroom-repair",
         title: "教室設備報修流程",
-        audience: "導師、科任教師、行政人員",
+        audience: "一般教師、導師、專科教室使用教師",
         situation: "教室燈具、門窗、桌椅、投影設備或公共設施故障時使用。",
         summary: ["先確認安全並暫停使用異常設備。", "拍照記錄地點、設備名稱與故障情形。", "填寫報修表單；急迫狀況同步通知總務處。"],
         office: "總務處",
@@ -771,25 +802,25 @@
       },
       {
         id: "small-purchase",
-        title: "小額請購流程",
-        audience: "提出採購需求之教師與行政同仁",
-        situation: "課程、活動或行政業務需要購置物品或服務時使用。",
-        summary: ["先確認需求、經費來源與是否已有校內資源。", "準備品項規格、估價資料與用途說明。", "未完成核准前不先行採購或承諾廠商。"],
+        title: "經費與小額請購基本提醒",
+        audience: "一般教師、活動承辦教師",
+        situation: "教學、班級經營或活動需要購置用品、材料或服務時使用。",
+        summary: ["先向承辦處室確認是否可申請、經費來源與採購方式。", "需開立發票或收據時，抬頭：新竹市香山區內湖國小；統一編號：47208311。", "未確認經費與採購方式前，不先付款、不先承諾廠商。"],
         office: "總務處",
         task: "funding",
-        links: [{ label: "請購單（示範）", url: "#" }, { label: "估價資料範例", url: "#" }],
+        links: [{ label: "請購表單（示範）", url: "#" }, { label: "Padlet 表單入口", url: padletUrl }],
         updated: "2026-05-28",
         tags: ["重要", "表件", "流程"]
       },
       {
         id: "acceptance-reimbursement",
-        title: "驗收與核銷應備資料",
-        audience: "採購承辦、請購教師、活動承辦人",
-        situation: "物品或服務完成後，需要驗收、黏貼憑證或辦理核銷時使用。",
-        summary: ["確認品項、數量、規格與核准內容一致。", "保存發票、收據、照片、簽收紀錄或成果資料。", "依會計室與總務處要求補齊核銷文件。"],
+        title: "經費核銷應備資料簡表",
+        audience: "提出請購或活動支出的教師",
+        situation: "用品、材料或活動支出完成後，需要交回憑證或辦理核銷時使用。",
+        summary: ["保留發票、收據、成果照片、簽收或活動紀錄等佐證資料。", "檢查抬頭是否為「新竹市香山區內湖國小」，統一編號是否為「47208311」。", "依承辦處室或會計室要求補齊資料，避免自行判斷可否核銷。"],
         office: "會計室",
         task: "funding",
-        links: [{ label: "核銷檢核表（示範）", url: "#" }],
+        links: [{ label: "核銷檢核表（示範）", url: "#" }, { label: "Padlet 表單入口", url: padletUrl }],
         updated: "2026-05-27",
         tags: ["表件", "流程"]
       },
@@ -820,7 +851,7 @@
       {
         id: "campus-security",
         title: "校安事件通報",
-        audience: "全體教職員",
+        audience: "一般教師、導師、活動承辦教師",
         situation: "發生校園安全、學生重大事件、外力介入、災害或需通報主管機關事項時使用。",
         summary: ["先確保現場安全並通報校內行政窗口。", "保留客觀事實，不擴散未確認訊息。", "依校安流程由權責人員完成正式通報。"],
         office: "學務處",
@@ -844,7 +875,7 @@
       {
         id: "gender-equity",
         title: "疑似性平事件處理",
-        audience: "全體教職員",
+        audience: "一般教師、導師、任課教師",
         situation: "疑似校園性別事件、性騷擾、性侵害、性霸凌或不當互動時使用。",
         summary: ["立即保護當事人安全與隱私。", "避免自行調查、詢問細節或要求雙方對質。", "依校內性平與通報流程交由權責單位處理。"],
         office: "學務處",
@@ -885,9 +916,21 @@
         summary: ["先掌握行事曆、處室分工、差勤與常用系統。", "將教師常用入口與校內聯絡方式加入書籤。", "遇到不確定事項先洽學年主任或承辦處室。"],
         office: "教務處",
         task: "new-teacher",
-        links: [{ label: "教師常用網 Padlet", url: "https://padlet.com/scarlet25452/padlet-hn1ztninyrdi4gns" }],
+        links: [{ label: "教師常用網 Padlet", url: padletUrl }],
         updated: "2026-05-19",
         tags: ["新進教師必讀", "常用"]
+      },
+      {
+        id: "padlet-forms",
+        title: "Padlet 與常用表單入口",
+        audience: "一般教師、代理代課教師、新進教師",
+        situation: "需要找行事曆、處室表單、常用系統、處室資料或最新入口時使用。",
+        summary: ["Padlet 保留為本校教師常用網與最新版入口。", "本網站整理使用時機、流程脈絡與注意事項；正式表單與最新檔案仍以承辦處室公告或 Padlet 為準。", "涉及學生資料、人事會計、採購請購或通報事件時，不自行轉傳未確認權限的連結。"],
+        office: "各處室",
+        task: "new-teacher",
+        links: [{ label: "前往教師常用網 Padlet", url: padletUrl }],
+        updated: "2026-05-30",
+        tags: ["常用", "表件", "新進教師必讀"]
       },
       {
         id: "field-trip",
@@ -1068,7 +1111,7 @@
         elements.cardGrid.hidden = true;
         elements.guideState.hidden = false;
         elements.emptyState.classList.remove("is-visible");
-        elements.resultCount.textContent = "請先使用搜尋、常用入口、任務或處室分類。";
+        elements.resultCount.textContent = "請先使用搜尋、常用入口、需求或處室分類。";
         return;
       }
 
@@ -1080,11 +1123,20 @@
       elements.emptyState.classList.toggle("is-visible", items.length === 0);
     }
 
-    function createChip(label, value, type) {
+    function createChip(label, value, type, hint = "") {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip";
-      button.textContent = label;
+      if (type === "task" && value !== "all") {
+        button.classList.add("task-option");
+        const title = document.createElement("strong");
+        title.textContent = label;
+        const detail = document.createElement("span");
+        detail.textContent = hint;
+        button.append(title, detail);
+      } else {
+        button.textContent = label;
+      }
       button.dataset.value = value;
       button.dataset.type = type;
       button.addEventListener("click", () => {
@@ -1099,8 +1151,8 @@
 
     function renderFilters() {
       elements.taskFilters.replaceChildren(
-        createChip("全部任務", "all", "task"),
-        ...taskCategories.map((task) => createChip(task.label, task.id, "task"))
+        createChip("全部需求", "all", "task"),
+        ...taskCategories.map((task) => createChip(task.label, task.id, "task", task.hint))
       );
       elements.officeFilters.replaceChildren(
         createChip("全部處室", "all", "office"),
