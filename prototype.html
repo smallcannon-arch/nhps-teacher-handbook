@@ -280,10 +280,57 @@
       font-size: 0.94rem;
     }
 
+    .guide-state {
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.86);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .guide-state[hidden] {
+      display: none;
+    }
+
+    .guide-state strong {
+      color: var(--navy);
+      font-size: 1.06rem;
+    }
+
+    .guide-state p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .guide-steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .guide-steps li {
+      padding: 12px;
+      border-left: 4px solid var(--sage);
+      border-radius: var(--radius);
+      background: var(--sage-soft);
+      color: #475f50;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
     .card-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
+    }
+
+    .card-grid[hidden] {
+      display: none;
     }
 
     .resource-card {
@@ -535,6 +582,7 @@
       .filter-layout,
       .quick-grid,
       .card-grid,
+      .guide-steps,
       .side-stack {
         grid-template-columns: 1fr;
       }
@@ -572,7 +620,7 @@
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <p class="site-kicker">測試版｜資料卡片架構原型</p>
+      <p class="site-kicker">測試版｜任務導向目錄原型</p>
       <h1>內湖國小教師手冊｜校務支援站</h1>
       <p class="site-summary">整合校內常用規定、流程、表件與資源連結，協助教師快速找到所需資訊。</p>
       <div class="search-row" role="search">
@@ -616,10 +664,19 @@
       <div>
         <div class="result-toolbar">
           <div>
-            <h2 id="cardsTitle">資料卡片</h2>
+            <h2 id="cardsTitle">查詢結果與資料卡片</h2>
             <p id="resultCount" class="result-count"></p>
           </div>
-          <button id="showAllBtn" class="chip" type="button">顯示全部</button>
+          <button id="showAllBtn" class="chip" type="button">瀏覽全部卡片</button>
+        </div>
+        <div id="guideState" class="guide-state">
+          <strong>先從目錄進入，再看資料卡片</strong>
+          <p>首頁保留任務入口與處室目錄。老師可以先搜尋或點選分類，再閱讀符合需求的資料卡片。</p>
+          <ul class="guide-steps">
+            <li>搜尋關鍵字，例如請假、校安、採購。</li>
+            <li>點常用入口，快速帶出相關流程。</li>
+            <li>依任務或處室縮小查詢範圍。</li>
+          </ul>
         </div>
         <div id="cardGrid" class="card-grid"></div>
         <div id="emptyState" class="empty-state">目前沒有符合條件的資料卡片。</div>
@@ -850,7 +907,8 @@
       query: "",
       task: "all",
       office: "all",
-      tag: ""
+      tag: "",
+      resultsMode: "directory"
     };
 
     const elements = {
@@ -860,6 +918,7 @@
       quickEntries: document.getElementById("quickEntries"),
       taskFilters: document.getElementById("taskFilters"),
       officeFilters: document.getElementById("officeFilters"),
+      guideState: document.getElementById("guideState"),
       cardGrid: document.getElementById("cardGrid"),
       resultCount: document.getElementById("resultCount"),
       recentUpdates: document.getElementById("recentUpdates"),
@@ -895,6 +954,14 @@
       const matchOffice = state.office === "all" || item.office === state.office;
       const matchTag = !state.tag || item.tags.includes(state.tag);
       return matchQuery && matchTask && matchOffice && matchTag;
+    }
+
+    function hasActiveFilters() {
+      return Boolean(normalize(state.query)) || state.task !== "all" || state.office !== "all" || Boolean(state.tag);
+    }
+
+    function shouldShowResults() {
+      return state.resultsMode === "all" || hasActiveFilters();
     }
 
     function getFilteredItems() {
@@ -996,7 +1063,18 @@
     }
 
     function renderCards() {
+      if (!shouldShowResults()) {
+        elements.cardGrid.replaceChildren();
+        elements.cardGrid.hidden = true;
+        elements.guideState.hidden = false;
+        elements.emptyState.classList.remove("is-visible");
+        elements.resultCount.textContent = "請先使用搜尋、常用入口、任務或處室分類。";
+        return;
+      }
+
       const items = getFilteredItems();
+      elements.cardGrid.hidden = false;
+      elements.guideState.hidden = true;
       elements.cardGrid.replaceChildren(...items.map(createCard));
       elements.resultCount.textContent = "目前顯示 " + items.length + " 筆，共 " + handbookItems.length + " 筆資料";
       elements.emptyState.classList.toggle("is-visible", items.length === 0);
@@ -1013,6 +1091,7 @@
         if (type === "task") state.task = value;
         if (type === "office") state.office = value;
         state.tag = "";
+        state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         renderAll();
       });
       return button;
@@ -1053,6 +1132,7 @@
           state.task = entry.task || "all";
           state.office = entry.office || "all";
           state.tag = entry.tag || "";
+          state.resultsMode = "filtered";
           elements.searchInput.value = state.query;
           renderAll();
           document.getElementById("cardsTitle").scrollIntoView({ block: "start" });
@@ -1072,6 +1152,17 @@
         link.className = "update-title";
         link.href = "#" + item.id;
         link.textContent = item.title;
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          state.query = item.title;
+          state.task = "all";
+          state.office = "all";
+          state.tag = "";
+          state.resultsMode = "filtered";
+          elements.searchInput.value = state.query;
+          renderAll();
+          document.getElementById(item.id)?.scrollIntoView({ block: "start" });
+        });
         const meta = createTextElement("span", "update-meta", item.updated + "｜" + item.office);
         row.append(link, meta);
         return row;
@@ -1083,6 +1174,17 @@
       state.task = "all";
       state.office = "all";
       state.tag = "";
+      state.resultsMode = "directory";
+      elements.searchInput.value = "";
+      renderAll();
+    }
+
+    function browseAllCards() {
+      state.query = "";
+      state.task = "all";
+      state.office = "all";
+      state.tag = "";
+      state.resultsMode = "all";
       elements.searchInput.value = "";
       renderAll();
     }
@@ -1095,11 +1197,12 @@
     elements.searchInput.addEventListener("input", (event) => {
       state.query = event.target.value;
       state.tag = "";
-      renderCards();
+      state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
+      renderAll();
     });
 
     elements.clearFiltersBtn.addEventListener("click", resetFilters);
-    elements.showAllBtn.addEventListener("click", resetFilters);
+    elements.showAllBtn.addEventListener("click", browseAllCards);
 
     renderQuickEntries();
     renderFilters();
