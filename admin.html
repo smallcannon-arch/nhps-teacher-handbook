@@ -563,7 +563,7 @@
         </div>
         <div class="actions">
           <button id="saveResourceBtn" type="button" disabled>儲存並更新網站</button>
-          <button id="archiveResourceBtn" type="button" class="warn" disabled>隱藏內容</button>
+          <button id="archiveResourceBtn" type="button" class="warn" disabled>刪除內容</button>
         </div>
       </form>
 
@@ -1112,9 +1112,9 @@
 
     async function archiveResource() {
       if (!activeResourceId) return;
-      const ok = window.confirm("確定要隱藏這筆首頁內容？網站將不再顯示。");
+      const ok = window.confirm("確定要刪除這筆首頁內容？刪除後會從網站與後台清單移除，試算表仍保留紀錄可備查。");
       if (!ok) return;
-      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已隱藏內容。");
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已刪除內容。");
       activeResourceId = "";
     }
 
