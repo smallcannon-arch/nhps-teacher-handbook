@@ -280,6 +280,41 @@ function deleteDirectoryResource_(payload, user) {
   }
 }
 
+function reorderDirectoryItems_(payload, user) {
+  requireEditor_(user);
+  var kind = String(payload.kind || "resource");
+  var items = payload.items || [];
+  if (!Array.isArray(items) || items.length === 0) throw new Error("缺少排序資料");
+
+  var isShortcut = kind === "shortcut";
+  var sheetName = isShortcut ? APP.SHEETS.DIRECTORY_SHORTCUTS : APP.SHEETS.DIRECTORY_RESOURCES;
+  var idColumn = isShortcut ? "shortcut_id" : "resource_id";
+  var actionName = isShortcut ? "reorderDirectoryShortcuts" : "reorderDirectoryResources";
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var rows = readTable(sheetName);
+    items.forEach(function(input) {
+      var id = String(input.id || input[idColumn] || "").trim();
+      var sortOrder = Number(input.sort_order);
+      if (!id || !sortOrder) return;
+      var row = rows.find(function(item) {
+        return item[idColumn] === id;
+      });
+      if (!row) throw new Error("找不到要排序的項目：" + id);
+      row.sort_order = sortOrder;
+      row.updated_at = nowText();
+      writeRowByHeaders(sheetName, row._row, row);
+    });
+    bumpCacheVersion();
+    logAction(user.email, actionName, items.map(function(item) { return item.id; }).join(","), "ok", "directory order updated");
+    return { ok: true, cache_version: getConfigValue("cache_version", "") };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function saveDirectoryShortcut_(payload, user) {
   requireEditor_(user);
   var input = payload.shortcut || payload;

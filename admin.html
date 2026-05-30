@@ -95,6 +95,7 @@
 
     .tabs,
     .actions,
+    .order-row,
     .filter-row,
     .checkbox-row {
       display: flex;
@@ -105,6 +106,18 @@
 
     .tabs {
       margin: 4px 0 14px;
+    }
+
+    .sidebar .field {
+      margin-bottom: 10px;
+    }
+
+    .filter-row select {
+      flex: 1 1 140px;
+    }
+
+    .filter-row button {
+      flex: 0 0 auto;
     }
 
     button {
@@ -256,6 +269,29 @@
       color: white;
     }
 
+    .list-group-title {
+      margin: 10px 0 0;
+      padding: 8px 4px 2px;
+      border-top: 1px solid #e4ebe9;
+      color: var(--navy);
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .list-group-title:first-child {
+      margin-top: 0;
+      border-top: 0;
+    }
+
+    .list-empty {
+      margin: 0;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--muted);
+    }
+
     .link-row {
       display: grid;
       grid-template-columns: minmax(130px, 0.75fr) minmax(220px, 1.35fr) auto;
@@ -292,6 +328,10 @@
       .link-row {
         grid-template-columns: 1fr;
       }
+
+      .order-row button {
+        flex: 1;
+      }
     }
   </style>
 </head>
@@ -299,24 +339,37 @@
   <header>
     <div class="header-inner">
       <h1>內湖國小教師手冊後台</h1>
-      <p class="meta">請使用 nhps.hc.edu.tw 帳號登入，維護前台的資源卡片、連結與第二層入口。</p>
+      <p class="meta">請使用 nhps.hc.edu.tw 帳號登入，維護網站首頁內容、連結與分類按鈕。</p>
       <div id="gsiButton"></div>
     </div>
   </header>
 
   <main>
     <aside class="panel sidebar">
-      <h2 id="listTitle">資源卡片</h2>
+      <h2 id="listTitle">首頁內容</h2>
       <p class="meta" id="loginState">尚未登入</p>
       <div class="tabs" role="tablist" aria-label="後台模式">
-        <button id="resourcesTab" class="tab-button is-active" type="button">資源卡片</button>
-        <button id="shortcutsTab" class="tab-button" type="button">第二層入口</button>
+        <button id="resourcesTab" class="tab-button is-active" type="button">首頁內容</button>
+        <button id="shortcutsTab" class="tab-button" type="button">分類按鈕</button>
+      </div>
+      <div class="field">
+        <label for="listSearchInput">搜尋</label>
+        <input id="listSearchInput" placeholder="搜尋標題、分類、連結">
       </div>
       <div class="filter-row">
         <select id="officeFilter" aria-label="處室篩選">
           <option value="">全部處室</option>
         </select>
+        <select id="categoryFilter" aria-label="分類篩選">
+          <option value="">全部分類</option>
+        </select>
+      </div>
+      <div class="filter-row">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增</button>
+      </div>
+      <div class="order-row" aria-label="顯示順序調整">
+        <button id="moveUpBtn" type="button" class="secondary" disabled>上移</button>
+        <button id="moveDownBtn" type="button" class="secondary" disabled>下移</button>
       </div>
       <div id="itemList" class="list"></div>
     </aside>
@@ -325,8 +378,8 @@
       <div id="message" class="notice" hidden></div>
 
       <form id="resourceForm">
-        <h2 id="resourceTitle">請先登入並選擇資源卡片</h2>
-        <p class="meta">資源卡片會出現在前台搜尋結果與各處室分類中；勾選常用入口可讓前台優先排序或後續納入常用區。</p>
+        <h2 id="resourceTitle">請先登入並選擇首頁內容</h2>
+        <p class="meta">首頁內容會出現在網站搜尋結果與各處室分類中；勾選「置頂到常用入口」會另外放進首頁最上方的常用入口區。</p>
         <input id="resourceIdInput" type="hidden">
 
         <div class="grid-2">
@@ -346,7 +399,7 @@
             <select id="resourceOfficeInput"></select>
           </div>
           <div class="field">
-            <label for="resourceCategoryInput">第二層分類</label>
+            <label for="resourceCategoryInput">所屬分類</label>
             <input id="resourceCategoryInput" placeholder="例如：內湖雲端、竹市常用連結">
           </div>
           <div class="field">
@@ -361,7 +414,7 @@
             <input id="resourceStatusInput" placeholder="例如：年度檔案待整理，可留空">
           </div>
           <div class="field">
-            <label for="resourceSortInput">排序</label>
+            <label for="resourceSortInput">顯示順序</label>
             <input id="resourceSortInput" type="number" min="1" step="1">
           </div>
         </div>
@@ -373,12 +426,12 @@
 
         <div class="field">
           <label for="resourceTagsInput">標籤</label>
-          <input id="resourceTagsInput" placeholder="用逗號分隔，例如：常用資源, 學務處, Google 表單">
+          <input id="resourceTagsInput" placeholder="用逗號分隔，例如：常用, 學務處, Google 表單">
         </div>
 
         <div class="checkbox-row">
-          <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 前台顯示</label>
-          <label class="checkbox-row"><input id="resourceFeaturedInput" type="checkbox"> 放入／保留常用入口候選</label>
+          <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 在網站顯示</label>
+          <label class="checkbox-row"><input id="resourceFeaturedInput" type="checkbox"> 置頂到常用入口</label>
         </div>
 
         <h3>連結</h3>
@@ -389,23 +442,23 @@
           高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
         </div>
         <div class="actions">
-          <button id="saveResourceBtn" type="button" disabled>儲存並更新前台</button>
-          <button id="archiveResourceBtn" type="button" class="warn" disabled>封存資源</button>
+          <button id="saveResourceBtn" type="button" disabled>儲存並更新網站</button>
+          <button id="archiveResourceBtn" type="button" class="warn" disabled>隱藏內容</button>
         </div>
       </form>
 
       <form id="shortcutForm" class="hidden">
-        <h2 id="shortcutTitle">請先選擇第二層入口</h2>
-        <p class="meta">第二層入口是前台處室標籤下方那排按鈕，可設定關鍵字搜尋或指定資源分類。</p>
+        <h2 id="shortcutTitle">請先選擇分類按鈕</h2>
+        <p class="meta">分類按鈕是網站上方處室標籤下方那排按鈕，用來把一批首頁內容快速篩出來。常用入口不是分類按鈕，而是由首頁內容勾選置頂後另外抓出來。</p>
         <input id="shortcutIdInput" type="hidden">
 
         <div class="grid-2">
           <div class="field">
-            <label for="shortcutParentInput">所屬第一層</label>
+            <label for="shortcutParentInput">放在哪個處室下面</label>
             <select id="shortcutParentInput"></select>
           </div>
           <div class="field">
-            <label for="shortcutLabelInput">入口名稱</label>
+            <label for="shortcutLabelInput">按鈕名稱</label>
             <input id="shortcutLabelInput" placeholder="例如：內湖雲端">
           </div>
         </div>
@@ -416,7 +469,7 @@
             <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
           </div>
           <div class="field">
-            <label for="shortcutSortInput">排序</label>
+            <label for="shortcutSortInput">顯示順序</label>
             <input id="shortcutSortInput" type="number" min="1" step="1">
           </div>
         </div>
@@ -427,7 +480,7 @@
             <input id="shortcutQueryInput" placeholder="例如：校安">
           </div>
           <div class="field">
-            <label for="shortcutCategoryInput">指定資源分類</label>
+            <label for="shortcutCategoryInput">指定內容分類</label>
             <input id="shortcutCategoryInput" placeholder="例如：內湖雲端">
           </div>
           <div class="field">
@@ -437,15 +490,15 @@
         </div>
 
         <div class="field">
-          <label for="shortcutTargetInput">指定資源 ID</label>
+          <label for="shortcutTargetInput">指定內容 ID</label>
           <input id="shortcutTargetInput" placeholder="可留空">
         </div>
 
-        <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 前台顯示此入口</label>
+        <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 在網站顯示此按鈕</label>
 
         <div class="actions">
-          <button id="saveShortcutBtn" type="button" disabled>儲存入口</button>
-          <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用入口</button>
+          <button id="saveShortcutBtn" type="button" disabled>儲存分類按鈕</button>
+          <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用分類按鈕</button>
         </div>
       </form>
     </section>
@@ -476,8 +529,12 @@
       message: document.getElementById("message"),
       listTitle: document.getElementById("listTitle"),
       itemList: document.getElementById("itemList"),
+      listSearchInput: document.getElementById("listSearchInput"),
       officeFilter: document.getElementById("officeFilter"),
+      categoryFilter: document.getElementById("categoryFilter"),
       addItemBtn: document.getElementById("addItemBtn"),
+      moveUpBtn: document.getElementById("moveUpBtn"),
+      moveDownBtn: document.getElementById("moveDownBtn"),
       resourcesTab: document.getElementById("resourcesTab"),
       shortcutsTab: document.getElementById("shortcutsTab"),
       resourceForm: document.getElementById("resourceForm"),
@@ -560,15 +617,33 @@
     };
 
     function setupSelects() {
-      el.officeFilter.innerHTML = "<option value=''>全部處室</option>" + RESOURCE_OFFICES.map((office) => (
-        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
-      )).join("");
+      renderOfficeFilter();
+      renderCategoryFilter();
       el.resourceOfficeInput.innerHTML = RESOURCE_OFFICES.map((office) => (
         "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
       el.shortcutParentInput.innerHTML = OFFICES.map((office) => (
         "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
+    }
+
+    function renderOfficeFilter() {
+      const current = el.officeFilter.value;
+      const offices = mode === "shortcuts" ? OFFICES : RESOURCE_OFFICES;
+      el.officeFilter.innerHTML = "<option value=''>全部處室</option>" + offices.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.officeFilter.value = offices.includes(current) ? current : "";
+    }
+
+    function renderCategoryFilter() {
+      const current = el.categoryFilter.value;
+      const categories = [...new Set(resources.map((item) => item.category).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
+      el.categoryFilter.innerHTML = "<option value=''>全部分類</option><option value='__featured'>常用入口（置頂）</option>" + categories.map((category) => (
+        "<option value='" + escapeHtml(category) + "'>" + escapeHtml(category) + "</option>"
+      )).join("");
+      el.categoryFilter.value = current === "__featured" || categories.includes(current) ? current : "";
     }
 
     async function api(cmd, extra = {}) {
@@ -592,6 +667,8 @@
         currentUser = data.user || null;
         if (!activeResourceId && resources.length) activeResourceId = resources[0].id;
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
+        renderOfficeFilter();
+        renderCategoryFilter();
         el.loginState.textContent = currentUser
           ? "已登入：" + currentUser.email + "（" + currentUser.role + "）"
           : "已登入";
@@ -619,31 +696,135 @@
       el.shortcutsTab.classList.toggle("is-active", mode === "shortcuts");
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
       el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
-      el.listTitle.textContent = mode === "resources" ? "資源卡片" : "第二層入口";
+      el.categoryFilter.classList.toggle("hidden", mode !== "resources");
+      el.categoryFilter.disabled = mode !== "resources";
+      el.officeFilter.setAttribute("aria-label", mode === "resources" ? "處室篩選" : "分類按鈕位置篩選");
+      el.listTitle.textContent = mode === "resources" ? "首頁內容" : "分類按鈕";
       renderList();
       mode === "resources" ? renderResourceEditor() : renderShortcutEditor();
     }
 
     function renderList() {
       if (mode === "resources") {
-        const office = el.officeFilter.value;
-        const items = resources.filter((item) => !office || item.office === office);
-        el.itemList.innerHTML = items.map((item) => `
-          <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-            <strong>${escapeHtml(item.title || "未命名資源")}</strong>
-            <span>${escapeHtml(item.office || "其他")}｜${escapeHtml(item.category || "")}｜${escapeHtml(item.updated || "")}${item.visible ? "" : "｜已隱藏"}</span>
-          </button>
-        `).join("");
+        const items = getVisibleListItems();
+        el.itemList.innerHTML = renderGroupedList(
+          items,
+          (item) => `${item.office || "其他"}｜${item.category || "未分類"}`,
+          (item) => `
+            <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+              <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+              <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用入口置頂" : ""}${item.visible ? "" : "｜已隱藏"}</span>
+            </button>
+          `
+        );
         return;
       }
 
-      const items = flattenShortcuts();
-      el.itemList.innerHTML = items.map((item) => `
-        <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-          <strong>${escapeHtml(item.label || "未命名入口")}</strong>
-          <span>${escapeHtml(item.parentOffice || "常用入口")}｜${escapeHtml(item.hint || "")}${item.enabled ? "" : "｜已停用"}</span>
-        </button>
-      `).join("");
+      const items = getVisibleListItems();
+      el.itemList.innerHTML = renderGroupedList(
+        items,
+        (item) => item.parentOffice || "常用入口",
+        (item) => `
+          <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+            <strong>${escapeHtml(item.label || "未命名按鈕")}</strong>
+            <span>顯示順序 ${escapeHtml(item.sort_order || "")}${item.enabled ? "" : "｜已停用"}</span>
+          </button>
+        `
+      );
+    }
+
+    function getVisibleListItems() {
+      const office = el.officeFilter.value;
+      const query = normalizeAdminText(el.listSearchInput.value);
+      if (mode === "resources") {
+        const category = el.categoryFilter.value;
+        return resources
+          .filter((item) => !office || item.office === office)
+          .filter((item) => !category || (category === "__featured" ? item.featured === true : item.category === category))
+          .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
+          .slice()
+          .sort(compareResourceListOrder);
+      }
+      return flattenShortcuts()
+        .filter((item) => !office || item.parentOffice === office)
+        .filter((item) => matchesAdminQuery(shortcutAdminSearchText(item), query))
+        .slice()
+        .sort(compareShortcutListOrder);
+    }
+
+    function renderGroupedList(items, groupName, renderItem) {
+      if (!items.length) return "<p class='list-empty'>沒有符合條件的項目。</p>";
+      let currentGroup = "";
+      return items.map((item) => {
+        const nextGroup = groupName(item);
+        const heading = nextGroup !== currentGroup
+          ? `<div class="list-group-title">${escapeHtml(nextGroup)}</div>`
+          : "";
+        currentGroup = nextGroup;
+        return heading + renderItem(item);
+      }).join("");
+    }
+
+    function compareResourceListOrder(a, b) {
+      const officeDiff = officeRank(a.office, RESOURCE_OFFICES) - officeRank(b.office, RESOURCE_OFFICES);
+      if (officeDiff !== 0) return officeDiff;
+      const categoryDiff = String(a.category || "").localeCompare(String(b.category || ""), "zh-Hant");
+      if (categoryDiff !== 0) return categoryDiff;
+      return compareSortOrder(a, b);
+    }
+
+    function compareShortcutListOrder(a, b) {
+      const parentDiff = officeRank(a.parentOffice, OFFICES) - officeRank(b.parentOffice, OFFICES);
+      if (parentDiff !== 0) return parentDiff;
+      return compareSortOrder(a, b);
+    }
+
+    function officeRank(value, list) {
+      const index = list.indexOf(value || "其他");
+      return index >= 0 ? index : list.length;
+    }
+
+    function compareSortOrder(a, b) {
+      const aOrder = Number(a.sort_order || 999999);
+      const bOrder = Number(b.sort_order || 999999);
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return String(a.title || a.label || "").localeCompare(String(b.title || b.label || ""), "zh-Hant");
+    }
+
+    function resourceAdminSearchText(item) {
+      const links = (item.links || []).map((link) => [link.label, link.url].join(" ")).join(" ");
+      return [
+        item.title,
+        item.office,
+        item.category,
+        item.type,
+        item.status,
+        item.note,
+        (item.tags || []).join(" "),
+        links
+      ].join(" ");
+    }
+
+    function shortcutAdminSearchText(item) {
+      return [
+        item.label,
+        item.hint,
+        item.parentOffice,
+        item.query,
+        item.resourceCategory,
+        item.tag,
+        item.targetId
+      ].join(" ");
+    }
+
+    function matchesAdminQuery(text, query) {
+      if (!query) return true;
+      const haystack = normalizeAdminText(text);
+      return query.split(" ").every((word) => haystack.includes(word));
+    }
+
+    function normalizeAdminText(value) {
+      return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
     }
 
     function renderResourceEditor() {
@@ -652,7 +833,7 @@
         clearResourceEditor();
         return;
       }
-      el.resourceTitle.textContent = item.title || "未命名資源";
+      el.resourceTitle.textContent = item.title || "未命名內容";
       el.resourceIdInput.value = item.id || "";
       el.resourceTitleInput.value = item.title || "";
       el.resourceUpdatedInput.value = normalizeDate(item.updated);
@@ -669,7 +850,7 @@
     }
 
     function clearResourceEditor() {
-      el.resourceTitle.textContent = "新增資源卡片";
+      el.resourceTitle.textContent = "新增首頁內容";
       el.resourceIdInput.value = "";
       el.resourceTitleInput.value = "";
       el.resourceUpdatedInput.value = todayText();
@@ -679,7 +860,7 @@
       el.resourceStatusInput.value = "";
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
-      el.resourceTagsInput.value = "常用資源";
+      el.resourceTagsInput.value = "常用";
       el.resourceVisibleInput.checked = true;
       el.resourceFeaturedInput.checked = false;
       renderLinkRows([]);
@@ -702,7 +883,7 @@
         clearShortcutEditor();
         return;
       }
-      el.shortcutTitle.textContent = item.label || "未命名入口";
+      el.shortcutTitle.textContent = item.label || "未命名按鈕";
       el.shortcutIdInput.value = item.id || "";
       el.shortcutParentInput.value = item.parentOffice || "常用入口";
       el.shortcutLabelInput.value = item.label || "";
@@ -716,7 +897,7 @@
     }
 
     function clearShortcutEditor() {
-      el.shortcutTitle.textContent = "新增第二層入口";
+      el.shortcutTitle.textContent = "新增分類按鈕";
       el.shortcutIdInput.value = "";
       el.shortcutParentInput.value = "常用入口";
       el.shortcutLabelInput.value = "";
@@ -767,27 +948,49 @@
     }
 
     async function saveResource() {
-      await runCommand("saveDirectoryResource", { resource: collectResource() }, "已儲存資源並更新前台快取。");
+      await runCommand("saveDirectoryResource", { resource: collectResource() }, "已儲存內容並更新網站。");
     }
 
     async function archiveResource() {
       if (!activeResourceId) return;
-      const ok = window.confirm("確定要封存這張資源卡片？前台將不再顯示。");
+      const ok = window.confirm("確定要隱藏這筆首頁內容？網站將不再顯示。");
       if (!ok) return;
-      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已封存資源。");
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已隱藏內容。");
       activeResourceId = "";
     }
 
     async function saveShortcut() {
-      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存第二層入口。");
+      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存分類按鈕。");
     }
 
     async function deleteShortcut() {
       if (!activeShortcutId) return;
-      const ok = window.confirm("確定要停用這個第二層入口？");
+      const ok = window.confirm("確定要停用這個分類按鈕？");
       if (!ok) return;
-      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用第二層入口。");
+      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用分類按鈕。");
       activeShortcutId = "";
+    }
+
+    async function moveSelectedItem(direction) {
+      const items = getVisibleListItems();
+      const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
+      const currentIndex = items.findIndex((item) => item.id === activeId);
+      const nextIndex = currentIndex + direction;
+      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= items.length) return;
+
+      const current = items[currentIndex];
+      const target = items[nextIndex];
+      const currentOrder = Number(current.sort_order || currentIndex + 1);
+      const targetOrder = Number(target.sort_order || nextIndex + 1);
+      const kind = mode === "resources" ? "resource" : "shortcut";
+
+      await runCommand("reorderDirectoryItems", {
+        kind,
+        items: [
+          { id: current.id, sort_order: targetOrder },
+          { id: target.id, sort_order: currentOrder }
+        ]
+      }, "已調整顯示順序並更新網站。");
     }
 
     async function runCommand(cmd, payload, successText) {
@@ -810,14 +1013,30 @@
 
     function setMode(nextMode) {
       mode = nextMode;
+      renderOfficeFilter();
+      renderCategoryFilter();
       renderAll();
+      setEnabled(true);
+    }
+
+    function refreshListView() {
+      renderList();
+      setEnabled(true);
     }
 
     function setEnabled(enabled) {
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
+      const items = getVisibleListItems();
+      const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
+      const activeIndex = items.findIndex((item) => item.id === activeId);
       el.addItemBtn.disabled = !enabled || !idToken || !canEdit;
+      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || activeIndex <= 0;
+      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || activeIndex < 0 || activeIndex >= items.length - 1;
+      el.listSearchInput.disabled = !enabled || !idToken;
+      el.officeFilter.disabled = !enabled || !idToken;
+      el.categoryFilter.disabled = mode !== "resources" || !enabled || !idToken;
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
       el.saveShortcutBtn.disabled = !enabled || !idToken || !canEdit;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
@@ -871,7 +1090,11 @@
 
     el.resourcesTab.addEventListener("click", () => setMode("resources"));
     el.shortcutsTab.addEventListener("click", () => setMode("shortcuts"));
-    el.officeFilter.addEventListener("change", renderList);
+    el.listSearchInput.addEventListener("input", refreshListView);
+    el.officeFilter.addEventListener("change", refreshListView);
+    el.categoryFilter.addEventListener("change", refreshListView);
+    el.moveUpBtn.addEventListener("click", () => moveSelectedItem(-1));
+    el.moveDownBtn.addEventListener("click", () => moveSelectedItem(1));
     el.addItemBtn.addEventListener("click", () => {
       if (mode === "resources") {
         activeResourceId = "";
@@ -880,6 +1103,7 @@
         activeShortcutId = "";
         clearShortcutEditor();
       }
+      renderList();
       setEnabled(true);
     });
     el.itemList.addEventListener("click", (event) => {

@@ -2669,6 +2669,12 @@
     }
 
     function sortDirectoryItems(a, b) {
+      const aOrder = Number(a.sort_order || 0);
+      const bOrder = Number(b.sort_order || 0);
+      if (aOrder || bOrder) {
+        const orderDiff = (aOrder || 999999) - (bOrder || 999999);
+        if (orderDiff !== 0) return orderDiff;
+      }
       const linkDiff = Number(b.links.length > 0) - Number(a.links.length > 0);
       if (linkDiff !== 0) return linkDiff;
       return String(b.updated || "").localeCompare(String(a.updated || ""));

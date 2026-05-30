@@ -42,6 +42,9 @@ function doPost(e) {
     if (cmd === "deleteDirectoryResource") {
       return jsonResponse(deleteDirectoryResource_(payload, user));
     }
+    if (cmd === "reorderDirectoryItems") {
+      return jsonResponse(reorderDirectoryItems_(payload, user));
+    }
     if (cmd === "saveDirectoryShortcut") {
       return jsonResponse(saveDirectoryShortcut_(payload, user));
     }
