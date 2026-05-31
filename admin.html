@@ -586,6 +586,18 @@
       text-align: left;
     }
 
+    .list-title-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .list-title-line strong {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
     .list-button strong {
       display: -webkit-box;
       overflow: hidden;
@@ -597,7 +609,7 @@
       overflow-wrap: anywhere;
     }
 
-    .list-button span {
+    .list-button .list-meta {
       display: block;
       overflow: hidden;
       color: var(--muted);
@@ -607,6 +619,36 @@
       white-space: nowrap;
     }
 
+    .status-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 20px;
+      padding: 1px 7px;
+      border: 1px solid #dfbeb7;
+      border-radius: 999px;
+      background: #f7e6e1;
+      color: #8a443a;
+      font-size: 0.72rem;
+      font-weight: 900;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .list-entry.is-unpublished .list-button {
+      border-color: #d9d1c8;
+      border-style: dashed;
+      background: #f7f4ef;
+    }
+
+    .list-entry.is-unpublished .list-button strong {
+      color: #53606b;
+    }
+
+    .list-entry.is-unpublished .list-button .list-meta {
+      color: #7e7268;
+    }
+
     .list-button.is-active {
       background: var(--navy);
       color: white;
@@ -614,13 +656,36 @@
     }
 
     .list-button.is-active strong,
-    .list-button.is-active span {
+    .list-button.is-active .list-meta {
       color: white;
+    }
+
+    .list-entry.is-unpublished .list-button.is-active {
+      border-color: #b98578;
+      border-style: solid;
+      background: var(--navy);
+      box-shadow: inset 4px 0 0 #c99a8a;
+    }
+
+    .list-entry.is-unpublished .list-button.is-active strong,
+    .list-entry.is-unpublished .list-button.is-active .list-meta {
+      color: white;
+    }
+
+    .list-button.is-active .status-badge {
+      border-color: #f1cfc6;
+      background: #fff1ed;
+      color: #79362e;
     }
 
     .list-entry.is-selected .list-button {
       border-color: #9db8c9;
       box-shadow: inset 4px 0 0 var(--gold);
+    }
+
+    .list-entry.is-unpublished.is-selected .list-button {
+      border-color: #b98578;
+      box-shadow: inset 4px 0 0 #c99a8a;
     }
 
     .user-box {
@@ -1454,8 +1519,11 @@
     function getResourceListMeta(item) {
       const parts = [getOfficeCategoryText(item), "順序 " + (item.sort_order || "")];
       if (item.featured) parts.push("常用資料");
-      if (item.visible === false) parts.push("已下架");
       return parts.filter(Boolean).join("｜");
+    }
+
+    function getUnpublishedBadge(item) {
+      return item.visible === false ? "<span class='status-badge'>已下架</span>" : "";
     }
 
     function getTrashListMeta(item) {
@@ -1516,12 +1584,15 @@
           items,
           getListGroupName,
           (item) => `
-            <div class="list-entry is-draggable ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
+            <div class="list-entry is-draggable ${item.visible === false ? "is-unpublished" : ""} ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
               ${selectionMode ? `<input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>` : ""}
               <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-                <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-                <span>${escapeHtml(getResourceListMeta(item))}</span>
+                <span class="list-title-line">
+                  <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                  ${getUnpublishedBadge(item)}
+                </span>
+                <span class="list-meta">${escapeHtml(getResourceListMeta(item))}</span>
               </button>
             </div>
           `
@@ -1538,8 +1609,10 @@
             <div class="list-entry ${selectedTrashIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}">
               <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedTrashIds.has(item.id) ? "checked" : ""}>
               <button class="list-button ${item.id === activeTrashId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-                <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-                <span>${escapeHtml(getTrashListMeta(item))}</span>
+                <span class="list-title-line">
+                  <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                </span>
+                <span class="list-meta">${escapeHtml(getTrashListMeta(item))}</span>
               </button>
             </div>
           `
