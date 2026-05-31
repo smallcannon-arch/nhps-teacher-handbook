@@ -693,14 +693,14 @@
       <h2 id="listTitle">內容管理清單</h2>
       <div class="field">
         <label for="listSearchInput">搜尋</label>
-        <input id="listSearchInput" placeholder="搜尋標題、分類、承辦處室、連結">
+        <input id="listSearchInput" placeholder="搜尋標題、資料類別、承辦處室、連結">
       </div>
       <div class="filter-row">
         <select id="officeFilter" aria-label="處室篩選">
           <option value="">全部處室</option>
         </select>
-        <select id="categoryFilter" aria-label="分類篩選">
-          <option value="">全部分類</option>
+        <select id="categoryFilter" aria-label="資料類別篩選">
+          <option value="">全部類別</option>
         </select>
       </div>
       <div class="primary-list-actions">
@@ -745,17 +745,17 @@
 
         <details id="bulkPanel" class="bulk-panel">
           <summary id="bulkPanelSummary">批次整理（已勾選 0 筆）</summary>
-          <p class="meta">先在左側勾選多筆資料卡，再一次調整處室、分類、常用資料標記或上架狀態。空白欄位會保持原狀。</p>
+          <p class="meta">先在左側勾選多筆資料卡，再一次調整處室、資料類別、常用資料標記或上架狀態。空白欄位會保持原狀。</p>
           <div class="grid-2">
             <div class="field">
               <label for="batchOfficeInput">批次改處室</label>
               <select id="batchOfficeInput"></select>
             </div>
             <div class="field">
-              <label for="batchCategoryInput">批次改分類</label>
+              <label for="batchCategoryInput">批次改資料類別</label>
               <div class="combo-field">
-                <select id="batchCategorySelect" aria-label="批次改分類"></select>
-                <input id="batchCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+                <select id="batchCategorySelect" aria-label="批次改資料類別"></select>
+                <input id="batchCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
               </div>
             </div>
           </div>
@@ -801,10 +801,10 @@
               <select id="resourceOfficeInput"></select>
             </div>
             <div class="field">
-              <label for="resourceCategoryInput">所屬分類</label>
+              <label for="resourceCategoryInput">資料類別</label>
               <div class="combo-field">
-                <select id="resourceCategorySelect" aria-label="所屬分類"></select>
-                <input id="resourceCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+                <select id="resourceCategorySelect" aria-label="資料類別"></select>
+                <input id="resourceCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
               </div>
             </div>
             <div class="field">
@@ -911,10 +911,10 @@
             <input id="shortcutQueryInput" placeholder="例如：校安">
           </div>
           <div class="field">
-            <label for="shortcutCategoryInput">指定內容分類</label>
+            <label for="shortcutCategoryInput">指定資料類別</label>
             <div class="combo-field">
-              <select id="shortcutCategorySelect" aria-label="指定內容分類"></select>
-              <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+              <select id="shortcutCategorySelect" aria-label="指定資料類別"></select>
+              <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
             </div>
           </div>
           <div class="field">
@@ -957,9 +957,10 @@
     const LEGACY_RESOURCE_OFFICES = ["人事室", "會計室", "其他"];
     const CANNED_TEXT = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
     const DEFAULT_CATEGORIES = [
-      "學校資料", "差勤系統", "硬體設備報修", "資訊設備報修", "場地／平板借用", "校安／學生事件",
-      "戶外教育", "輔導轉介", "常用系統", "114年度資料", "內湖雲端", "竹市常用連結", "表件下載", "研習進修"
+      "一般資料", "表單／申請", "流程說明", "系統入口",
+      "年度資料", "操作說明", "常用資料", "其他"
     ];
+    const DEFAULT_CATEGORY_SET = new Set(DEFAULT_CATEGORIES);
     const DEFAULT_TYPES = [
       "連結", "常用系統", "校網", "Google 表單", "Google 文件", "Google 試算表",
       "Drive 資料夾", "PDF", "年度文件", "操作與申請", "資訊分享", "公告頁", "外部系統"
@@ -1161,8 +1162,8 @@
         .filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
       const featuredOption = office ? "" : "<option value='__featured'>標記為常用資料</option>";
-      el.categoryFilter.innerHTML = "<option value=''>全部分類</option>" + featuredOption + categories.map((category) => (
-        "<option value='" + escapeHtml(category) + "'>" + escapeHtml(category) + "</option>"
+      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + featuredOption + categories.map((category) => (
+        "<option value='" + escapeHtml(category) + "'>" + escapeHtml(categoryOptionLabel(category)) + "</option>"
       )).join("");
       el.categoryFilter.value = (!office && current === "__featured") || categories.includes(current) ? current : "";
     }
@@ -1242,6 +1243,30 @@
       if (mode === "shortcuts") renderShortcutEditor();
     }
 
+    function getDisplayResourceCategory(item) {
+      const office = String(item.office || "全校共用").trim();
+      const category = String(item.category || "").trim();
+      return category && category !== office ? category : "";
+    }
+
+    function getOfficeCategoryText(item) {
+      const parts = [item.office || "全校共用"];
+      const category = getDisplayResourceCategory(item);
+      if (category) parts.push(category);
+      return parts.join("｜");
+    }
+
+    function getResourceListMeta(item) {
+      const parts = [getOfficeCategoryText(item), "順序 " + (item.sort_order || "")];
+      if (item.featured) parts.push("常用資料");
+      if (item.visible === false) parts.push("已下架");
+      return parts.filter(Boolean).join("｜");
+    }
+
+    function getTrashListMeta(item) {
+      return [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].filter(Boolean).join("｜");
+    }
+
     function renderList() {
       if (mode === "resources") {
         const items = getVisibleListItems();
@@ -1255,7 +1280,7 @@
               <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-                <span>${escapeHtml(item.office || "全校共用")}｜${escapeHtml(item.category || "未分類")}｜順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用資料" : ""}${item.visible ? "" : "｜已下架"}</span>
+                <span>${escapeHtml(getResourceListMeta(item))}</span>
               </button>
             </div>
           `
@@ -1273,7 +1298,7 @@
               <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedTrashIds.has(item.id) ? "checked" : ""}>
               <button class="list-button ${item.id === activeTrashId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-                <span>${escapeHtml(item.category || "未分類")}｜刪除時間 ${escapeHtml(item.deleted_at || "")}</span>
+                <span>${escapeHtml(getTrashListMeta(item))}</span>
               </button>
             </div>
           `
@@ -1299,7 +1324,7 @@
 
     function getListGroupName(item) {
       if (mode === "shortcuts") return item.parentOffice || "常用入口";
-      return `${item.office || "全校共用"}｜${item.category || "未分類"}`;
+      return getOfficeCategoryText(item);
     }
 
     function getVisibleListItems() {
@@ -1457,12 +1482,12 @@
       }
       el.resourceEditorLabel.textContent = "正在編輯資料卡";
       el.resourceTitle.textContent = item.title || "未命名內容";
-      el.resourceContext.textContent = [item.office || "全校共用", item.category || "未分類", "ID " + (item.id || "")].join("｜");
+      el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
       el.resourceIdInput.value = item.id || "";
       el.resourceTitleInput.value = item.title || "";
       el.resourceUpdatedInput.value = normalizeDate(item.updated);
       el.resourceOfficeInput.value = item.office || "全校共用";
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || item.office || "");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "");
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
       el.resourceSortInput.value = item.sort_order || "";
       el.resourceNoteInput.value = item.note || "";
@@ -1480,7 +1505,7 @@
       el.resourceTitleInput.value = "";
       el.resourceUpdatedInput.value = todayText();
       el.resourceOfficeInput.value = "全校共用";
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, "");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, "一般資料");
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
@@ -1494,11 +1519,11 @@
       const item = trash.find((resource) => resource.id === activeTrashId);
       el.trashTitle.textContent = item ? item.title || "未命名內容" : "回收桶";
       el.trashContext.textContent = item
-        ? [item.office || "全校共用", item.category || "未分類", "刪除時間 " + (item.deleted_at || "")].join("｜")
+        ? [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].join("｜")
         : "刪除的資料卡會先移到這裡，可勾選後還原。";
       el.trashPreview.innerHTML = item ? `
         <p><strong>標題：</strong>${escapeHtml(item.title || "未命名內容")}</p>
-        <p><strong>處室／分類：</strong>${escapeHtml(item.office || "全校共用")}｜${escapeHtml(item.category || "未分類")}</p>
+        <p><strong>處室／資料類別：</strong>${escapeHtml(getOfficeCategoryText(item))}</p>
         <p><strong>類型：</strong>${escapeHtml(item.type || "連結")}｜<strong>最後更新：</strong>${escapeHtml(item.updated || "")}</p>
         <p class="meta">${escapeHtml(item.note || "沒有備註。")}</p>
       ` : "<p class='meta'>從左側回收桶清單點選一筆內容，可查看基本資料。</p>";
@@ -1644,7 +1669,7 @@
           id: item.id,
           title: item.title || "",
           office: item.office || "全校共用",
-          category: item.category || item.office || "全校共用",
+          category: item.category || "一般資料",
           type: item.type || "連結",
           status: item.status || "",
           note: item.note || "",
@@ -1670,7 +1695,7 @@
       el.resourceTitleInput.value = (item.title || "未命名資料卡") + "（副本）";
       el.resourceUpdatedInput.value = todayText();
       el.resourceOfficeInput.value = item.office || "全校共用";
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || item.office || "");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "一般資料");
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "連結");
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = item.note || "";
@@ -1794,7 +1819,7 @@
       const sourceGroup = getListGroupName(source);
       const targetGroup = getListGroupName(target);
       if (sourceGroup !== targetGroup) {
-        showMessage("拖曳排序只能在同一個處室分類內調整。", true);
+        showMessage("拖曳排序只能在同一個處室與資料類別內調整。", true);
         return;
       }
 
@@ -1943,11 +1968,7 @@
     function renderSuggestionLists() {
       const resourceItems = [...resources, ...trash];
       const shortcutItems = flattenShortcuts();
-      const categoryOptions = mergeOptions(
-        DEFAULT_CATEGORIES,
-        resourceItems.map((item) => item.category),
-        shortcutItems.map((item) => item.resourceCategory)
-      );
+      const categoryOptions = buildCategoryOptions(resourceItems, shortcutItems);
       const typeOptions = mergeOptions(
         DEFAULT_TYPES,
         resourceItems.map((item) => item.type)
@@ -1957,11 +1978,24 @@
         resourceItems.flatMap((item) => item.tags || []),
         shortcutItems.map((item) => item.tag)
       );
-      renderComboOptions(el.batchCategorySelect, el.batchCategoryInput, categoryOptions, "不變更分類", "新增分類...");
-      renderComboOptions(el.resourceCategorySelect, el.resourceCategoryInput, categoryOptions, "請選擇分類", "新增分類...");
+      renderComboOptions(el.batchCategorySelect, el.batchCategoryInput, categoryOptions, "不變更資料類別", "新增資料類別...", categoryOptionLabel);
+      renderComboOptions(el.resourceCategorySelect, el.resourceCategoryInput, categoryOptions, "請選擇資料類別", "新增資料類別...", categoryOptionLabel);
       renderComboOptions(el.resourceTypeSelect, el.resourceTypeInput, typeOptions, "請選擇類型", "新增類型...");
-      renderComboOptions(el.shortcutCategorySelect, el.shortcutCategoryInput, categoryOptions, "不指定分類", "新增分類...");
+      renderComboOptions(el.shortcutCategorySelect, el.shortcutCategoryInput, categoryOptions, "不指定資料類別", "新增資料類別...", categoryOptionLabel);
       renderComboOptions(el.shortcutTagSelect, el.shortcutTagInput, tagOptions, "不指定標籤", "新增標籤...");
+    }
+
+    function buildCategoryOptions(resourceItems, shortcutItems) {
+      return mergeOptions(
+        DEFAULT_CATEGORIES,
+        resourceItems.map((item) => item.category),
+        shortcutItems.map((item) => item.resourceCategory)
+      );
+    }
+
+    function categoryOptionLabel(value) {
+      const text = String(value || "").trim();
+      return DEFAULT_CATEGORY_SET.has(text) ? text : "舊分類：" + text;
     }
 
     function mergeOptions(defaults, ...groups) {
@@ -1984,10 +2018,10 @@
       }
     }
 
-    function renderComboOptions(select, input, options, emptyLabel, customLabel) {
+    function renderComboOptions(select, input, options, emptyLabel, customLabel, optionLabel = (value) => value) {
       const current = getComboValue(select, input);
       select.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" +
-        options.map((value) => "<option value='" + escapeHtml(value) + "'>" + escapeHtml(value) + "</option>").join("") +
+        options.map((value) => "<option value='" + escapeHtml(value) + "'>" + escapeHtml(optionLabel(value)) + "</option>").join("") +
         "<option value='" + CUSTOM_OPTION_VALUE + "'>" + escapeHtml(customLabel) + "</option>";
       setComboValue(select, input, current);
     }
