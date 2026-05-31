@@ -120,7 +120,6 @@
 
     .tabs,
     .actions,
-    .order-row,
     .filter-row,
     .checkbox-row {
       display: flex;
@@ -143,6 +142,19 @@
 
     .filter-row button {
       flex: 0 0 auto;
+    }
+
+    .list-command-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0 12px;
+    }
+
+    .list-command-row button {
+      width: 100%;
+      padding: 7px 8px;
+      white-space: nowrap;
     }
 
     button {
@@ -358,6 +370,7 @@
       min-height: 38px;
       padding: 7px 10px;
       font-size: 0.92rem;
+      white-space: nowrap;
     }
 
     .list-entry {
@@ -507,12 +520,9 @@
         grid-template-columns: 1fr;
       }
 
-      .order-row button {
-        flex: 1;
-      }
-
-      .compact-actions {
-        grid-template-columns: 1fr;
+      .compact-actions,
+      .list-command-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
   </style>
@@ -555,10 +565,8 @@
           <option value="">全部分類</option>
         </select>
       </div>
-      <div class="filter-row">
+      <div class="list-command-row" aria-label="公告操作">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增公告</button>
-      </div>
-      <div class="order-row" aria-label="公告顯示順序調整">
         <button id="moveUpBtn" type="button" class="secondary" disabled>公告上移</button>
         <button id="moveDownBtn" type="button" class="secondary" disabled>公告下移</button>
       </div>
@@ -568,7 +576,7 @@
           <span id="visibleCountText">目前清單 0 筆</span>
         </div>
         <div class="compact-actions">
-          <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選目前清單</button>
+          <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選清單</button>
           <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
           <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
         </div>
