@@ -770,7 +770,7 @@
     <div class="header-inner">
       <div class="header-copy">
         <h1>內湖國小教師手冊後台</h1>
-        <p class="meta">維護教師手冊資料卡、連結與入口設定。</p>
+        <p class="meta">維護教師手冊資料卡、連結與回收桶。</p>
       </div>
       <div class="user-box">
         <p class="meta" id="loginState">載入使用者資料...</p>
@@ -783,7 +783,6 @@
     <section class="panel mode-bar" aria-label="後台主入口">
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">內容管理</button>
-        <button id="shortcutsTab" class="tab-button" type="button">入口設定</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
     </section>
@@ -966,7 +965,7 @@
         </div>
       </section>
 
-      <form id="shortcutForm" class="hidden">
+      <form id="shortcutForm" class="hidden" hidden aria-hidden="true">
         <div class="editor-header">
           <span class="editor-kicker">入口設定</span>
           <h2>前台入口對照</h2>
@@ -1238,10 +1237,10 @@
 
     function renderOfficeFilter() {
       const current = el.officeFilter.value;
-      const offices = mode === "shortcuts" ? getShortcutOfficeOptions() : getResourceOfficeOptions();
-      const emptyLabel = mode === "shortcuts" ? "全部舊版分組" : "全部處室";
+      const offices = getResourceOfficeOptions();
+      const emptyLabel = "全部處室";
       el.officeFilter.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" + offices.map((office) => (
-        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(mode === "shortcuts" ? shortcutParentLabel(office) : office) + "</option>"
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
       )).join("");
       el.officeFilter.value = offices.includes(current) ? current : "";
     }
@@ -1358,28 +1357,27 @@
     }
 
     function renderAll() {
+      mode = normalizeMode(mode);
       el.resourcesTab.classList.toggle("is-active", mode === "resources");
-      el.shortcutsTab.classList.toggle("is-active", mode === "shortcuts");
+      if (el.shortcutsTab) el.shortcutsTab.classList.remove("is-active");
       el.trashTab.classList.toggle("is-active", mode === "trash");
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
-      el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
+      el.shortcutForm.classList.add("hidden");
+      el.shortcutForm.hidden = true;
+      el.shortcutForm.setAttribute("aria-hidden", "true");
       el.trashForm.classList.toggle("hidden", mode !== "trash");
-      el.bulkTools.classList.toggle("hidden", mode === "shortcuts");
+      el.bulkTools.classList.remove("hidden");
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
       el.sortHint.classList.toggle("hidden", mode === "trash");
-      el.categoryFilter.classList.toggle("hidden", mode === "shortcuts");
-      el.categoryFilter.disabled = mode === "shortcuts";
-      el.officeFilter.setAttribute("aria-label", mode === "shortcuts" ? "舊版分組篩選" : "處室篩選");
-      el.listTitle.textContent = mode === "resources" ? "內容管理清單" : mode === "trash" ? "回收桶清單" : "舊版入口清單";
-      el.addItemBtn.textContent = mode === "shortcuts" ? "新增舊版入口按鈕" : "新增資料卡";
+      el.categoryFilter.classList.remove("hidden");
+      el.categoryFilter.disabled = false;
+      el.officeFilter.setAttribute("aria-label", "處室篩選");
+      el.listTitle.textContent = mode === "trash" ? "回收桶清單" : "內容管理清單";
+      el.addItemBtn.textContent = "新增資料卡";
       renderList();
       renderBulkState();
       if (mode === "resources") renderResourceEditor();
       if (mode === "trash") renderTrashEditor();
-      if (mode === "shortcuts") {
-        renderFrontendEntryOverviews();
-        renderShortcutEditor();
-      }
     }
 
     function getDisplayResourceCategory(item) {
@@ -1452,6 +1450,7 @@
     }
 
     function renderList() {
+      mode = normalizeMode(mode);
       if (mode === "resources") {
         const items = getVisibleListItems();
         const selectionMode = isListSelectionMode();
@@ -1489,29 +1488,14 @@
         );
         return;
       }
-
-      const items = getVisibleListItems();
-      el.itemList.innerHTML = renderGroupedList(
-        items,
-        getListGroupName,
-        (item) => `
-          <div class="list-entry is-draggable is-shortcut" data-id="${escapeHtml(item.id)}" draggable="true">
-            <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
-            <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-              <strong>${escapeHtml(item.label || "未命名按鈕")}</strong>
-              <span>顯示順序 ${escapeHtml(item.sort_order || "")}${item.enabled ? "" : "｜已停用"}</span>
-            </button>
-          </div>
-        `
-      );
     }
 
     function getListGroupName(item) {
-      if (mode === "shortcuts") return shortcutParentLabel(item.parentOffice);
       return getOfficeCategoryText(item);
     }
 
     function getVisibleListItems() {
+      mode = normalizeMode(mode);
       const office = el.officeFilter.value;
       const query = normalizeAdminText(el.listSearchInput.value);
       if (mode === "resources") {
@@ -1532,11 +1516,7 @@
           .slice()
           .sort(compareResourceListOrder);
       }
-      return flattenShortcuts()
-        .filter((item) => !office || adminOfficeMatches(item.parentOffice, office))
-        .filter((item) => matchesAdminQuery(shortcutAdminSearchText(item), query))
-        .slice()
-        .sort(compareShortcutListOrder);
+      return [];
     }
 
     function renderGroupedList(items, groupName, renderItem) {
@@ -1553,6 +1533,7 @@
     }
 
     function renderBulkState(enabled = true) {
+      mode = normalizeMode(mode);
       const isBulkMode = mode === "resources" || mode === "trash";
       const visibleItems = isBulkMode ? getVisibleListItems() : [];
       const selectedCount = mode === "trash" ? selectedTrashIds.size : selectedResourceIds.size;
@@ -2025,7 +2006,7 @@
     }
 
     async function reorderListByDrag(sourceId, targetId) {
-      if (mode === "trash" || !sourceId || !targetId || sourceId === targetId) return;
+      if (mode !== "resources" || !sourceId || !targetId || sourceId === targetId) return;
       const items = getVisibleListItems();
       const source = items.find((item) => item.id === sourceId);
       const target = items.find((item) => item.id === targetId);
@@ -2048,9 +2029,8 @@
       const sortOrders = groupItems
         .map((item, index) => Number(item.sort_order || index + 1))
         .sort((a, b) => a - b);
-      const kind = mode === "resources" ? "resource" : "shortcut";
-      if (mode === "resources") activeResourceId = sourceId;
-      if (mode === "shortcuts") activeShortcutId = sourceId;
+      const kind = "resource";
+      activeResourceId = sourceId;
 
       await runCommand("reorderDirectoryItems", {
         kind,
@@ -2108,19 +2088,25 @@
     }
 
     function setMode(nextMode) {
-      mode = nextMode;
+      mode = normalizeMode(nextMode);
       renderOfficeFilter();
       renderCategoryFilter();
       renderAll();
       setEnabled(true);
     }
 
+    function normalizeMode(nextMode) {
+      return nextMode === "trash" ? "trash" : "resources";
+    }
+
     function refreshListView() {
+      mode = normalizeMode(mode);
       renderList();
       setEnabled(true);
     }
 
     function setEnabled(enabled) {
+      mode = normalizeMode(mode);
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
@@ -2128,7 +2114,7 @@
       el.addItemBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash";
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
-      el.categoryFilter.disabled = mode === "shortcuts" || !enabled || !idToken;
+      el.categoryFilter.disabled = !enabled || !idToken;
       el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEdit || mode !== "resources");
       el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
@@ -2136,9 +2122,9 @@
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
       el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEdit || mode !== "resources" || !activeResourceId;
       el.unpublishResourceBtn.disabled = !enabled || !idToken || !canEdit || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
-      el.saveShortcutBtn.disabled = !enabled || !idToken || !canEdit;
+      el.saveShortcutBtn.disabled = true;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
-      el.deleteShortcutBtn.disabled = !enabled || !idToken || !canArchive || !activeShortcutId;
+      el.deleteShortcutBtn.disabled = true;
       el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
       renderBulkState();
     }
@@ -2274,7 +2260,6 @@
     }
 
     el.resourcesTab.addEventListener("click", () => setMode("resources"));
-    el.shortcutsTab.addEventListener("click", () => setMode("shortcuts"));
     el.trashTab.addEventListener("click", () => setMode("trash"));
     el.logoutBtn.addEventListener("click", logout);
     el.listSearchInput.addEventListener("input", refreshListView);
@@ -2342,10 +2327,6 @@
       if (mode === "resources") {
         activeResourceId = "";
         clearResourceEditor();
-      } else if (mode === "shortcuts") {
-        activeShortcutId = "";
-        clearShortcutEditor();
-        if (el.legacyShortcutPanel) el.legacyShortcutPanel.open = true;
       }
       renderList();
       setEnabled(true);
@@ -2380,9 +2361,6 @@
         activeResourceId = button.dataset.id;
       } else if (mode === "trash") {
         activeTrashId = button.dataset.id;
-      } else {
-        activeShortcutId = button.dataset.id;
-        if (el.legacyShortcutPanel) el.legacyShortcutPanel.open = true;
       }
       renderAll();
       setEnabled(true);
