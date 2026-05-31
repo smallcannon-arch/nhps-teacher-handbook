@@ -501,6 +501,29 @@
       line-height: 1.45;
     }
 
+    .staff-unit-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .staff-unit-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 1px 8px;
+      border: 1px solid #d7e4ef;
+      border-radius: 999px;
+      background: #f3f7fa;
+      color: var(--navy);
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
     .padlet-type {
       display: inline-flex;
       align-items: center;
@@ -1317,6 +1340,12 @@
       "forms-download": "需要下載常用表件、檔案或年度資料時使用。"
     };
     const cannedSummaryText = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
+    const staffUnitTags = new Set([
+      "教務主任", "教學組", "課研組", "資訊組", "特教組",
+      "學務主任", "生教組", "體育組", "環教組", "護理師",
+      "總務主任", "事務組", "出納組", "文書組",
+      "輔導主任", "輔導組", "親職組", "專輔教師"
+    ]);
 
     const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
     const defaultOfficeTab = "常用入口";
@@ -3300,6 +3329,31 @@
       return `${looseDate[1]}/${looseDate[2].padStart(2, "0")}/${looseDate[3].padStart(2, "0")}`;
     }
 
+    function getStaffUnitTags(tags) {
+      const seen = new Set();
+      return (Array.isArray(tags) ? tags : [])
+        .map((tag) => String(tag || "").trim())
+        .filter((tag) => {
+          if (!staffUnitTags.has(tag) || seen.has(tag)) return false;
+          seen.add(tag);
+          return true;
+        });
+    }
+
+    function createStaffUnitTags(tags) {
+      const units = getStaffUnitTags(tags);
+      if (!units.length) return null;
+      const list = document.createElement("ul");
+      list.className = "staff-unit-tags";
+      units.forEach((unit) => {
+        const item = document.createElement("li");
+        item.className = "staff-unit-tag";
+        item.textContent = unit;
+        list.appendChild(item);
+      });
+      return list;
+    }
+
     function createCommonResourceCard(resource) {
       const card = document.createElement("article");
       card.className = "padlet-card";
@@ -3332,6 +3386,8 @@
 
       card.append(title, ...optionalFields);
       if (resource.links.length) card.appendChild(createCommonResourceLinks(resource));
+      const staffUnits = createStaffUnitTags(resource.tags);
+      if (staffUnits) card.appendChild(staffUnits);
       if (updatedText) card.appendChild(createTextElement("p", "padlet-meta", "更新：" + updatedText));
       if (resource.status) card.appendChild(createTextElement("p", "padlet-status", resource.status + "，每學年更換一次檔案或連結。"));
 

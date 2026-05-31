@@ -298,6 +298,59 @@
       gap: 8px;
     }
 
+    .staff-unit-field {
+      margin-top: 2px;
+      padding: 12px;
+      border: 1px solid #dbe7e9;
+      border-radius: var(--radius);
+      background: #f7faf8;
+    }
+
+    .staff-unit-title {
+      color: var(--navy);
+      font-weight: 900;
+    }
+
+    .staff-unit-help {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    .staff-unit-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .staff-unit-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 5px 10px;
+      border: 1px solid #cbdbe2;
+      border-radius: 999px;
+      background: white;
+      color: var(--navy);
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .staff-unit-option input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--navy);
+    }
+
+    .staff-unit-option:has(input:checked) {
+      border-color: var(--navy);
+      background: #eaf1f6;
+      box-shadow: inset 0 0 0 1px rgba(22, 61, 101, 0.08);
+    }
+
     .notice {
       margin-bottom: 14px;
       padding: 12px 14px;
@@ -893,6 +946,11 @@
               </div>
             </div>
           </div>
+          <div id="staffUnitField" class="field staff-unit-field" hidden aria-hidden="true">
+            <span class="staff-unit-title">組別</span>
+            <p id="staffUnitHelp" class="staff-unit-help">組別會存入既有標籤欄位，不新增資料欄位。</p>
+            <div id="staffUnitOptions" class="staff-unit-options" aria-label="組別"></div>
+          </div>
         </section>
 
         <section class="form-section" aria-labelledby="resourceDisplayHeading">
@@ -1083,6 +1141,13 @@
       "常用", "重要", "高風險", "表件", "流程", "新進教師必讀", "教務處", "學務處", "總務處",
       "輔導室", "人事室", "會計室", "資訊設備", "硬體設備", "場地借用", "平板借用", "校安", "性平", "霸凌"
     ];
+    const STAFF_UNITS_BY_OFFICE = {
+      "教務處": ["教務主任", "教學組", "課研組", "資訊組", "特教組"],
+      "學務處": ["學務主任", "生教組", "體育組", "環教組", "護理師"],
+      "總務處": ["總務主任", "事務組", "出納組", "文書組"],
+      "輔導室": ["輔導主任", "輔導組", "親職組", "專輔教師"]
+    };
+    const STAFF_UNIT_TAGS = Object.values(STAFF_UNITS_BY_OFFICE).flat();
 
     let idToken = "";
     let currentUser = null;
@@ -1150,6 +1215,9 @@
       resourceCategoryInput: document.getElementById("resourceCategoryInput"),
       resourceTypeSelect: document.getElementById("resourceTypeSelect"),
       resourceTypeInput: document.getElementById("resourceTypeInput"),
+      staffUnitField: document.getElementById("staffUnitField"),
+      staffUnitOptions: document.getElementById("staffUnitOptions"),
+      staffUnitHelp: document.getElementById("staffUnitHelp"),
       resourceSortInput: document.getElementById("resourceSortInput"),
       resourceNoteInput: document.getElementById("resourceNoteInput"),
       resourceTagsInput: document.getElementById("resourceTagsInput"),
@@ -1664,6 +1732,7 @@
       el.resourceTagsInput.value = (item.tags || []).join(", ");
       el.resourceVisibleInput.checked = item.visible !== false;
       el.resourceFeaturedInput.checked = item.featured === true;
+      renderStaffUnitPicker();
       renderLinkRows(item.links || []);
     }
 
@@ -1682,6 +1751,7 @@
       el.resourceTagsInput.value = "常用";
       el.resourceVisibleInput.checked = true;
       el.resourceFeaturedInput.checked = false;
+      renderStaffUnitPicker();
       renderLinkRows([]);
     }
 
@@ -1769,7 +1839,7 @@
         status: existing ? existing.status || "" : "",
         note: el.resourceNoteInput.value.trim(),
         links,
-        tags: splitTags(el.resourceTagsInput.value),
+        tags: collectResourceTags(),
         updated: el.resourceUpdatedInput.value || todayText(),
         visible: el.resourceVisibleInput.checked,
         featured: el.resourceFeaturedInput.checked,
@@ -1882,6 +1952,7 @@
       el.resourceTagsInput.value = (item.tags || []).join(", ");
       el.resourceVisibleInput.checked = false;
       el.resourceFeaturedInput.checked = false;
+      renderStaffUnitPicker();
       renderLinkRows((item.links || []).map((link) => ({ label: link.label || "", url: link.url || "" })));
       showMessage("已建立副本，請確認內容後再儲存。這是尚未儲存的副本，不會影響原資料。", false);
       renderList();
@@ -2154,6 +2225,59 @@
       return String(value || "").split(/[,，]/).map((tag) => tag.trim()).filter(Boolean);
     }
 
+    function mergeTagList(tags, extraTags = []) {
+      const seen = new Set();
+      const output = [];
+      [...tags, ...extraTags].forEach((tag) => {
+        const text = String(tag || "").trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        output.push(text);
+      });
+      return output;
+    }
+
+    function getVisibleStaffUnits() {
+      return STAFF_UNITS_BY_OFFICE[el.resourceOfficeInput.value] || [];
+    }
+
+    function getCheckedStaffUnits() {
+      return [...el.staffUnitOptions.querySelectorAll("[data-staff-unit]:checked")]
+        .map((input) => input.value);
+    }
+
+    function renderStaffUnitPicker() {
+      const units = getVisibleStaffUnits();
+      if (!units.length) {
+        el.staffUnitField.hidden = true;
+        el.staffUnitField.setAttribute("aria-hidden", "true");
+        el.staffUnitOptions.replaceChildren();
+        return;
+      }
+
+      const selectedTags = new Set(splitTags(el.resourceTagsInput.value));
+      el.staffUnitField.hidden = false;
+      el.staffUnitField.setAttribute("aria-hidden", "false");
+      el.staffUnitHelp.textContent = "組別會存入既有標籤欄位，不新增資料欄位；未勾選的本處室組別會從標籤中移除。";
+      el.staffUnitOptions.innerHTML = units.map((unit) => (
+        "<label class='staff-unit-option'>" +
+          "<input type='checkbox' data-staff-unit value='" + escapeHtml(unit) + "'" + (selectedTags.has(unit) ? " checked" : "") + ">" +
+          "<span>" + escapeHtml(unit) + "</span>" +
+        "</label>"
+      )).join("");
+    }
+
+    function collectResourceTags() {
+      const visibleUnits = new Set(getVisibleStaffUnits());
+      const tagsWithoutVisibleUnits = splitTags(el.resourceTagsInput.value).filter((tag) => !visibleUnits.has(tag));
+      return mergeTagList(tagsWithoutVisibleUnits, getCheckedStaffUnits());
+    }
+
+    function syncStaffUnitSelectionToTags() {
+      el.resourceTagsInput.value = collectResourceTags().join(", ");
+      renderStaffUnitPicker();
+    }
+
     function renderSuggestionLists() {
       const resourceItems = [...resources, ...trash];
       const shortcutItems = flattenShortcuts();
@@ -2276,6 +2400,11 @@
     });
     el.categoryFilter.addEventListener("change", refreshListView);
     el.statusFilter.addEventListener("change", refreshListView);
+    el.resourceOfficeInput.addEventListener("change", renderStaffUnitPicker);
+    el.resourceTagsInput.addEventListener("change", renderStaffUnitPicker);
+    el.staffUnitOptions.addEventListener("change", (event) => {
+      if (event.target.matches("[data-staff-unit]")) syncStaffUnitSelectionToTags();
+    });
     [
       [el.batchCategorySelect, el.batchCategoryInput],
       [el.resourceCategorySelect, el.resourceCategoryInput],
