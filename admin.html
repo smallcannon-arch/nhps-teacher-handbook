@@ -148,15 +148,44 @@
       flex: 0 0 auto;
     }
 
+    .primary-list-actions {
+      margin: 10px 0;
+    }
+
+    .primary-list-actions button {
+      width: 100%;
+    }
+
+    .sidebar-tools {
+      margin: 8px 0;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f8fbfa;
+    }
+
+    .sidebar-tools summary {
+      padding: 8px 10px;
+      color: var(--navy);
+      font-weight: 900;
+      cursor: pointer;
+      list-style-position: inside;
+    }
+
+    .sidebar-tools-body {
+      display: grid;
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+
     .list-command-row {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
-      margin: 10px 0 12px;
     }
 
     .list-command-row button {
       width: 100%;
+      min-height: 38px;
       padding: 7px 8px;
       white-space: nowrap;
     }
@@ -342,12 +371,7 @@
     }
 
     .bulk-tools {
-      display: grid;
-      gap: 8px;
-      margin: 14px 0 8px;
-      padding: 10px 0;
-      border-top: 1px solid #e4ebe9;
-      border-bottom: 1px solid #e4ebe9;
+      margin: 8px 0 10px;
     }
 
     .bulk-summary {
@@ -357,6 +381,7 @@
       align-items: baseline;
       color: var(--muted);
       font-size: 0.9rem;
+      padding-top: 2px;
     }
 
     .bulk-summary strong {
@@ -380,16 +405,17 @@
     .list-entry {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px;
+      gap: 6px;
       align-items: stretch;
     }
 
-    .list-entry.is-draggable {
-      grid-template-columns: auto auto minmax(0, 1fr);
-    }
-
+    .list-entry.is-draggable,
     .list-entry.is-shortcut {
       grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .list-entry.is-draggable.has-check {
+      grid-template-columns: auto auto minmax(0, 1fr);
     }
 
     .list-check {
@@ -398,16 +424,16 @@
 
     .drag-handle {
       align-self: center;
-      width: 24px;
-      min-height: 42px;
+      width: 18px;
+      min-height: 34px;
       display: grid;
       place-items: center;
-      border: 1px solid #d8e4e7;
+      border: 1px solid transparent;
       border-radius: var(--radius);
-      background: #f6faf9;
-      color: var(--muted);
+      background: transparent;
+      color: #9aa6ad;
       cursor: grab;
-      font-size: 0.85rem;
+      font-size: 0.72rem;
       font-weight: 900;
       line-height: 1;
       user-select: none;
@@ -427,7 +453,7 @@
       display: grid;
       gap: 2px;
       min-height: 0;
-      padding: 10px 12px;
+      padding: 8px 10px;
       background: white;
       border-color: var(--line);
       color: var(--ink);
@@ -436,12 +462,13 @@
 
     .list-button strong {
       color: var(--navy);
-      line-height: 1.35;
+      font-size: 0.95rem;
+      line-height: 1.3;
     }
 
     .list-button span {
       color: var(--muted);
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       line-height: 1.45;
     }
 
@@ -559,9 +586,8 @@
         grid-template-columns: 1fr;
       }
 
-      .compact-actions,
       .list-command-row {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
@@ -661,22 +687,32 @@
           <option value="">全部分類</option>
         </select>
       </div>
-      <div class="list-command-row" aria-label="資料卡操作">
+      <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
-        <button id="moveUpBtn" type="button" class="secondary" disabled>資料上移</button>
-        <button id="moveDownBtn" type="button" class="secondary" disabled>資料下移</button>
       </div>
-      <div id="bulkTools" class="bulk-tools">
-        <div class="bulk-summary">
-          <strong id="bulkCountText">已勾選 0 筆</strong>
-          <span id="visibleCountText">目前清單 0 筆</span>
+      <details id="manageTools" class="sidebar-tools">
+        <summary>管理工具</summary>
+        <div class="sidebar-tools-body">
+          <div class="list-command-row" aria-label="資料卡排序操作">
+            <button id="moveUpBtn" type="button" class="secondary" disabled>資料上移</button>
+            <button id="moveDownBtn" type="button" class="secondary" disabled>資料下移</button>
+          </div>
         </div>
-        <div class="compact-actions">
-          <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選清單</button>
-          <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
-          <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
+      </details>
+      <details id="bulkTools" class="sidebar-tools bulk-tools">
+        <summary id="bulkToolsSummary">批次整理</summary>
+        <div class="sidebar-tools-body">
+          <div class="bulk-summary">
+            <strong id="bulkCountText">已勾選 0 筆</strong>
+            <span id="visibleCountText">目前清單 0 筆</span>
+          </div>
+          <div class="compact-actions">
+            <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選清單</button>
+            <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
+            <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
+          </div>
         </div>
-      </div>
+      </details>
       <div id="itemList" class="list"></div>
     </aside>
 
@@ -942,7 +978,9 @@
       addItemBtn: document.getElementById("addItemBtn"),
       moveUpBtn: document.getElementById("moveUpBtn"),
       moveDownBtn: document.getElementById("moveDownBtn"),
+      manageTools: document.getElementById("manageTools"),
       bulkTools: document.getElementById("bulkTools"),
+      bulkToolsSummary: document.getElementById("bulkToolsSummary"),
       bulkCountText: document.getElementById("bulkCountText"),
       visibleCountText: document.getElementById("visibleCountText"),
       selectVisibleBtn: document.getElementById("selectVisibleBtn"),
@@ -1174,6 +1212,7 @@
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
       el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
       el.trashForm.classList.toggle("hidden", mode !== "trash");
+      el.manageTools.classList.toggle("hidden", mode === "trash");
       el.bulkTools.classList.toggle("hidden", mode === "shortcuts");
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
       el.categoryFilter.classList.toggle("hidden", mode === "shortcuts");
@@ -1190,16 +1229,17 @@
     function renderList() {
       if (mode === "resources") {
         const items = getVisibleListItems();
+        const selectionMode = isListSelectionMode();
         el.itemList.innerHTML = renderGroupedList(
           items,
           getListGroupName,
           (item) => `
-            <div class="list-entry is-draggable ${selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
-              <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>
+            <div class="list-entry is-draggable ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
+              ${selectionMode ? `<input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>` : ""}
               <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
-                <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用資料" : ""}${item.visible ? "" : "｜已下架"}</span>
+                <span>${escapeHtml(item.office || "全校共用")}｜${escapeHtml(item.category || "未分類")}｜順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用資料" : ""}${item.visible ? "" : "｜已下架"}</span>
               </button>
             </div>
           `
@@ -1294,18 +1334,24 @@
       el.bulkCountText.textContent = "已勾選 " + selectedCount + " 筆";
       el.visibleCountText.textContent = "目前清單 " + visibleItems.length + " 筆";
       el.batchDeleteBtn.textContent = mode === "trash" ? "還原已勾選" : "移到回收桶";
+      if (el.bulkToolsSummary) el.bulkToolsSummary.textContent = mode === "trash" ? "回收桶批次整理" : "批次整理";
       if (el.bulkPanelSummary) el.bulkPanelSummary.textContent = "批次整理（已勾選 " + selectedResourceIds.size + " 筆）";
       const hasVisibleItems = visibleItems.length > 0;
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
-      const canUseBulk = Boolean(enabled && idToken && canEdit && isBulkMode);
+      const canUseBulk = Boolean(enabled && idToken && canEdit && isBulkMode && isListSelectionMode());
       const canMoveToTrash = Boolean(enabled && idToken && canArchive && isBulkMode && selectedCount > 0);
       el.selectVisibleBtn.disabled = !canUseBulk || !hasVisibleItems;
       el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
       el.batchApplyBtn.disabled = mode !== "resources" || !canUseBulk || selectedResourceIds.size === 0;
-      el.batchDeleteBtn.disabled = !canMoveToTrash;
+      el.batchDeleteBtn.disabled = !canUseBulk || !canMoveToTrash;
       el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
+    }
+
+    function isListSelectionMode() {
+      if (mode === "trash") return true;
+      return mode === "resources" && el.bulkTools.open;
     }
 
     function pruneSelectedItems() {
@@ -2010,6 +2056,12 @@
     el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
     el.batchApplyBtn.addEventListener("click", applyBatchResources);
     el.restoreTrashBtn.addEventListener("click", restoreSelectedTrash);
+    el.bulkTools.addEventListener("toggle", () => {
+      if (mode === "resources" && !el.bulkTools.open) selectedResourceIds.clear();
+      renderList();
+      renderBulkState();
+      setEnabled(true);
+    });
     el.itemList.addEventListener("dragstart", (event) => {
       const entry = event.target.closest(".list-entry.is-draggable");
       if (!entry || !idToken || mode === "trash") return;
