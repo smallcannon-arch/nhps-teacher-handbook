@@ -387,6 +387,64 @@
       background: white;
     }
 
+    .entry-overview {
+      display: grid;
+      gap: 12px;
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .entry-card {
+      display: grid;
+      gap: 6px;
+      min-height: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfdfc;
+    }
+
+    .entry-card strong {
+      color: var(--navy);
+      line-height: 1.35;
+    }
+
+    .entry-card .meta {
+      margin-bottom: 0;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .readonly-badge {
+      justify-self: start;
+      padding: 2px 8px;
+      border: 1px solid #d8e4e7;
+      border-radius: 999px;
+      background: #eef6f4;
+      color: #2f6b56;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .legacy-shortcut-panel {
+      margin-top: 18px;
+    }
+
+    .legacy-shortcut-panel summary {
+      color: var(--navy);
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .legacy-shortcut-panel[open] summary {
+      margin-bottom: 12px;
+    }
+
     .bulk-tools {
       margin: 5px 0 8px;
     }
@@ -648,7 +706,8 @@
 
       .grid-2,
       .grid-3,
-      .link-row {
+      .link-row,
+      .entry-grid {
         grid-template-columns: 1fr;
       }
 
@@ -926,66 +985,92 @@
 
       <form id="shortcutForm" class="hidden">
         <div class="editor-header">
-          <span id="shortcutEditorLabel" class="editor-kicker">正在編輯入口按鈕</span>
-          <h2 id="shortcutTitle">請先選擇入口按鈕</h2>
-          <p id="shortcutContext" class="meta">從左側清單點選一個入口按鈕後，就能在這裡修改。</p>
-        </div>
-        <input id="shortcutIdInput" type="hidden">
-
-        <div class="grid-2">
-          <div class="field">
-            <label for="shortcutParentInput">放在哪個處室下面</label>
-            <select id="shortcutParentInput"></select>
-          </div>
-          <div class="field">
-            <label for="shortcutLabelInput">按鈕名稱</label>
-            <input id="shortcutLabelInput" placeholder="例如：內湖雲端">
-          </div>
+          <span class="editor-kicker">入口設定</span>
+          <h2>前台入口對照</h2>
+          <p class="meta">新版前台主要依「處室」與「需求」顯示資料；此頁先以唯讀方式對照目前前台入口。</p>
         </div>
 
-        <div class="grid-2">
-          <div class="field">
-            <label for="shortcutHintInput">簡短提示</label>
-            <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
+        <section class="form-section entry-overview" aria-labelledby="officeEntryHeading">
+          <div>
+            <h3 id="officeEntryHeading">依處室快速查找</h3>
+            <p class="meta section-help">管理前台上方的處室入口。老師可依承辦處室快速篩選資料卡。</p>
           </div>
-          <div class="field">
-            <label for="shortcutSortInput">顯示順序</label>
-            <input id="shortcutSortInput" type="number" min="1" step="1">
-          </div>
-        </div>
+          <div id="officeEntryOverview" class="entry-grid"></div>
+        </section>
 
-        <div class="grid-3">
-          <div class="field">
-            <label for="shortcutQueryInput">關鍵字搜尋</label>
-            <input id="shortcutQueryInput" placeholder="例如：校安">
+        <section class="form-section entry-overview" aria-labelledby="needEntryHeading">
+          <div>
+            <h3 id="needEntryHeading">我需要……</h3>
+            <p class="meta section-help">管理前台左側的需求入口。老師可依目前需求查看相關表單、流程與連結。</p>
           </div>
-          <div class="field">
-            <label for="shortcutCategoryInput">指定資料類別</label>
-            <div class="combo-field">
-              <select id="shortcutCategorySelect" aria-label="指定資料類別"></select>
-              <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
+          <div id="needEntryOverview" class="entry-grid"></div>
+        </section>
+
+        <details id="legacyShortcutPanel" class="form-section legacy-shortcut-panel">
+          <summary>舊版入口按鈕（相容保留）</summary>
+          <p class="meta section-help">此區保留舊資料相容。新版前台主要依「處室」與「需求」顯示資料。</p>
+          <div class="editor-header">
+            <span id="shortcutEditorLabel" class="editor-kicker">正在編輯舊版入口按鈕</span>
+            <h2 id="shortcutTitle">請先選擇舊版入口按鈕</h2>
+            <p id="shortcutContext" class="meta">從左側清單點選一個舊版入口按鈕後，就能在這裡修改。</p>
+          </div>
+          <input id="shortcutIdInput" type="hidden">
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shortcutParentInput">舊版分組</label>
+              <select id="shortcutParentInput"></select>
+            </div>
+            <div class="field">
+              <label for="shortcutLabelInput">按鈕名稱</label>
+              <input id="shortcutLabelInput" placeholder="例如：內湖雲端">
             </div>
           </div>
-          <div class="field">
-            <label for="shortcutTagInput">指定標籤</label>
-            <div class="combo-field">
-              <select id="shortcutTagSelect" aria-label="指定標籤"></select>
-              <input id="shortcutTagInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新標籤">
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shortcutHintInput">簡短提示</label>
+              <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
+            </div>
+            <div class="field">
+              <label for="shortcutSortInput">顯示順序</label>
+              <input id="shortcutSortInput" type="number" min="1" step="1">
             </div>
           </div>
-        </div>
 
-        <div class="field">
-          <label for="shortcutTargetInput">指定內容 ID</label>
-          <input id="shortcutTargetInput" placeholder="可留空">
-        </div>
+          <div class="grid-3">
+            <div class="field">
+              <label for="shortcutQueryInput">關鍵字搜尋</label>
+              <input id="shortcutQueryInput" placeholder="例如：校安">
+            </div>
+            <div class="field">
+              <label for="shortcutCategoryInput">指定資料類別</label>
+              <div class="combo-field">
+                <select id="shortcutCategorySelect" aria-label="指定資料類別"></select>
+                <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
+              </div>
+            </div>
+            <div class="field">
+              <label for="shortcutTagInput">指定標籤</label>
+              <div class="combo-field">
+                <select id="shortcutTagSelect" aria-label="指定標籤"></select>
+                <input id="shortcutTagInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新標籤">
+              </div>
+            </div>
+          </div>
 
-        <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 啟用此入口按鈕</label>
+          <div class="field">
+            <label for="shortcutTargetInput">指定內容 ID</label>
+            <input id="shortcutTargetInput" placeholder="可留空">
+          </div>
 
-        <div class="actions">
-          <button id="saveShortcutBtn" type="button" disabled>儲存入口按鈕</button>
-          <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用入口按鈕</button>
-        </div>
+          <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 啟用此舊版入口按鈕</label>
+
+          <div class="actions">
+            <button id="saveShortcutBtn" type="button" disabled>儲存舊版入口按鈕</button>
+            <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用舊版入口按鈕</button>
+          </div>
+        </details>
       </form>
     </section>
   </main>
@@ -1004,6 +1089,16 @@
     const OFFICES = ["常用入口", "校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
     const RESOURCE_OFFICES = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
     const LEGACY_RESOURCE_OFFICES = ["人事室", "會計室", "其他"];
+    const FRONTEND_NEED_ENTRIES = [
+      { label: "請假／補休", hint: "差勤、課務安排", keywords: ["請假", "補休", "差勤", "調課", "代課"] },
+      { label: "處理學生事件", hint: "受傷、通報、輔導", keywords: ["學生事件", "受傷", "校安", "通報", "霸凌", "性平", "輔導"] },
+      { label: "報修／借用", hint: "設備、場地、平板", keywords: ["報修", "設備", "冷氣", "資訊", "電腦", "網路", "場地", "借用", "平板"] },
+      { label: "帶學生外出", hint: "校外教學、安全準備", keywords: ["校外教學", "戶外教育", "外出", "保險", "安全"] },
+      { label: "課務／教學支援", hint: "調課、代課、教學資料", keywords: ["課務", "教學", "評量", "研習", "調課", "代課"] },
+      { label: "常用系統", hint: "差勤、行事曆、Meet", keywords: ["系統", "差勤", "行事曆", "Meet", "校務", "Google"] },
+      { label: "新進教師", hint: "報到、系統、校園生活", keywords: ["新進", "報到", "校園生活", "帳號", "系統"] },
+      { label: "表件／資料下載", hint: "表單、文件、年度資料", keywords: ["表件", "表單", "資料", "下載", "年度", "檔案"] }
+    ];
     const CANNED_TEXT = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
     const DEFAULT_CATEGORIES = [
       "一般資料", "表單／申請", "流程說明", "系統入口",
@@ -1072,6 +1167,9 @@
       trashPreview: document.getElementById("trashPreview"),
       restoreTrashBtn: document.getElementById("restoreTrashBtn"),
       shortcutForm: document.getElementById("shortcutForm"),
+      officeEntryOverview: document.getElementById("officeEntryOverview"),
+      needEntryOverview: document.getElementById("needEntryOverview"),
+      legacyShortcutPanel: document.getElementById("legacyShortcutPanel"),
       resourceEditorLabel: document.getElementById("resourceEditorLabel"),
       resourceTitle: document.getElementById("resourceTitle"),
       resourceContext: document.getElementById("resourceContext"),
@@ -1160,8 +1258,9 @@
     function renderOfficeFilter() {
       const current = el.officeFilter.value;
       const offices = mode === "shortcuts" ? getShortcutOfficeOptions() : getResourceOfficeOptions();
-      el.officeFilter.innerHTML = "<option value=''>全部處室</option>" + offices.map((office) => (
-        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      const emptyLabel = mode === "shortcuts" ? "全部舊版分組" : "全部處室";
+      el.officeFilter.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" + offices.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(mode === "shortcuts" ? shortcutParentLabel(office) : office) + "</option>"
       )).join("");
       el.officeFilter.value = offices.includes(current) ? current : "";
     }
@@ -1181,7 +1280,7 @@
       )).join("");
       el.batchOfficeInput.value = resourceOptions.includes(batchOffice) ? batchOffice : "";
       el.shortcutParentInput.innerHTML = shortcutOptions.map((office) => (
-        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(shortcutParentLabel(office)) + "</option>"
       )).join("");
       el.shortcutParentInput.value = shortcutOptions.includes(shortcutParent) ? shortcutParent : "常用入口";
     }
@@ -1201,6 +1300,10 @@
         LEGACY_RESOURCE_OFFICES,
         flattenShortcuts().map((item) => item.parentOffice)
       );
+    }
+
+    function shortcutParentLabel(value) {
+      return String(value || "") === "常用入口" ? "舊版預設分組" : String(value || "舊版分組");
     }
 
     function renderCategoryFilter() {
@@ -1285,13 +1388,17 @@
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
       el.categoryFilter.classList.toggle("hidden", mode === "shortcuts");
       el.categoryFilter.disabled = mode === "shortcuts";
-      el.officeFilter.setAttribute("aria-label", mode === "shortcuts" ? "入口按鈕位置篩選" : "處室篩選");
-      el.listTitle.textContent = mode === "resources" ? "內容管理清單" : mode === "trash" ? "回收桶清單" : "入口設定清單";
+      el.officeFilter.setAttribute("aria-label", mode === "shortcuts" ? "舊版分組篩選" : "處室篩選");
+      el.listTitle.textContent = mode === "resources" ? "內容管理清單" : mode === "trash" ? "回收桶清單" : "舊版入口清單";
+      el.addItemBtn.textContent = mode === "shortcuts" ? "新增舊版入口按鈕" : "新增資料卡";
       renderList();
       renderBulkState();
       if (mode === "resources") renderResourceEditor();
       if (mode === "trash") renderTrashEditor();
-      if (mode === "shortcuts") renderShortcutEditor();
+      if (mode === "shortcuts") {
+        renderFrontendEntryOverviews();
+        renderShortcutEditor();
+      }
     }
 
     function getDisplayResourceCategory(item) {
@@ -1316,6 +1423,51 @@
 
     function getTrashListMeta(item) {
       return [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].filter(Boolean).join("｜");
+    }
+
+    function renderFrontendEntryOverviews() {
+      if (el.officeEntryOverview) {
+        const officeCards = RESOURCE_OFFICES.map((office, index) => {
+          const count = resources.filter((item) => item.visible !== false && adminOfficeMatches(item.office, office)).length;
+          return renderStaticEntryCard({
+            title: office,
+            lines: ["顯示順序 " + (index + 1), "目前 " + count + " 筆上架資料"],
+            badge: "固定入口"
+          });
+        }).join("");
+        el.officeEntryOverview.innerHTML = officeCards;
+      }
+
+      if (el.needEntryOverview) {
+        const needCards = FRONTEND_NEED_ENTRIES.map((entry, index) => {
+          const count = resources.filter((item) => item.visible !== false && needEntryMatchesResource(entry, item)).length;
+          return renderStaticEntryCard({
+            title: entry.label,
+            lines: [
+              entry.hint,
+              "推論關鍵字：" + entry.keywords.join("、"),
+              "顯示順序 " + (index + 1) + "｜目前 " + count + " 筆可能相關資料"
+            ],
+            badge: "固定入口"
+          });
+        }).join("");
+        el.needEntryOverview.innerHTML = needCards;
+      }
+    }
+
+    function renderStaticEntryCard({ title, lines, badge }) {
+      return `
+        <article class="entry-card">
+          <strong>${escapeHtml(title)}</strong>
+          ${(lines || []).map((line) => `<p class="meta">${escapeHtml(line)}</p>`).join("")}
+          <span class="readonly-badge">${escapeHtml(badge)}</span>
+        </article>
+      `;
+    }
+
+    function needEntryMatchesResource(entry, item) {
+      const text = normalizeAdminText(resourceAdminSearchText(item));
+      return entry.keywords.some((keyword) => text.includes(normalizeAdminText(keyword)));
     }
 
     function renderList() {
@@ -1374,7 +1526,7 @@
     }
 
     function getListGroupName(item) {
-      if (mode === "shortcuts") return item.parentOffice || "常用入口";
+      if (mode === "shortcuts") return shortcutParentLabel(item.parentOffice);
       return getOfficeCategoryText(item);
     }
 
@@ -1603,9 +1755,9 @@
         clearShortcutEditor();
         return;
       }
-      el.shortcutEditorLabel.textContent = "正在編輯入口按鈕";
+      el.shortcutEditorLabel.textContent = "正在編輯舊版入口按鈕";
       el.shortcutTitle.textContent = item.label || "未命名按鈕";
-      el.shortcutContext.textContent = [item.parentOffice || "常用入口", item.resourceCategory || item.query || "未指定條件", "ID " + (item.id || "")].join("｜");
+      el.shortcutContext.textContent = [shortcutParentLabel(item.parentOffice), item.resourceCategory || item.query || "未指定條件", "ID " + (item.id || "")].join("｜");
       el.shortcutIdInput.value = item.id || "";
       el.shortcutParentInput.value = item.parentOffice || "常用入口";
       el.shortcutLabelInput.value = item.label || "";
@@ -1619,9 +1771,9 @@
     }
 
     function clearShortcutEditor() {
-      el.shortcutEditorLabel.textContent = "新增入口按鈕";
-      el.shortcutTitle.textContent = "新增入口按鈕";
-      el.shortcutContext.textContent = "填寫後按「儲存入口按鈕」新增。";
+      el.shortcutEditorLabel.textContent = "新增舊版入口按鈕";
+      el.shortcutTitle.textContent = "新增舊版入口按鈕";
+      el.shortcutContext.textContent = "此區只維護舊版入口資料；新版前台主要依處室與需求顯示。";
       el.shortcutIdInput.value = "";
       el.shortcutParentInput.value = "常用入口";
       el.shortcutLabelInput.value = "";
@@ -1768,14 +1920,14 @@
     }
 
     async function saveShortcut() {
-      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存入口按鈕。");
+      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存舊版入口按鈕。");
     }
 
     async function deleteShortcut() {
       if (!activeShortcutId) return;
-      const ok = window.confirm("確定要停用這個入口按鈕？");
+      const ok = window.confirm("確定要停用這個舊版入口按鈕？");
       if (!ok) return;
-      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用入口按鈕。");
+      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用舊版入口按鈕。");
       activeShortcutId = "";
     }
 
@@ -2209,6 +2361,7 @@
       } else if (mode === "shortcuts") {
         activeShortcutId = "";
         clearShortcutEditor();
+        if (el.legacyShortcutPanel) el.legacyShortcutPanel.open = true;
       }
       renderList();
       setEnabled(true);
@@ -2245,6 +2398,7 @@
         activeTrashId = button.dataset.id;
       } else {
         activeShortcutId = button.dataset.id;
+        if (el.legacyShortcutPanel) el.legacyShortcutPanel.open = true;
       }
       renderAll();
       setEnabled(true);
