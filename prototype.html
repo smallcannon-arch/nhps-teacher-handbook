@@ -530,6 +530,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      margin: 0;
       color: var(--muted);
       font-size: 0.84rem;
       line-height: 1.45;
@@ -3332,6 +3333,31 @@
       return list;
     }
 
+    function formatDisplayDate(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      const dateOnly = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (dateOnly) return `${dateOnly[1]}/${dateOnly[2]}/${dateOnly[3]}`;
+
+      const parsed = new Date(text);
+      if (!Number.isNaN(parsed.getTime())) {
+        const parts = new Intl.DateTimeFormat("zh-TW", {
+          timeZone: "Asia/Taipei",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).formatToParts(parsed).reduce((acc, part) => {
+          acc[part.type] = part.value;
+          return acc;
+        }, {});
+        return `${parts.year}/${parts.month}/${parts.day}`;
+      }
+
+      const looseDate = text.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/);
+      if (!looseDate) return "";
+      return `${looseDate[1]}/${looseDate[2].padStart(2, "0")}/${looseDate[3].padStart(2, "0")}`;
+    }
+
     function createCommonResourceCard(resource) {
       const card = document.createElement("article");
       card.className = "padlet-card";
@@ -3360,18 +3386,11 @@
         );
         optionalFields.push(summary);
       }
-      const meta = document.createElement("div");
-      meta.className = "padlet-meta";
-      const taskLabel = getTaskLabel(inferTaskId(resource));
-      if (resource.type) meta.appendChild(createTextElement("span", "padlet-type", resource.type));
-      meta.appendChild(createTextElement("span", "", resource.office || resource.category || "其他"));
-      if (taskLabel) meta.appendChild(createTextElement("span", "", taskLabel));
-      (resource.tags || []).slice(0, 3).forEach((tag) => meta.appendChild(createTextElement("span", "", "#" + tag)));
-      meta.appendChild(createTextElement("span", "", "更新 " + (resource.updated || "未標示")));
+      const updatedText = formatDisplayDate(resource.updated);
 
       card.append(title, ...optionalFields);
       if (resource.links.length) card.appendChild(createCommonResourceLinks(resource));
-      card.appendChild(meta);
+      if (updatedText) card.appendChild(createTextElement("p", "padlet-meta", "更新：" + updatedText));
       if (resource.status) card.appendChild(createTextElement("p", "padlet-status", resource.status + "，每學年更換一次檔案或連結。"));
 
       return card;
