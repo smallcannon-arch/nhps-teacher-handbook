@@ -3621,7 +3621,11 @@
 
     async function loadDirectoryFromApi() {
       try {
-        const response = await fetch(directoryApiUrl, { method: "GET", headers: { "Accept": "application/json" } });
+        const response = await fetch(directoryApiRequestUrl(), {
+          method: "GET",
+          cache: "no-store",
+          headers: { "Accept": "application/json" }
+        });
         const data = await response.json();
         if (!data || data.ok !== true || !Array.isArray(data.resources) || data.resources.length === 0) return false;
         directoryApiResources = data.resources.map(normalizeResourceFromApi).filter((resource) => resource.visible);
@@ -3636,6 +3640,12 @@
       } catch (err) {
         return false;
       }
+    }
+
+    function directoryApiRequestUrl() {
+      const url = new URL(directoryApiUrl);
+      url.searchParams.set("_cache", String(Date.now()));
+      return url.toString();
     }
 
     elements.searchInput.addEventListener("input", (event) => {
