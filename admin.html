@@ -1408,7 +1408,7 @@
       return String(value || "") === "常用入口" ? "舊版預設分組" : String(value || "舊版分組");
     }
 
-    function renderCategoryFilter() {
+    function renderCategoryFilter(options = {}) {
       const current = el.categoryFilter.value;
       const source = mode === "trash" ? trash : resources;
       const office = el.officeFilter.value;
@@ -1418,10 +1418,14 @@
         .filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
       const featuredOption = office ? "" : "<option value='__featured'>標記為常用資料</option>";
-      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + featuredOption + categories.map((category) => (
+      const keepCurrent = options.keepCurrent === true && current && current !== "__featured" && !categories.includes(current);
+      const currentOption = keepCurrent
+        ? "<option value='" + escapeHtml(current) + "'>" + escapeHtml(categoryOptionLabel(current)) + "</option>"
+        : "";
+      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + featuredOption + currentOption + categories.map((category) => (
         "<option value='" + escapeHtml(category) + "'>" + escapeHtml(categoryOptionLabel(category)) + "</option>"
       )).join("");
-      el.categoryFilter.value = (!office && current === "__featured") || categories.includes(current) ? current : "";
+      el.categoryFilter.value = (!office && current === "__featured") || categories.includes(current) || keepCurrent ? current : "";
     }
 
     async function api(cmd, extra = {}) {
@@ -1437,7 +1441,7 @@
       return data;
     }
 
-    async function loadDirectoryData() {
+    async function loadDirectoryData(options = {}) {
       try {
         const data = await api("directoryList");
         resources = Array.isArray(data.resources) ? data.resources : [];
@@ -1452,7 +1456,7 @@
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
         renderOfficeSelects();
         renderOfficeFilter();
-        renderCategoryFilter();
+        renderCategoryFilter({ keepCurrent: options.keepCategoryFilter === true });
         renderSuggestionLists();
         el.loginState.textContent = currentUser
           ? currentUser.email + "（" + currentUser.role + "）"
@@ -2217,7 +2221,8 @@
         if (cmd === "batchDeleteDirectoryResources") activeResourceId = "";
         if (cmd === "restoreDirectoryResources") activeTrashId = "";
         if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
-        await loadDirectoryData();
+        applyCommandResultLocally(cmd, payload, data);
+        await loadDirectoryData({ keepCategoryFilter: true });
         showMessage(resolveSuccessText(successText), false);
       } catch (err) {
         showMessage(commandErrorText(err, isSaveAction), true);
@@ -2225,6 +2230,74 @@
         if (slowTimer) window.clearTimeout(slowTimer);
         if (actionButton) actionButton.textContent = idleButtonText;
         setEnabled(true);
+      }
+    }
+
+    function applyCommandResultLocally(cmd, payload, data) {
+      if (cmd === "saveDirectoryResource") {
+        const resource = { ...(payload.resource || {}) };
+        resource.id = data.resource_id || resource.id || activeResourceId;
+        if (!resource.id) return;
+        resource.links = Array.isArray(resource.links) ? resource.links : [];
+        resource.tags = Array.isArray(resource.tags) ? resource.tags : [];
+        resource.visible = resource.visible !== false;
+        resource.featured = resource.featured === true;
+        const index = resources.findIndex((item) => item.id === resource.id);
+        if (index >= 0) resources[index] = { ...resources[index], ...resource };
+        else resources.push(resource);
+        activeResourceId = resource.id;
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderSuggestionLists();
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "deleteDirectoryResource") {
+        const resourceId = payload.resource_id || activeResourceId;
+        resources = resources.filter((item) => item.id !== resourceId);
+        activeResourceId = resources[0]?.id || "";
+        pruneSelectedItems();
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "batchUpdateDirectoryResources") {
+        const resourceIds = new Set(payload.resource_ids || []);
+        const changes = payload.changes || {};
+        resources = resources.map((item) => resourceIds.has(item.id) ? { ...item, ...changes } : item);
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "batchDeleteDirectoryResources") {
+        const resourceIds = new Set(payload.resource_ids || []);
+        resources = resources.filter((item) => !resourceIds.has(item.id));
+        activeResourceId = resources[0]?.id || "";
+        selectedResourceIds.clear();
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "reorderDirectoryItems" && payload.kind === "resource") {
+        const orderMap = new Map((payload.items || []).map((item) => [item.id, item.sort_order]));
+        resources = resources.map((item) => orderMap.has(item.id) ? { ...item, sort_order: orderMap.get(item.id) } : item);
+        renderList();
+        renderBulkState();
       }
     }
 
