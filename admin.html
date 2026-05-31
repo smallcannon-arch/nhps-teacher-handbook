@@ -82,26 +82,29 @@
       grid-column: 1 / -1;
       display: flex;
       justify-content: space-between;
-      gap: 18px;
+      gap: 12px;
       align-items: center;
-      padding: 16px;
+      padding: 10px 12px;
     }
 
     .mode-copy {
-      display: grid;
-      gap: 8px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
       min-width: 0;
     }
 
     .mode-label {
       margin-bottom: 0;
       color: var(--muted);
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       font-weight: 800;
+      white-space: nowrap;
     }
 
     .mode-bar .tabs {
       margin: 0;
+      gap: 8px;
     }
 
     .sidebar {
@@ -513,12 +516,28 @@
     }
 
     .mode-bar .user-box {
-      min-width: 260px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
       margin: 0;
+      padding: 5px 8px;
+      border-radius: 999px;
     }
 
     .user-box .meta {
-      margin-bottom: 8px;
+      min-width: 0;
+      margin-bottom: 0;
+      overflow-wrap: anywhere;
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .mode-bar #logoutBtn {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      font-size: 0.88rem;
     }
 
     .list-group-title {
@@ -581,11 +600,29 @@
 
       .mode-bar {
         display: grid;
-        gap: 14px;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .mode-copy {
+        display: grid;
+        gap: 6px;
+      }
+
+      .mode-label {
+        white-space: normal;
+      }
+
+      .mode-bar .tabs {
+        gap: 8px;
       }
 
       .mode-bar .user-box {
+        justify-content: space-between;
+        width: 100%;
         min-width: 0;
+        border-radius: var(--radius);
+        flex-wrap: wrap;
       }
 
       .sidebar {
@@ -634,7 +671,7 @@
       }
 
       .mode-bar {
-        padding: 12px 14px;
+        padding: 8px 12px;
       }
 
       .sidebar {
