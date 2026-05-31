@@ -349,7 +349,7 @@
 
     .compact-actions {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
     }
 
@@ -556,11 +556,11 @@
         </select>
       </div>
       <div class="filter-row">
-        <button id="addItemBtn" type="button" class="secondary" disabled>新增</button>
+        <button id="addItemBtn" type="button" class="secondary" disabled>新增公告</button>
       </div>
-      <div class="order-row" aria-label="顯示順序調整">
-        <button id="moveUpBtn" type="button" class="secondary" disabled>上移</button>
-        <button id="moveDownBtn" type="button" class="secondary" disabled>下移</button>
+      <div class="order-row" aria-label="公告顯示順序調整">
+        <button id="moveUpBtn" type="button" class="secondary" disabled>公告上移</button>
+        <button id="moveDownBtn" type="button" class="secondary" disabled>公告下移</button>
       </div>
       <div id="bulkTools" class="bulk-tools">
         <div class="bulk-summary">
@@ -571,7 +571,6 @@
           <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選目前清單</button>
           <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
           <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
-          <button id="exportCsvBtn" type="button" class="secondary" disabled>匯出目前清單</button>
         </div>
       </div>
       <div id="itemList" class="list"></div>
@@ -833,7 +832,6 @@
       selectVisibleBtn: document.getElementById("selectVisibleBtn"),
       clearSelectionBtn: document.getElementById("clearSelectionBtn"),
       batchDeleteBtn: document.getElementById("batchDeleteBtn"),
-      exportCsvBtn: document.getElementById("exportCsvBtn"),
       resourcesTab: document.getElementById("resourcesTab"),
       shortcutsTab: document.getElementById("shortcutsTab"),
       trashTab: document.getElementById("trashTab"),
@@ -1150,7 +1148,6 @@
       el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
       el.batchApplyBtn.disabled = mode !== "resources" || !canUseBulk || selectedResourceIds.size === 0;
       el.batchDeleteBtn.disabled = !canMoveToTrash;
-      el.exportCsvBtn.disabled = !enabled || !idToken || !isBulkMode || !hasVisibleItems;
       el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
     }
 
@@ -1470,47 +1467,6 @@
       renderBulkState();
     }
 
-    function exportVisibleResourcesCsv() {
-      const items = mode === "resources" || mode === "trash" ? getVisibleListItems() : [];
-      if (!items.length) {
-        showMessage("目前清單沒有可匯出的內容。", true);
-        return;
-      }
-      const rows = [
-        ["ID", "標題", "處室", "分類", "類型", "置頂常用入口", "網站顯示", "最後更新", "刪除時間", "標籤", "連結數", "主要連結"],
-        ...items.map((item) => [
-          item.id,
-          item.title,
-          item.office,
-          item.category,
-          item.type,
-          item.featured ? "是" : "否",
-          item.visible === false ? "否" : "是",
-          item.updated,
-          item.deleted_at || "",
-          (item.tags || []).join("、"),
-          (item.links || []).length,
-          (item.links || [])[0]?.url || ""
-        ])
-      ];
-      const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
-      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "內湖國小教師手冊" + (mode === "trash" ? "回收桶" : "首頁內容") + "-" + todayText() + ".csv";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      showMessage("已匯出目前清單 CSV。", false);
-    }
-
-    function csvCell(value) {
-      const text = String(value ?? "");
-      return '"' + text.replace(/"/g, '""') + '"';
-    }
-
     async function moveSelectedItem(direction) {
       if (mode === "trash") return;
       const items = getVisibleListItems();
@@ -1740,7 +1696,6 @@
     el.selectVisibleBtn.addEventListener("click", selectVisibleItems);
     el.clearSelectionBtn.addEventListener("click", clearSelectedItems);
     el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
-    el.exportCsvBtn.addEventListener("click", exportVisibleResourcesCsv);
     el.batchApplyBtn.addEventListener("click", applyBatchResources);
     el.restoreTrashBtn.addEventListener("click", restoreSelectedTrash);
     el.addItemBtn.addEventListener("click", () => {
