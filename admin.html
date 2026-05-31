@@ -1026,8 +1026,8 @@
             <textarea id="resourceNoteInput" placeholder="簡短說明，避免放學生個資或未公告資訊。"></textarea>
           </div>
           <div class="field">
-            <label for="resourceTagsInput">標籤</label>
-            <input id="resourceTagsInput" autocomplete="off" placeholder="用逗號分隔，例如：常用, 教務處, 表件">
+            <label for="resourceTagsInput">標籤／關鍵字</label>
+            <textarea id="resourceTagsInput" rows="2" autocomplete="off" placeholder="可用空白、逗號、頓號或換行分隔；含空白的詞建議用逗號分隔。"></textarea>
           </div>
           <div class="checkbox-row">
             <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 上架顯示</label>
@@ -2389,7 +2389,19 @@
     }
 
     function splitTags(value) {
-      return String(value || "").split(/[,，]/).map((tag) => tag.trim()).filter(Boolean);
+      const text = String(value || "").trim();
+      if (!text) return [];
+      const hasExplicitSeparator = /[,，、\r\n]/.test(text);
+      const pieces = hasExplicitSeparator ? text.split(/[,，、\r\n]+/) : text.split(/\s+/);
+      const seen = new Set();
+      const output = [];
+      pieces.forEach((tag) => {
+        const item = String(tag || "").trim();
+        if (!item || seen.has(item)) return;
+        seen.add(item);
+        output.push(item);
+      });
+      return output;
     }
 
     function mergeTagList(tags, extraTags = []) {
