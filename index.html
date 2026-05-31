@@ -188,6 +188,124 @@
       margin: 28px auto 56px;
     }
 
+    .home-shell {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .home-directory {
+      position: sticky;
+      top: 18px;
+      display: block;
+    }
+
+    .directory-toggle {
+      display: none;
+    }
+
+    .home-sidebar {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.94);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .sidebar-section {
+      display: grid;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e3ebe5;
+    }
+
+    .sidebar-section:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .sidebar-section summary {
+      color: var(--navy);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .sidebar-task-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .sidebar-task-list .task-option {
+      min-height: 0;
+      padding: 9px 10px;
+    }
+
+    .sidebar-task-list .task-option strong {
+      font-size: 0.92rem;
+    }
+
+    .sidebar-task-list .task-option span {
+      font-size: 0.76rem;
+    }
+
+    .sidebar-link {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 10px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--navy);
+      font-weight: 900;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link:focus-visible {
+      border-color: var(--navy-2);
+      outline: none;
+    }
+
+    .sidebar-link.is-active {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: var(--white);
+    }
+
+    .home-content {
+      display: grid;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .home-content .search-row {
+      max-width: none;
+    }
+
+    .home-content .search-field {
+      border-color: var(--blue-line);
+      background: var(--white);
+    }
+
+    .current-context {
+      display: grid;
+      gap: 4px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
+    }
+
+    .current-context h2 {
+      font-size: 1.25rem;
+    }
+
     .section {
       margin-top: 30px;
       scroll-margin-top: 78px;
@@ -287,7 +405,12 @@
     }
 
     .quick-band {
+      display: grid;
+      gap: 8px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
       border-bottom: 1px solid #e3ebe5;
+      border-radius: var(--radius);
       background: rgba(255, 253, 248, 0.96);
     }
 
@@ -321,8 +444,7 @@
 
     .advanced-filter-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      gap: 12px;
       margin-top: 14px;
     }
 
@@ -891,6 +1013,37 @@
     }
 
     @media (max-width: 980px) {
+      .home-shell {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .home-directory {
+        position: static;
+      }
+
+      .directory-toggle {
+        display: block;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 253, 248, 0.94);
+        color: var(--navy);
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .home-directory[open] .directory-toggle {
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      .home-sidebar {
+        border-top: 0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+
       .quick-grid,
       .card-grid,
       .padlet-grid {
@@ -1058,57 +1211,64 @@
           <p class="site-summary">整合一般教師常用規定、流程、表件與資源連結，協助快速找到所需資訊。</p>
         </div>
       </div>
+    </div>
+  </header>
+
+  <main class="home-shell">
+    <details id="homeDirectory" class="home-directory" open>
+      <summary class="directory-toggle">首頁目錄</summary>
+      <aside class="home-sidebar" aria-label="首頁目錄">
+        <details class="sidebar-section" open>
+          <summary>我想要……</summary>
+          <div id="taskFilters" class="sidebar-task-list"></div>
+        </details>
+        <section class="sidebar-section" aria-label="快速開啟目錄">
+          <button id="quickNavBtn" class="sidebar-link" type="button">快速開啟</button>
+        </section>
+        <details class="sidebar-section advanced-filter">
+          <summary>進階篩選</summary>
+          <div class="advanced-filter-grid">
+            <div class="filter-group">
+              <h3 class="filter-subtitle">依處室</h3>
+              <div id="officeFilters" class="chip-list"></div>
+            </div>
+            <div class="filter-group">
+              <h3 class="filter-subtitle">依標籤</h3>
+              <div id="tagFilters" class="chip-list"></div>
+            </div>
+            <div class="filter-group">
+              <h3 class="filter-subtitle">依分類</h3>
+              <div id="categoryFilters" class="chip-list"></div>
+            </div>
+          </div>
+        </details>
+      </aside>
+    </details>
+
+    <div class="home-content">
       <div class="search-row" role="search">
         <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：請假、冷氣、學生受傷、校外教學、性平、報修">
         <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
       </div>
-    </div>
-  </header>
 
-  <main>
-    <section id="entryPanels" class="section" aria-label="情境任務入口">
-      <div class="entry-layout">
-        <section class="entry-card" aria-label="首頁入口">
-          <div class="filter-layout">
-            <div class="filter-band task-band">
-              <h2>我想要……</h2>
-              <p class="section-note">從老師常遇到的任務進入，再看要開哪個表單或連結。</p>
-              <div id="taskFilters" class="chip-list task-grid"></div>
-            </div>
-            <div class="filter-band quick-band">
-              <h2>快速開啟</h2>
-              <p class="section-note">常用系統與高頻連結，作為捷徑使用。</p>
-              <div id="quickEntries" class="quick-grid"></div>
-              <p id="shortcutEmpty" class="section-note"></p>
-            </div>
-            <details class="filter-band advanced-filter">
-              <summary>進階篩選</summary>
-              <div class="advanced-filter-grid">
-                <div class="filter-group">
-                  <h3 class="filter-subtitle">依處室</h3>
-                  <div id="officeFilters" class="chip-list"></div>
-                </div>
-                <div class="filter-group">
-                  <h3 class="filter-subtitle">依標籤</h3>
-                  <div id="tagFilters" class="chip-list"></div>
-                </div>
-                <div class="filter-group">
-                  <h3 class="filter-subtitle">依分類</h3>
-                  <div id="categoryFilters" class="chip-list"></div>
-                </div>
-              </div>
-            </details>
-          </div>
-        </section>
-      </div>
-    </section>
+      <section class="current-context" aria-live="polite">
+        <h2 id="currentTitle">快速開啟</h2>
+        <p id="currentDescription" class="section-note">可直接搜尋，或從左側選擇情境任務。</p>
+      </section>
 
-    <section id="resourceResults" class="section resource-results" aria-label="搜尋與篩選結果">
-      <p id="padletCount" class="result-count"></p>
-      <div id="padletGrid" class="padlet-grid"></div>
-      <p id="padletEmpty" class="padlet-empty"></p>
-      <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
-    </section>
+      <section id="quickOpen" class="quick-band" aria-labelledby="quickOpenTitle">
+        <h2 id="quickOpenTitle">快速開啟</h2>
+        <p class="section-note">常用系統與高頻連結，作為捷徑使用。</p>
+        <div id="quickEntries" class="quick-grid"></div>
+        <p id="shortcutEmpty" class="section-note"></p>
+      </section>
+
+      <section id="resourceResults" class="resource-results" aria-label="搜尋與篩選結果">
+        <p id="padletCount" class="result-count"></p>
+        <div id="padletGrid" class="padlet-grid"></div>
+        <p id="padletEmpty" class="padlet-empty"></p>
+        <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
+      </section>
 
     <section class="section school-info-card" aria-labelledby="schoolInfoTitle">
       <div>
@@ -1156,6 +1316,7 @@
         </section>
       </aside>
     </section>
+    </div>
   </main>
 
   <footer class="site-footer">
@@ -2632,7 +2793,10 @@
     const elements = {
       searchInput: document.getElementById("searchInput"),
       clearFiltersBtn: document.getElementById("clearFiltersBtn"),
+      currentTitle: document.getElementById("currentTitle"),
+      currentDescription: document.getElementById("currentDescription"),
       taskFilters: document.getElementById("taskFilters"),
+      quickNavBtn: document.getElementById("quickNavBtn"),
       quickEntries: document.getElementById("quickEntries"),
       shortcutEmpty: document.getElementById("shortcutEmpty"),
       officeFilters: document.getElementById("officeFilters"),
@@ -3138,6 +3302,37 @@
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
     }
 
+    function updateCurrentContext() {
+      const task = taskCategories.find((item) => item.id === state.task);
+      if (task) {
+        elements.currentTitle.textContent = task.label;
+        elements.currentDescription.textContent = task.hint;
+        return;
+      }
+      if (normalize(state.query)) {
+        elements.currentTitle.textContent = "搜尋：" + state.query;
+        elements.currentDescription.textContent = "以下顯示符合關鍵字的資源與連結。";
+        return;
+      }
+      if (state.office !== "all") {
+        elements.currentTitle.textContent = state.office;
+        elements.currentDescription.textContent = "以下顯示此承辦處室相關資源。";
+        return;
+      }
+      if (state.tag) {
+        elements.currentTitle.textContent = "標籤：" + state.tag;
+        elements.currentDescription.textContent = "以下顯示帶有此標籤的資源。";
+        return;
+      }
+      if (state.padletCategory !== "none") {
+        elements.currentTitle.textContent = "分類：" + state.padletCategory;
+        elements.currentDescription.textContent = "以下顯示此分類相關資源。";
+        return;
+      }
+      elements.currentTitle.textContent = "快速開啟";
+      elements.currentDescription.textContent = "可直接搜尋，或從左側選擇情境任務。";
+    }
+
     function createChip(label, value, type, hint = "") {
       const button = document.createElement("button");
       button.type = "button";
@@ -3156,11 +3351,13 @@
       button.dataset.type = type;
       button.addEventListener("click", () => {
         if (type === "task") {
+          state.query = "";
           state.task = value;
           state.office = "all";
           state.padletCategory = "none";
           state.tag = "";
           state.activeShortcut = "";
+          elements.searchInput.value = "";
         }
         if (type === "office") {
           state.office = value;
@@ -3210,6 +3407,7 @@
       document.querySelectorAll("[data-type='padlet']").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.value === state.padletCategory);
       });
+      elements.quickNavBtn.classList.toggle("is-active", !hasActiveFilters());
     }
 
     function shortcutKey(entry) {
@@ -3296,6 +3494,7 @@
       renderQuickEntries();
       renderCommonResources();
       updateFilterActiveState();
+      updateCurrentContext();
     }
 
     function normalizeResourceFromApi(resource) {
@@ -3363,6 +3562,10 @@
     });
 
     elements.clearFiltersBtn.addEventListener("click", resetFilters);
+    elements.quickNavBtn.addEventListener("click", () => {
+      resetFilters();
+      document.getElementById("quickOpen").scrollIntoView({ block: "start" });
+    });
 
     renderFilters();
     renderRecentUpdates();
