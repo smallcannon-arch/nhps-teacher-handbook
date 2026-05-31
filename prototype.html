@@ -833,70 +833,6 @@
       letter-spacing: 0;
     }
 
-    .school-info-card {
-      display: grid;
-      gap: 14px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 253, 248, 0.92);
-      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
-    }
-
-    .school-info-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .school-info-list li {
-      padding: 12px 14px;
-      border-left: 4px solid var(--sage);
-      border-radius: var(--radius);
-      background: var(--sage-soft);
-    }
-
-    .school-info-label {
-      display: block;
-      color: var(--muted);
-      font-size: 0.84rem;
-      font-weight: 800;
-      line-height: 1.4;
-    }
-
-    .school-info-value {
-      display: block;
-      margin-top: 3px;
-      color: var(--navy);
-      font-size: 1rem;
-      font-weight: 900;
-      line-height: 1.45;
-      overflow-wrap: anywhere;
-    }
-
-    .school-info-value a {
-      color: inherit;
-      text-decoration-color: rgba(23, 55, 94, 0.35);
-      text-underline-offset: 3px;
-    }
-
-    .school-info-link {
-      display: inline-flex;
-      align-items: center;
-      min-height: 32px;
-      padding: 3px 10px;
-      border: 1px solid var(--blue-line);
-      border-radius: var(--radius);
-      background: var(--white);
-      color: var(--navy);
-      font-size: 0.95rem;
-      font-weight: 900;
-      text-decoration: none;
-    }
-
     .update-list,
     .reminder-list {
       display: grid;
@@ -948,6 +884,42 @@
       border-top: 1px solid var(--line);
       color: var(--muted);
       font-size: 0.9rem;
+    }
+
+    .footer-school-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin: 14px 0;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .footer-school-info span,
+    .footer-school-info a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      overflow-wrap: anywhere;
+    }
+
+    .footer-school-info strong {
+      margin-right: 5px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .footer-school-info a {
+      padding: 1px 9px;
+      border: 1px solid var(--blue-line);
+      border-radius: 999px;
+      background: rgba(255, 253, 248, 0.92);
+      color: var(--navy);
+      font-weight: 900;
+      text-decoration: none;
     }
 
     .footer-row {
@@ -1159,7 +1131,6 @@
 
       .resource-card,
       .padlet-card,
-      .school-info-card,
       .info-panel {
         padding: 16px;
       }
@@ -1242,35 +1213,6 @@
       </div>
     </div>
 
-    <section class="section school-info-card" aria-labelledby="schoolInfoTitle">
-      <div>
-        <h2 id="schoolInfoTitle">學校資料</h2>
-        <p class="section-note">需要填寫學校基本資料時，直接使用以下欄位。</p>
-      </div>
-      <ul class="school-info-list">
-        <li>
-          <span class="school-info-label">抬頭</span>
-          <span class="school-info-value">新竹市香山區內湖國小</span>
-        </li>
-        <li>
-          <span class="school-info-label">統一編號</span>
-          <span class="school-info-value">47208311</span>
-        </li>
-        <li>
-          <span class="school-info-label">代碼</span>
-          <span class="school-info-value">183622</span>
-        </li>
-        <li>
-          <span class="school-info-label">電話</span>
-          <span class="school-info-value">03-5373184</span>
-        </li>
-        <li>
-          <span class="school-info-label">校網首頁</span>
-          <span class="school-info-value"><a class="school-info-link" href="https://www.nhps.hc.edu.tw/nss/p/index" target="_blank" rel="noopener noreferrer">前往校網首頁</a></span>
-        </li>
-      </ul>
-    </section>
-
     <section class="section" aria-label="近期更新與重要提醒">
       <aside class="side-stack">
         <section class="info-panel" aria-labelledby="recentTitle">
@@ -1282,7 +1224,7 @@
           <h3 id="remindersTitle">重要提醒</h3>
           <ul class="reminder-list">
             <li>疑似性平、霸凌、兒少保護事件應即時通報，不宜自行判斷後延誤。</li>
-            <li>需填寫學校資料時，請使用本頁「學校資料」欄位；其他細節依承辦處室公告。</li>
+            <li>需填寫學校資料時，請使用頁尾學校基本資料；其他細節依承辦處室公告。</li>
             <li>校園施工或危險區域應依公告避開並提醒學生。</li>
           </ul>
         </section>
@@ -1294,6 +1236,18 @@
     <div class="footer-row">
       <div class="footer-brand">
         <p class="footer-title">內湖國小教師手冊｜校務支援站</p>
+        <p>維護教師手冊資料卡、連結與常用校務資訊。</p>
+      </div>
+    </div>
+    <div class="footer-school-info" aria-label="學校基本資料">
+      <span><strong>抬頭</strong>新竹市香山區內湖國小</span>
+      <span><strong>統一編號</strong>47208311</span>
+      <span><strong>教育部代碼</strong>183622</span>
+      <span><strong>電話</strong>03-5373184</span>
+      <a href="https://www.nhps.hc.edu.tw/nss/p/index" target="_blank" rel="noopener noreferrer">前往校網首頁</a>
+    </div>
+    <div class="footer-row">
+      <div class="footer-brand">
         <p>Copyright © 2026 Hsinchu Nei Hu Primary School. All rights reserved.</p>
       </div>
       <div class="footer-meta">
@@ -3077,7 +3031,7 @@
         title: "學校資料",
         type: "基本資料",
         status: "",
-        note: "抬頭：新竹市香山區內湖國小；統一編號：47208311；代碼：183622；電話：03-5373184。",
+        note: "抬頭：新竹市香山區內湖國小；統一編號：47208311；教育部代碼：183622；電話：03-5373184。",
         links: [{ label: "前往校網首頁", url: "https://www.nhps.hc.edu.tw/nss/p/index" }],
         updated: "2026-05-30",
         tags: ["常用資源", "學校資料"],
