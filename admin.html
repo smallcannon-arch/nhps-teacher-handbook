@@ -279,7 +279,6 @@
       padding-right: 2px;
     }
 
-    .bulk-tools,
     .bulk-panel {
       margin: 12px 0;
       padding: 12px;
@@ -328,7 +327,11 @@
 
     .bulk-tools {
       display: grid;
-      gap: 10px;
+      gap: 8px;
+      margin: 14px 0 8px;
+      padding: 10px 0;
+      border-top: 1px solid #e4ebe9;
+      border-bottom: 1px solid #e4ebe9;
     }
 
     .bulk-summary {
@@ -346,7 +349,7 @@
 
     .compact-actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
     }
 
@@ -567,9 +570,9 @@
         <div class="compact-actions">
           <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選目前清單</button>
           <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
+          <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
+          <button id="exportCsvBtn" type="button" class="secondary" disabled>匯出目前清單</button>
         </div>
-        <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
-        <button id="exportCsvBtn" type="button" class="secondary" disabled>匯出目前清單</button>
       </div>
       <div id="itemList" class="list"></div>
     </aside>
@@ -952,12 +955,17 @@
     function renderCategoryFilter() {
       const current = el.categoryFilter.value;
       const source = mode === "trash" ? trash : resources;
-      const categories = [...new Set(source.map((item) => item.category).filter(Boolean))]
+      const office = el.officeFilter.value;
+      const categories = [...new Set(source
+        .filter((item) => !office || item.office === office)
+        .map((item) => item.category)
+        .filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
-      el.categoryFilter.innerHTML = "<option value=''>全部分類</option><option value='__featured'>常用入口（置頂）</option>" + categories.map((category) => (
+      const featuredOption = office ? "" : "<option value='__featured'>常用入口（置頂）</option>";
+      el.categoryFilter.innerHTML = "<option value=''>全部分類</option>" + featuredOption + categories.map((category) => (
         "<option value='" + escapeHtml(category) + "'>" + escapeHtml(category) + "</option>"
       )).join("");
-      el.categoryFilter.value = current === "__featured" || categories.includes(current) ? current : "";
+      el.categoryFilter.value = (!office && current === "__featured") || categories.includes(current) ? current : "";
     }
 
     async function api(cmd, extra = {}) {
@@ -1710,7 +1718,10 @@
     el.trashTab.addEventListener("click", () => setMode("trash"));
     el.logoutBtn.addEventListener("click", logout);
     el.listSearchInput.addEventListener("input", refreshListView);
-    el.officeFilter.addEventListener("change", refreshListView);
+    el.officeFilter.addEventListener("change", () => {
+      renderCategoryFilter();
+      refreshListView();
+    });
     el.categoryFilter.addEventListener("change", refreshListView);
     [
       [el.batchCategorySelect, el.batchCategoryInput],
