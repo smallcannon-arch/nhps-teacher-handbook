@@ -25,6 +25,7 @@
 
     body {
       margin: 0;
+      min-height: 100vh;
       color: var(--ink);
       background: linear-gradient(180deg, rgba(23, 55, 94, 0.06), #fbfaf6 45%), var(--cream);
       font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
@@ -65,6 +66,7 @@
     main {
       display: grid;
       grid-template-columns: 340px minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 22px;
       padding: 26px 0 46px;
     }
@@ -106,10 +108,12 @@
       position: sticky;
       top: 18px;
       align-self: start;
+      min-height: 0;
       padding: 16px;
     }
 
     .content {
+      min-height: 0;
       padding: 22px;
     }
 
@@ -380,8 +384,42 @@
       align-items: stretch;
     }
 
+    .list-entry.is-draggable {
+      grid-template-columns: auto auto minmax(0, 1fr);
+    }
+
+    .list-entry.is-shortcut {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
     .list-check {
       align-self: center;
+    }
+
+    .drag-handle {
+      align-self: center;
+      width: 24px;
+      min-height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+      color: var(--muted);
+      cursor: grab;
+      font-size: 0.85rem;
+      font-weight: 900;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .list-entry.is-dragging {
+      opacity: 0.55;
+    }
+
+    .list-entry.is-drop-target .list-button {
+      border-color: var(--gold);
+      box-shadow: inset 0 0 0 2px rgba(178, 139, 69, 0.28);
     }
 
     .list-button {
@@ -494,6 +532,7 @@
     @media (max-width: 900px) {
       main {
         grid-template-columns: 1fr;
+        grid-template-rows: auto;
         width: min(100% - 20px, 1280px);
       }
 
@@ -523,6 +562,58 @@
       .compact-actions,
       .list-command-row {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 901px) {
+      body {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .header-inner {
+        gap: 4px;
+        padding: 14px 0 12px;
+      }
+
+      .header-inner h1 {
+        font-size: 1.85rem;
+      }
+
+      .header-inner .meta {
+        margin-bottom: 0;
+      }
+
+      main {
+        min-height: 0;
+        padding: 14px 0;
+      }
+
+      .mode-bar {
+        padding: 12px 14px;
+      }
+
+      .sidebar {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .content {
+        overflow: auto;
+      }
+
+      .list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+      }
+
+      footer {
+        display: none;
       }
     }
   </style>
@@ -821,6 +912,7 @@
     let activeShortcutId = "";
     let selectedResourceIds = new Set();
     let selectedTrashIds = new Set();
+    let draggedItemId = "";
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1052,10 +1144,11 @@
         const items = getVisibleListItems();
         el.itemList.innerHTML = renderGroupedList(
           items,
-          (item) => `${item.office || "其他"}｜${item.category || "未分類"}`,
+          getListGroupName,
           (item) => `
-            <div class="list-entry ${selectedResourceIds.has(item.id) ? "is-selected" : ""}">
+            <div class="list-entry is-draggable ${selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
               <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>
+              <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
                 <span>${escapeHtml(item.category || "未分類")}｜顯示順序 ${escapeHtml(item.sort_order || "")}${item.featured ? "｜常用入口置頂" : ""}${item.visible ? "" : "｜已隱藏"}</span>
@@ -1070,9 +1163,9 @@
         const items = getVisibleListItems();
         el.itemList.innerHTML = renderGroupedList(
           items,
-          (item) => `${item.office || "其他"}｜${item.category || "未分類"}`,
+          getListGroupName,
           (item) => `
-            <div class="list-entry ${selectedTrashIds.has(item.id) ? "is-selected" : ""}">
+            <div class="list-entry ${selectedTrashIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}">
               <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedTrashIds.has(item.id) ? "checked" : ""}>
               <button class="list-button ${item.id === activeTrashId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <strong>${escapeHtml(item.title || "未命名內容")}</strong>
@@ -1087,14 +1180,22 @@
       const items = getVisibleListItems();
       el.itemList.innerHTML = renderGroupedList(
         items,
-        (item) => item.parentOffice || "常用入口",
+        getListGroupName,
         (item) => `
-          <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-            <strong>${escapeHtml(item.label || "未命名按鈕")}</strong>
-            <span>顯示順序 ${escapeHtml(item.sort_order || "")}${item.enabled ? "" : "｜已停用"}</span>
-          </button>
+          <div class="list-entry is-draggable is-shortcut" data-id="${escapeHtml(item.id)}" draggable="true">
+            <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
+            <button class="list-button ${item.id === activeShortcutId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+              <strong>${escapeHtml(item.label || "未命名按鈕")}</strong>
+              <span>顯示順序 ${escapeHtml(item.sort_order || "")}${item.enabled ? "" : "｜已停用"}</span>
+            </button>
+          </div>
         `
       );
+    }
+
+    function getListGroupName(item) {
+      if (mode === "shortcuts") return item.parentOffice || "常用入口";
+      return `${item.office || "其他"}｜${item.category || "未分類"}`;
     }
 
     function getVisibleListItems() {
@@ -1475,11 +1576,58 @@
       renderBulkState();
     }
 
+    function clearDragState() {
+      draggedItemId = "";
+      el.itemList.querySelectorAll(".is-dragging, .is-drop-target").forEach((entry) => {
+        entry.classList.remove("is-dragging", "is-drop-target");
+      });
+    }
+
+    async function reorderListByDrag(sourceId, targetId) {
+      if (mode === "trash" || !sourceId || !targetId || sourceId === targetId) return;
+      const items = getVisibleListItems();
+      const source = items.find((item) => item.id === sourceId);
+      const target = items.find((item) => item.id === targetId);
+      if (!source || !target) return;
+      const sourceGroup = getListGroupName(source);
+      const targetGroup = getListGroupName(target);
+      if (sourceGroup !== targetGroup) {
+        showMessage("拖曳排序只能在同一個處室分類內調整。", true);
+        return;
+      }
+
+      const groupItems = items.filter((item) => getListGroupName(item) === sourceGroup);
+      const fromIndex = groupItems.findIndex((item) => item.id === sourceId);
+      const toIndex = groupItems.findIndex((item) => item.id === targetId);
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+      const reordered = groupItems.slice();
+      const [moved] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, moved);
+      const sortOrders = groupItems
+        .map((item, index) => Number(item.sort_order || index + 1))
+        .sort((a, b) => a - b);
+      const kind = mode === "resources" ? "resource" : "shortcut";
+      if (mode === "resources") activeResourceId = sourceId;
+      if (mode === "shortcuts") activeShortcutId = sourceId;
+
+      await runCommand("reorderDirectoryItems", {
+        kind,
+        items: reordered.map((item, index) => ({ id: item.id, sort_order: sortOrders[index] }))
+      }, "已用拖曳調整顯示順序。");
+    }
+
     async function moveSelectedItem(direction) {
       if (mode === "trash") return;
       const items = getVisibleListItems();
-      const activeId = mode === "resources" ? activeResourceId : activeShortcutId;
-      const currentIndex = items.findIndex((item) => item.id === activeId);
+      const moveTargetId = getMoveTargetId();
+      if (!moveTargetId) {
+        if (mode === "resources" && selectedResourceIds.size > 1) {
+          showMessage("公告上移／下移一次只能調整 1 筆，請先保留單一勾選。", true);
+        }
+        return;
+      }
+      const currentIndex = items.findIndex((item) => item.id === moveTargetId);
       const nextIndex = currentIndex + direction;
       if (currentIndex < 0 || nextIndex < 0 || nextIndex >= items.length) return;
 
@@ -1488,6 +1636,8 @@
       const currentOrder = Number(current.sort_order || currentIndex + 1);
       const targetOrder = Number(target.sort_order || nextIndex + 1);
       const kind = mode === "resources" ? "resource" : "shortcut";
+      if (mode === "resources") activeResourceId = current.id;
+      if (mode === "shortcuts") activeShortcutId = current.id;
 
       await runCommand("reorderDirectoryItems", {
         kind,
@@ -1518,6 +1668,16 @@
       }
     }
 
+    function getMoveTargetId() {
+      if (mode === "resources") {
+        if (selectedResourceIds.size === 1) return [...selectedResourceIds][0];
+        if (selectedResourceIds.size > 1) return "";
+        return activeResourceId;
+      }
+      if (mode === "shortcuts") return activeShortcutId;
+      return "";
+    }
+
     function setMode(nextMode) {
       mode = nextMode;
       renderOfficeFilter();
@@ -1536,11 +1696,12 @@
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
       const items = getVisibleListItems();
-      const activeId = mode === "resources" ? activeResourceId : mode === "trash" ? activeTrashId : activeShortcutId;
-      const activeIndex = items.findIndex((item) => item.id === activeId);
+      const moveTargetId = getMoveTargetId();
+      const moveIndex = items.findIndex((item) => item.id === moveTargetId);
+      const hasMultipleMoveTargets = mode === "resources" && selectedResourceIds.size > 1;
       el.addItemBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash";
-      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || activeIndex <= 0;
-      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || activeIndex < 0 || activeIndex >= items.length - 1;
+      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || hasMultipleMoveTargets || moveIndex <= 0;
+      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || hasMultipleMoveTargets || moveIndex < 0 || moveIndex >= items.length - 1;
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = mode === "shortcuts" || !enabled || !idToken;
@@ -1706,6 +1867,35 @@
     el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
     el.batchApplyBtn.addEventListener("click", applyBatchResources);
     el.restoreTrashBtn.addEventListener("click", restoreSelectedTrash);
+    el.itemList.addEventListener("dragstart", (event) => {
+      const entry = event.target.closest(".list-entry.is-draggable");
+      if (!entry || !idToken || mode === "trash") return;
+      draggedItemId = entry.dataset.id || "";
+      entry.classList.add("is-dragging");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", draggedItemId);
+      }
+    });
+    el.itemList.addEventListener("dragover", (event) => {
+      if (!draggedItemId || mode === "trash") return;
+      const entry = event.target.closest(".list-entry.is-draggable");
+      if (!entry || entry.dataset.id === draggedItemId) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      el.itemList.querySelectorAll(".is-drop-target").forEach((item) => item.classList.remove("is-drop-target"));
+      entry.classList.add("is-drop-target");
+    });
+    el.itemList.addEventListener("drop", async (event) => {
+      if (!draggedItemId || mode === "trash") return;
+      const entry = event.target.closest(".list-entry.is-draggable");
+      const sourceId = draggedItemId;
+      const targetId = entry && entry.dataset.id;
+      event.preventDefault();
+      clearDragState();
+      if (targetId) await reorderListByDrag(sourceId, targetId);
+    });
+    el.itemList.addEventListener("dragend", clearDragState);
     el.addItemBtn.addEventListener("click", () => {
       if (mode === "resources") {
         activeResourceId = "";
@@ -1728,9 +1918,17 @@
           if (mode === "trash") selectedTrashIds.delete(id);
           if (mode === "resources") selectedResourceIds.delete(id);
         }
+        if (mode === "trash") activeTrashId = id;
+        if (mode === "resources") activeResourceId = id;
         const entry = check.closest(".list-entry");
         if (entry) entry.classList.toggle("is-selected", check.checked);
+        el.itemList.querySelectorAll(".list-button.is-active").forEach((activeButton) => activeButton.classList.remove("is-active"));
+        const selectedButton = entry && entry.querySelector(".list-button");
+        if (selectedButton) selectedButton.classList.add("is-active");
+        if (mode === "resources") renderResourceEditor();
+        if (mode === "trash") renderTrashEditor();
         renderBulkState();
+        setEnabled(true);
         return;
       }
       const button = event.target.closest(".list-button");
