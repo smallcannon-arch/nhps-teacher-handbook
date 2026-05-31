@@ -39,6 +39,7 @@
     }
 
     .header-inner,
+    .header-tabs-bar,
     main,
     footer {
       width: min(1280px, calc(100% - 32px));
@@ -79,7 +80,6 @@
     main {
       display: grid;
       grid-template-columns: 400px minmax(0, 1fr);
-      grid-template-rows: auto minmax(0, 1fr);
       gap: 22px;
       padding: 26px 0 46px;
     }
@@ -91,33 +91,31 @@
       box-shadow: var(--shadow);
     }
 
-    .mode-bar {
-      grid-column: 1 / -1;
+    .header-tabs-bar {
       display: flex;
+      align-items: center;
       justify-content: flex-start;
-      gap: 8px;
-      align-items: center;
-      padding: 8px 10px;
+      padding: 0 0 10px;
     }
 
-    .mode-copy {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-    }
-
-    .mode-label {
-      margin-bottom: 0;
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .mode-bar .tabs {
+    .header-tabs-bar .tabs {
       margin: 0;
-      gap: 8px;
+      gap: 6px;
+    }
+
+    .header-tabs-bar button.tab-button {
+      min-height: 34px;
+      padding: 4px 12px;
+      border-color: rgba(255, 255, 255, 0.34);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 0.92rem;
+    }
+
+    .header-tabs-bar button.tab-button.is-active {
+      background: white;
+      color: var(--navy);
+      border-color: white;
     }
 
     .sidebar {
@@ -656,6 +654,12 @@
         grid-template-columns: 1fr;
         gap: 10px;
         width: min(100% - 20px, 1280px);
+        padding: 18px 0 10px;
+      }
+
+      .header-tabs-bar {
+        width: min(100% - 20px, 1280px);
+        padding-bottom: 8px;
       }
 
       .user-box {
@@ -667,26 +671,10 @@
 
       main {
         grid-template-columns: 1fr;
-        grid-template-rows: auto;
         width: min(100% - 20px, 1280px);
       }
 
-      .mode-bar {
-        display: grid;
-        gap: 8px;
-        padding: 10px;
-      }
-
-      .mode-copy {
-        display: grid;
-        gap: 6px;
-      }
-
-      .mode-label {
-        white-space: normal;
-      }
-
-      .mode-bar .tabs {
+      .header-tabs-bar .tabs {
         gap: 8px;
       }
 
@@ -733,10 +721,6 @@
         padding: 14px 0;
       }
 
-      .mode-bar {
-        padding: 8px 12px;
-      }
-
       .sidebar {
         position: static;
         align-self: stretch;
@@ -777,16 +761,15 @@
         <button id="logoutBtn" type="button" class="secondary">登出</button>
       </div>
     </div>
-  </header>
-
-  <main>
-    <section class="panel mode-bar" aria-label="後台主入口">
+    <nav class="header-tabs-bar" aria-label="後台主入口">
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">內容管理</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
-    </section>
+    </nav>
+  </header>
 
+  <main>
     <aside class="panel sidebar">
       <h2 id="listTitle">內容管理清單</h2>
       <div class="field">
