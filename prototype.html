@@ -188,118 +188,79 @@
       margin: 28px auto 56px;
     }
 
-    .home-shell {
+    .workbench-shell {
       display: grid;
-      grid-template-columns: 270px minmax(0, 1fr);
-      gap: 24px;
-      align-items: start;
+      gap: 18px;
+      min-width: 0;
     }
 
-    .home-directory {
-      position: sticky;
-      top: 18px;
-      display: block;
-    }
-
-    .directory-toggle {
-      display: none;
-    }
-
-    .home-sidebar {
-      display: grid;
-      gap: 14px;
-      padding: 16px;
+    .workbench-section {
+      padding: 18px 20px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: rgba(255, 253, 248, 0.94);
       box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
     }
 
-    .sidebar-section {
-      display: grid;
-      gap: 10px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e3ebe5;
+    .search-panel {
+      padding: 16px;
     }
 
-    .sidebar-section:last-child {
-      padding-bottom: 0;
-      border-bottom: 0;
-    }
-
-    .sidebar-section summary {
-      color: var(--navy);
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .sidebar-task-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .sidebar-task-list .task-option {
-      min-height: 0;
-      padding: 9px 10px;
-    }
-
-    .sidebar-task-list .task-option strong {
-      font-size: 0.92rem;
-    }
-
-    .sidebar-task-list .task-option span {
-      font-size: 0.76rem;
-    }
-
-    .sidebar-link {
-      width: 100%;
-      min-height: 38px;
-      padding: 7px 10px;
-      border: 1px solid var(--blue-line);
-      border-radius: var(--radius);
-      background: var(--white);
-      color: var(--navy);
-      font-weight: 900;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .sidebar-link:hover,
-    .sidebar-link:focus-visible {
-      border-color: var(--navy-2);
-      outline: none;
-    }
-
-    .sidebar-link.is-active {
-      border-color: var(--navy);
-      background: var(--navy);
-      color: var(--white);
-    }
-
-    .home-content {
-      display: grid;
-      gap: 20px;
-      min-width: 0;
-    }
-
-    .home-content .search-row {
+    .search-panel .search-row {
       max-width: none;
     }
 
-    .home-content .search-field {
+    .search-panel .search-field {
       border-color: var(--blue-line);
       background: var(--white);
+    }
+
+    .search-scope-note {
+      margin: 8px 2px 0;
+      color: #627186;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .results-column {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .task-section {
+      display: grid;
+      gap: 0;
+      align-content: start;
+    }
+
+    .task-section .section-heading {
+      margin-bottom: 0;
+    }
+
+    .task-section h2 {
+      font-size: 1.18rem;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line);
     }
 
     .current-context {
       display: grid;
       gap: 4px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 253, 248, 0.92);
-      box-shadow: 0 10px 24px rgba(32, 48, 68, 0.06);
     }
 
     .current-context h2 {
@@ -407,20 +368,14 @@
     .quick-band {
       display: grid;
       gap: 8px;
-      padding: 14px 16px;
-      border: 1px solid var(--line);
-      border-bottom: 1px solid #e3ebe5;
-      border-radius: var(--radius);
-      background: rgba(255, 253, 248, 0.96);
     }
 
     .quick-band h2 {
       font-size: 1.05rem;
     }
 
-    .quick-band .section-note {
-      margin-bottom: 0;
-      font-size: 0.88rem;
+    .quick-band .chip-list {
+      margin-top: 2px;
     }
 
     .shortcut-band {
@@ -428,12 +383,12 @@
     }
 
     .advanced-filter {
-      border: 0;
-      background: #fbfaf6;
+      background: rgba(255, 253, 248, 0.9);
     }
 
     .advanced-filter summary {
       color: var(--navy);
+      list-style-position: outside;
       font-weight: 900;
       cursor: pointer;
     }
@@ -444,6 +399,7 @@
 
     .advanced-filter-grid {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       margin-top: 14px;
     }
@@ -476,7 +432,10 @@
 
     .task-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 16px;
+      margin-bottom: 0;
     }
 
     .chip {
@@ -486,23 +445,25 @@
     }
 
     .task-option {
-      display: grid;
-      gap: 4px;
-      min-height: 74px;
+      display: block;
+      min-height: 68px;
       padding: 12px 14px;
+      border-radius: 10px;
       text-align: left;
     }
 
     .task-option strong {
+      display: block;
+      margin-bottom: 5px;
       color: inherit;
-      font-size: 0.96rem;
+      font-size: 0.94rem;
       line-height: 1.4;
     }
 
     .task-option span {
       color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.5;
+      font-size: 0.78rem;
+      line-height: 1.45;
     }
 
     .task-option.is-active span {
@@ -994,7 +955,7 @@
     .site-footer {
       width: min(var(--max), calc(100% - 40px));
       margin: 0 auto 34px;
-      padding-top: 20px;
+      padding: 20px 0 0;
       border-top: 1px solid var(--line);
       color: var(--muted);
       font-size: 0.9rem;
@@ -1003,8 +964,8 @@
     .footer-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px 16px;
-      align-items: center;
+      gap: 14px 22px;
+      align-items: flex-start;
       justify-content: space-between;
     }
 
@@ -1012,36 +973,57 @@
       margin: 0;
     }
 
+    .footer-brand {
+      display: grid;
+      gap: 4px;
+    }
+
+    .footer-title {
+      color: var(--navy);
+      font-weight: 900;
+    }
+
+    .footer-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .version-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 2px 10px;
+      border: 1px solid var(--blue-line);
+      border-radius: 999px;
+      background: rgba(255, 253, 248, 0.92);
+      color: var(--navy);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      justify-content: flex-end;
+    }
+
     @media (max-width: 980px) {
-      .home-shell {
+      .workspace-layout {
         grid-template-columns: 1fr;
         gap: 18px;
       }
 
-      .home-directory {
-        position: static;
+      .task-grid,
+      .advanced-filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .directory-toggle {
-        display: block;
-        padding: 12px 14px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: rgba(255, 253, 248, 0.94);
-        color: var(--navy);
-        font-weight: 900;
-        cursor: pointer;
-      }
-
-      .home-directory[open] .directory-toggle {
-        border-bottom-right-radius: 0;
-        border-bottom-left-radius: 0;
-      }
-
-      .home-sidebar {
-        border-top: 0;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
+      .task-grid {
+        gap: 14px;
       }
 
       .quick-grid,
@@ -1057,6 +1039,11 @@
 
       .side-stack {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .footer-meta {
+        justify-content: flex-start;
+        text-align: left;
       }
     }
 
@@ -1115,19 +1102,25 @@
 
       .task-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+        margin-bottom: 0;
       }
 
       .task-option {
-        min-height: 58px;
-        padding: 9px 10px;
+        min-height: 72px;
+        padding: 16px 18px;
+        border-radius: 10px;
       }
 
       .task-option strong {
+        margin-bottom: 8px;
         font-size: 0.9rem;
       }
 
       .task-option span {
         font-size: 0.76rem;
+        line-height: 1.45;
       }
 
       .quick-band,
@@ -1193,6 +1186,18 @@
       }
     }
 
+    @media (max-width: 480px) {
+      .task-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .result-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html {
         scroll-behavior: auto;
@@ -1206,7 +1211,6 @@
       <div class="brand-row">
         <img class="school-logo" src="assets/nhps-icon.png" alt="內湖國小校徽">
         <div class="brand-copy">
-          <p class="site-kicker">測試版｜一般教師校務支援原型</p>
           <h1>內湖國小教師手冊｜校務支援站</h1>
           <p class="site-summary">整合一般教師常用規定、流程、表件與資源連結，協助快速找到所需資訊。</p>
         </div>
@@ -1214,61 +1218,61 @@
     </div>
   </header>
 
-  <main class="home-shell">
-    <details id="homeDirectory" class="home-directory" open>
-      <summary class="directory-toggle">首頁目錄</summary>
-      <aside class="home-sidebar" aria-label="首頁目錄">
-        <details class="sidebar-section" open>
-          <summary>我想要……</summary>
-          <div id="taskFilters" class="sidebar-task-list"></div>
-        </details>
-        <section class="sidebar-section" aria-label="快速開啟目錄">
-          <button id="quickNavBtn" class="sidebar-link" type="button">快速開啟</button>
-        </section>
-        <details class="sidebar-section advanced-filter">
-          <summary>進階篩選</summary>
-          <div class="advanced-filter-grid">
-            <div class="filter-group">
-              <h3 class="filter-subtitle">依處室</h3>
-              <div id="officeFilters" class="chip-list"></div>
+  <main class="workbench-shell">
+    <section class="workbench-section search-panel" aria-label="全站搜尋">
+      <div class="search-row" role="search">
+        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：請假、冷氣、學生受傷、校外教學、性平、報修……">
+        <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
+      </div>
+      <p class="search-scope-note">目前會在所選情境內搜尋；未選情境時搜尋全站資料。</p>
+    </section>
+
+    <section id="quickOpen" class="workbench-section quick-band" aria-labelledby="quickOpenTitle">
+      <h2 id="quickOpenTitle">依處室快速查找</h2>
+      <div id="officeFilters" class="chip-list"></div>
+    </section>
+
+    <div class="workspace-layout">
+      <aside class="workbench-section task-section" aria-labelledby="taskSectionTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="taskSectionTitle">我需要……</h2>
+            <p class="section-note">先選擇目前需求，再查看相關表單、流程與連結。</p>
+          </div>
+        </div>
+        <div id="taskFilters" class="task-grid"></div>
+      </aside>
+
+      <div class="results-column">
+        <section id="resourceResults" class="workbench-section resource-results" aria-label="目前結果">
+          <div class="result-header">
+            <div class="current-context" aria-live="polite">
+              <h2 id="currentTitle">目前結果：全部資料</h2>
+              <p id="currentDescription" class="section-note">可直接搜尋，或從左側選擇一個情境任務。</p>
             </div>
+            <p id="padletCount" class="result-count"></p>
+          </div>
+          <div id="padletGrid" class="padlet-grid"></div>
+          <p id="padletEmpty" class="padlet-empty"></p>
+          <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
+        </section>
+
+        <details class="workbench-section advanced-filter">
+          <summary>進階篩選</summary>
+          <p class="section-note">標籤與資料類型可用來補充縮小結果。</p>
+          <div class="advanced-filter-grid">
             <div class="filter-group">
               <h3 class="filter-subtitle">依標籤</h3>
               <div id="tagFilters" class="chip-list"></div>
             </div>
             <div class="filter-group">
-              <h3 class="filter-subtitle">依分類</h3>
+              <h3 class="filter-subtitle">依資料類型</h3>
               <div id="categoryFilters" class="chip-list"></div>
             </div>
           </div>
         </details>
-      </aside>
-    </details>
-
-    <div class="home-content">
-      <div class="search-row" role="search">
-        <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：請假、冷氣、學生受傷、校外教學、性平、報修">
-        <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
       </div>
-
-      <section class="current-context" aria-live="polite">
-        <h2 id="currentTitle">快速開啟</h2>
-        <p id="currentDescription" class="section-note">可直接搜尋，或從左側選擇情境任務。</p>
-      </section>
-
-      <section id="quickOpen" class="quick-band" aria-labelledby="quickOpenTitle">
-        <h2 id="quickOpenTitle">快速開啟</h2>
-        <p class="section-note">常用系統與高頻連結，作為捷徑使用。</p>
-        <div id="quickEntries" class="quick-grid"></div>
-        <p id="shortcutEmpty" class="section-note"></p>
-      </section>
-
-      <section id="resourceResults" class="resource-results" aria-label="搜尋與篩選結果">
-        <p id="padletCount" class="result-count"></p>
-        <div id="padletGrid" class="padlet-grid"></div>
-        <p id="padletEmpty" class="padlet-empty"></p>
-        <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
-      </section>
+    </div>
 
     <section class="section school-info-card" aria-labelledby="schoolInfoTitle">
       <div>
@@ -1316,31 +1320,63 @@
         </section>
       </aside>
     </section>
-    </div>
   </main>
 
   <footer class="site-footer">
     <div class="footer-row">
-      <p>COPYRIGHT © 2026 HSINCHU NEI HU PRIMARY SCHOOL</p>
-      <p>維護：總務主任 江志宏｜<a href="mailto:smallcannon@nhps.hc.edu.tw">smallcannon@nhps.hc.edu.tw</a>｜<a href="admin.html">後台管理</a></p>
+      <div class="footer-brand">
+        <p class="footer-title">內湖國小教師手冊｜校務支援站</p>
+        <p>Copyright © 2026 Hsinchu Nei Hu Primary School. All rights reserved.</p>
+      </div>
+      <div class="footer-meta">
+        <span class="version-pill">版本 0.2.0-directory-admin</span>
+        <span class="footer-links">
+          <span>維護：總務主任 江志宏</span>
+          <a href="mailto:smallcannon@nhps.hc.edu.tw">smallcannon@nhps.hc.edu.tw</a>
+          <a href="admin.html">後台管理</a>
+        </span>
+      </div>
     </div>
   </footer>
 
   <script>
     // 後續要新增任務分類，可在 taskCategories 加一筆 { id, label }，並讓資料卡片的 task 使用同一個 id。
     const taskCategories = [
-      { id: "leave-duty", label: "我要請假／補休", hint: "差勤、課務、代課" },
-      { id: "student-event", label: "我要處理學生事件", hint: "受傷、校安、霸凌、性平" },
-      { id: "space-equipment", label: "我要報修／借用", hint: "冷氣、電腦、網路、平板" },
-      { id: "field-trip", label: "我要帶學生外出", hint: "校外教學、保險、安全分工" },
-      { id: "teaching-assessment", label: "我要找課務教學", hint: "調課、代課、教學資料" },
-      { id: "new-teacher", label: "我是新進教師", hint: "報到、常用系統、校園生活" }
+      { id: "leave-duty", label: "請假／補休", hint: "差勤、課務安排" },
+      { id: "student-event", label: "處理學生事件", hint: "受傷、通報、輔導" },
+      { id: "space-equipment", label: "報修／借用", hint: "設備、場地、平板" },
+      { id: "field-trip", label: "帶學生外出", hint: "校外教學、安全準備" },
+      { id: "teaching-assessment", label: "課務／教學支援", hint: "調課、代課、教學資料" },
+      { id: "common-system", label: "常用系統", hint: "差勤、行事曆、Meet" },
+      { id: "new-teacher", label: "新進教師", hint: "報到、系統、校園生活" },
+      { id: "forms-download", label: "表件／資料下載", hint: "表單、檔案、資料" }
     ];
+    const taskDescriptions = {
+      "leave-duty": "差勤與課務安排相關資料。",
+      "student-event": "受傷、通報、輔導等學生事件相關資料。",
+      "space-equipment": "設備、場地與平板相關資料。",
+      "field-trip": "校外教學與安全準備相關資料。",
+      "teaching-assessment": "調課、代課與教學資料相關支援。",
+      "common-system": "校內常用系統與線上服務入口。",
+      "new-teacher": "新進教師報到、常用系統與校園生活相關資料。",
+      "forms-download": "常用表件、檔案與資料下載入口。"
+    };
+    const generatedSituationTextByTask = {
+      "leave-duty": "需要請假、補休、查詢差勤或確認課務安排時使用。",
+      "student-event": "學生受傷、校安、霸凌、性平或其他學生事件需要判斷下一步時使用。",
+      "space-equipment": "需要報修設備、處理冷氣異常，或借用場地、平板與相關設備時使用。",
+      "field-trip": "辦理校外教學、戶外教育、參訪或競賽外出前使用。",
+      "teaching-assessment": "需要調課代課、查找教學評量資料或研習課程資訊時使用。",
+      "common-system": "需要快速開啟校內常用系統、行事曆或線上服務時使用。",
+      "new-teacher": "不熟悉校內流程、常用系統或校園生活資訊時使用。",
+      "forms-download": "需要下載常用表件、檔案或年度資料時使用。"
+    };
+    const cannedSummaryText = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
 
     const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
     const defaultOfficeTab = "常用入口";
-    const realOfficeCategories = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
-    const officeCategories = ["all", ...realOfficeCategories];
+    const realOfficeCategories = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
+    const officeCategories = [...realOfficeCategories];
     const padletPendingAttachmentCount = 10;
     const padletPendingExternalCount = 1;
     const padletExcludedUntitledCount = 4;
@@ -2796,9 +2832,6 @@
       currentTitle: document.getElementById("currentTitle"),
       currentDescription: document.getElementById("currentDescription"),
       taskFilters: document.getElementById("taskFilters"),
-      quickNavBtn: document.getElementById("quickNavBtn"),
-      quickEntries: document.getElementById("quickEntries"),
-      shortcutEmpty: document.getElementById("shortcutEmpty"),
       officeFilters: document.getElementById("officeFilters"),
       tagFilters: document.getElementById("tagFilters"),
       categoryFilters: document.getElementById("categoryFilters"),
@@ -2816,6 +2849,18 @@
 
     function normalize(value) {
       return String(value || "").trim().toLowerCase();
+    }
+
+    function cleanDisplayText(value) {
+      if (Array.isArray(value)) {
+        return value.map(cleanDisplayText).filter(Boolean).join(" ");
+      }
+      if (value === undefined || value === null) return "";
+      return String(value).replace(/\s+/g, " ").trim();
+    }
+
+    function sameDisplayText(a, b) {
+      return normalize(cleanDisplayText(a)) === normalize(cleanDisplayText(b));
     }
 
     function queryTokens(value) {
@@ -2849,8 +2894,8 @@
     function itemMatches(item) {
       const query = normalize(state.query);
       const matchQuery = matchesQuery(itemSearchText(item), query);
-      const matchTask = state.task === "all" || item.task === state.task;
-      const matchOffice = state.office === "all" || item.office === state.office;
+      const matchTask = taskMatches(item, state.task);
+      const matchOffice = officeMatches(item, state.office);
       const matchTag = !state.tag || item.tags.includes(state.tag);
       return matchQuery && matchTask && matchOffice && matchTag;
     }
@@ -2873,19 +2918,63 @@
       const matchQuery = matchesQuery(padletSearchText(resource), query);
       const category = state.padletCategory === "none" && state.office !== "all" && padletCategories.includes(state.office) ? state.office : state.padletCategory;
       const matchCategory = category === "none" || category === "featured" || category === "all" || resource.category === category;
-      return matchQuery && matchCategory;
+      const matchOffice = officeMatches(resource, state.office);
+      return matchQuery && matchCategory && matchOffice;
+    }
+
+    function officeFromText(value) {
+      const text = normalize(value);
+      if (!text) return "";
+      if (/校長/.test(text)) return "校長室";
+      if (/教務/.test(text)) return "教務處";
+      if (/學務/.test(text)) return "學務處";
+      if (/總務/.test(text)) return "總務處";
+      if (/輔導/.test(text)) return "輔導室";
+      if (/幼兒/.test(text)) return "幼兒園";
+      if (/人事/.test(text)) return "人事";
+      if (/(會計|出納)/.test(text)) return "會計";
+      if (/(全校|共用|共同|各處室|常用入口|常用連結|內小常用連結|其他)/.test(text)) return "全校共用";
+      return "";
     }
 
     function normalizeOffice(office) {
-      return realOfficeCategories.includes(office) ? office : "其他";
+      return officeFromText(office) || "全校共用";
+    }
+
+    function officeSearchText(item) {
+      return [
+        item.office,
+        item.category,
+        item.title,
+        item.type,
+        item.note,
+        item.situation,
+        Array.isArray(item.summary) ? item.summary.join(" ") : item.summary,
+        (item.tags || []).join(" "),
+        (item.links || []).map((link) => link.label + " " + link.url).join(" ")
+      ].join(" ");
+    }
+
+    function officeMatches(item, selectedOffice) {
+      if (!selectedOffice || selectedOffice === "all") return true;
+      const explicitOffice = officeFromText(item.office);
+      const office = explicitOffice || "全校共用";
+      const categoryOffice = officeFromText(item.category);
+      if (office === selectedOffice || categoryOffice === selectedOffice) return true;
+      const text = normalize(officeSearchText(item));
+      if (selectedOffice === "人事") return /人事/.test(text);
+      if (selectedOffice === "會計") return /(會計|出納|經費|核銷)/.test(text);
+      if (selectedOffice === "全校共用") return office === "全校共用" || categoryOffice === "全校共用" || (!explicitOffice && /(全校|共用|共同|常用)/.test(text));
+      return text.includes(normalize(selectedOffice));
     }
 
     function resourceOffice(resource) {
-      if (realOfficeCategories.includes(resource.category)) return resource.category;
-      if (resource.title.includes("差勤") || resource.title.includes("請假")) return "人事室";
+      const categoryOffice = officeFromText(resource.category);
+      if (categoryOffice) return categoryOffice;
+      if (resource.title.includes("差勤") || resource.title.includes("請假")) return "人事";
       if (resource.title.includes("平板借用") || resource.title.includes("平板車")) return "總務處";
       if (resource.category === "資訊分享") return "教務處";
-      return "其他";
+      return "全校共用";
     }
 
     function resourceText(resource) {
@@ -2910,28 +2999,50 @@
       if (/(報修|冷氣|設備|場地|借用|平板|電腦|網路|印表機|門窗|燈具)/.test(text)) return "space-equipment";
       if (/(戶外教育|校外教學|外出|保險|參訪|競賽)/.test(text)) return "field-trip";
       if (/(課務|教學|評量|調課|研習|學扶|課後班|課程|學習)/.test(text)) return "teaching-assessment";
-      if (/(新進|行事曆|常用系統|meet|單一入口|校務系統|校園生活)/.test(text)) return "new-teacher";
+      if (/(常用系統|行事曆|meet|單一入口|校務系統|google|雲端|帳號)/.test(text)) return "common-system";
+      if (/(表件|表單|下載|檔案|資料下載|年度資料)/.test(text)) return "forms-download";
+      if (/(新進|報到|校園生活)/.test(text)) return "new-teacher";
       return "";
     }
 
+    function isCommonSystemResource(resource) {
+      const text = normalize([
+        resource.title,
+        resource.category,
+        resource.office,
+        resource.type,
+        resource.note,
+        resource.situation,
+        Array.isArray(resource.summary) ? resource.summary.join(" ") : resource.summary,
+        (resource.tags || []).join(" "),
+        (resource.links || []).map((link) => link.label + " " + link.url).join(" ")
+      ].join(" "));
+      return /(差勤系統|學校資料|校內行事曆|行事曆|meet|線上週會|教師會議|常用系統|單一入口|校務系統|疾病通報|google\s*(calender|calendar))/.test(text);
+    }
+
+    function taskMatches(resource, selectedTask) {
+      if (!selectedTask || selectedTask === "all") return true;
+      if (selectedTask === "common-system") return isCommonSystemResource(resource);
+      return inferTaskId(resource) === selectedTask;
+    }
+
     function getResourceSituation(resource) {
-      if (resource.situation) return resource.situation;
+      const text = cleanDisplayText(resource.situation);
+      if (!text) return "";
       const taskId = inferTaskId(resource);
-      if (taskId === "leave-duty") return "需要請假、補休、查詢差勤或確認課務安排時使用。";
-      if (taskId === "student-event") return "學生受傷、校安、霸凌、性平或其他學生事件需要判斷下一步時使用。";
-      if (taskId === "space-equipment") return "需要報修設備、處理冷氣異常，或借用場地、平板與相關設備時使用。";
-      if (taskId === "field-trip") return "辦理校外教學、戶外教育、參訪或競賽外出前使用。";
-      if (taskId === "teaching-assessment") return "需要調課代課、查找教學評量資料或研習課程資訊時使用。";
-      if (taskId === "new-teacher") return "不熟悉校內流程、常用系統或校園生活資訊時使用。";
-      return "需要使用「" + (resource.title || "此項資源") + "」相關資料或連結時使用。";
+      const repeatedTaskText = [
+        generatedSituationTextByTask[taskId],
+        taskDescriptions[taskId],
+        taskCategories.find((task) => task.id === taskId)?.hint
+      ].filter(Boolean);
+      if (repeatedTaskText.some((candidate) => sameDisplayText(text, candidate))) return "";
+      return text;
     }
 
     function getResourceSummary(resource) {
-      if (Array.isArray(resource.summary) && resource.summary.length) return resource.summary.join(" ");
-      if (resource.summary) return String(resource.summary);
-      if (resource.note) return resource.note;
-      if (resource.links && resource.links.length) return "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
-      return "先確認權責處室與最新公告；若內容不足，請洽承辦處室確認。";
+      const text = cleanDisplayText(resource.summary);
+      if (!text || sameDisplayText(text, cannedSummaryText)) return "";
+      return text;
     }
 
     function canonicalUrl(url) {
@@ -3034,18 +3145,19 @@
         getResourceSituation(item),
         getResourceSummary(item),
         item.updated,
-        item.links.map((link) => link.label + " " + link.url).join(" "),
-        item.tags.join(" ")
+        (item.links || []).map((link) => link.label + " " + link.url).join(" "),
+        (item.tags || []).join(" ")
       ].join(" ");
     }
 
     function directoryItemMatches(item) {
       const query = normalize(state.query);
       const matchQuery = matchesQuery(directorySearchText(item), query);
-      const matchTask = state.task === "all" || inferTaskId(item) === state.task;
-      const matchOffice = state.office === "all" || item.office === state.office;
+      const matchTask = taskMatches(item, state.task);
+      const matchOffice = officeMatches(item, state.office);
       const matchCategory = state.padletCategory === "none" || state.padletCategory === "all" || item.category === state.padletCategory;
-      return matchQuery && matchTask && matchOffice && matchCategory;
+      const matchTag = !state.tag || (item.tags || []).includes(state.tag);
+      return matchQuery && matchTask && matchOffice && matchCategory && matchTag;
     }
 
     function sortDirectoryItems(a, b) {
@@ -3227,18 +3339,27 @@
       card.id = resource.id;
 
       const title = createTextElement("h3", "", resource.title);
-      const situation = document.createElement("p");
-      situation.className = "padlet-situation";
-      situation.append(
-        createTextElement("span", "inline-label", "使用情境："),
-        document.createTextNode(getResourceSituation(resource))
-      );
-      const summary = document.createElement("p");
-      summary.className = "padlet-summary";
-      summary.append(
-        createTextElement("span", "inline-label", "我該做什麼："),
-        document.createTextNode(getResourceSummary(resource))
-      );
+      const situationText = getResourceSituation(resource);
+      const summaryText = getResourceSummary(resource);
+      const optionalFields = [];
+      if (situationText) {
+        const situation = document.createElement("p");
+        situation.className = "padlet-situation";
+        situation.append(
+          createTextElement("span", "inline-label", "使用情境："),
+          document.createTextNode(situationText)
+        );
+        optionalFields.push(situation);
+      }
+      if (summaryText) {
+        const summary = document.createElement("p");
+        summary.className = "padlet-summary";
+        summary.append(
+          createTextElement("span", "inline-label", "行動指引："),
+          document.createTextNode(summaryText)
+        );
+        optionalFields.push(summary);
+      }
       const meta = document.createElement("div");
       meta.className = "padlet-meta";
       const taskLabel = getTaskLabel(inferTaskId(resource));
@@ -3248,7 +3369,7 @@
       (resource.tags || []).slice(0, 3).forEach((tag) => meta.appendChild(createTextElement("span", "", "#" + tag)));
       meta.appendChild(createTextElement("span", "", "更新 " + (resource.updated || "未標示")));
 
-      card.append(title, situation, summary);
+      card.append(title, ...optionalFields);
       if (resource.links.length) card.appendChild(createCommonResourceLinks(resource));
       card.appendChild(meta);
       if (resource.status) card.appendChild(createTextElement("p", "padlet-status", resource.status + "，每學年更換一次檔案或連結。"));
@@ -3262,7 +3383,7 @@
         elements.cardGrid.hidden = true;
         elements.guideState.hidden = false;
         elements.emptyState.classList.remove("is-visible");
-        elements.resultCount.textContent = "請先使用搜尋、常用入口、處室或資源分類。";
+        elements.resultCount.textContent = "請先使用搜尋、處室或資源分類。";
         return;
       }
 
@@ -3275,21 +3396,20 @@
     }
 
     function renderCommonResources() {
-      const query = normalize(state.query);
       const isIdle = !hasActiveFilters();
       const directoryItems = getDirectoryItems();
       const visible = (isIdle
-        ? directoryItems.filter((item) => item.featured)
+        ? directoryItems
         : directoryItems.filter(directoryItemMatches)
       ).sort(sortDirectoryItems);
 
       elements.padletGrid.replaceChildren(...visible.map(createCommonResourceCard));
       elements.padletEmpty.hidden = visible.length > 0;
       if (visible.length === 0) {
-        elements.padletEmpty.textContent = isIdle ? "目前尚未設定快速開啟項目。" : "目前沒有符合條件的連結。";
+        elements.padletEmpty.textContent = isIdle ? "目前尚未建立首頁資料。" : "目前沒有符合條件的連結。";
       }
 
-      elements.padletCount.textContent = (isIdle ? "快速開啟項目" : "搜尋／篩選結果") + " " + visible.length + " 筆";
+      elements.padletCount.textContent = (isIdle ? "全部資料" : "符合條件") + " " + visible.length + " 筆";
     }
 
     function getFilterCategories() {
@@ -3305,32 +3425,35 @@
     function updateCurrentContext() {
       const task = taskCategories.find((item) => item.id === state.task);
       if (task) {
-        elements.currentTitle.textContent = task.label;
-        elements.currentDescription.textContent = task.hint;
+        const queryText = normalize(state.query) ? "（搜尋：" + state.query + "）" : "";
+        elements.currentTitle.textContent = "目前結果：" + task.label + queryText;
+        elements.currentDescription.textContent = normalize(state.query)
+          ? "在此情境內依關鍵字縮小結果。"
+          : taskDescriptions[task.id] || task.hint;
         return;
       }
       if (normalize(state.query)) {
-        elements.currentTitle.textContent = "搜尋：" + state.query;
+        elements.currentTitle.textContent = "目前結果：搜尋「" + state.query + "」";
         elements.currentDescription.textContent = "以下顯示符合關鍵字的資源與連結。";
         return;
       }
       if (state.office !== "all") {
-        elements.currentTitle.textContent = state.office;
+        elements.currentTitle.textContent = "目前結果：" + state.office;
         elements.currentDescription.textContent = "以下顯示此承辦處室相關資源。";
         return;
       }
       if (state.tag) {
-        elements.currentTitle.textContent = "標籤：" + state.tag;
+        elements.currentTitle.textContent = "目前結果：標籤「" + state.tag + "」";
         elements.currentDescription.textContent = "以下顯示帶有此標籤的資源。";
         return;
       }
       if (state.padletCategory !== "none") {
-        elements.currentTitle.textContent = "分類：" + state.padletCategory;
+        elements.currentTitle.textContent = "目前結果：" + state.padletCategory;
         elements.currentDescription.textContent = "以下顯示此分類相關資源。";
         return;
       }
-      elements.currentTitle.textContent = "快速開啟";
-      elements.currentDescription.textContent = "可直接搜尋，或從左側選擇情境任務。";
+      elements.currentTitle.textContent = "目前結果：全部資料";
+      elements.currentDescription.textContent = "可直接搜尋，或從左側選擇一個情境任務。";
     }
 
     function createChip(label, value, type, hint = "") {
@@ -3351,17 +3474,20 @@
       button.dataset.type = type;
       button.addEventListener("click", () => {
         if (type === "task") {
-          state.query = "";
           state.task = value;
           state.office = "all";
           state.padletCategory = "none";
           state.tag = "";
           state.activeShortcut = "";
-          elements.searchInput.value = "";
         }
         if (type === "office") {
           state.office = value;
+          state.query = "";
+          state.task = "all";
+          state.padletCategory = "none";
+          state.tag = "";
           state.activeShortcut = "";
+          elements.searchInput.value = "";
         }
         if (type === "padlet") {
           state.padletCategory = value;
@@ -3382,7 +3508,7 @@
         ...taskCategories.map((task) => createChip(task.label, task.id, "task", task.hint))
       );
       elements.officeFilters.replaceChildren(
-        ...officeCategories.map((office) => createChip(office === "all" ? "全部處室" : office, office, "office"))
+        ...officeCategories.map((office) => createChip(office, office, "office"))
       );
       elements.tagFilters.replaceChildren(
         createChip("全部標籤", "", "tag"),
@@ -3407,7 +3533,6 @@
       document.querySelectorAll("[data-type='padlet']").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.value === state.padletCategory);
       });
-      elements.quickNavBtn.classList.toggle("is-active", !hasActiveFilters());
     }
 
     function shortcutKey(entry) {
@@ -3419,32 +3544,11 @@
       ].join("|");
     }
 
-    function renderQuickEntries() {
+    function getActiveShortcutLabel() {
+      if (!state.activeShortcut) return "";
       const shortcuts = officeShortcuts[defaultOfficeTab] || [];
-      elements.shortcutEmpty.hidden = shortcuts.length > 0;
-      elements.shortcutEmpty.textContent = shortcuts.length ? "" : "目前尚未設定快速開啟。";
-      elements.quickEntries.replaceChildren(...shortcuts.map((entry) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "quick-entry";
-        button.title = entry.hint || entry.label || "快速開啟";
-        const label = document.createElement("strong");
-        label.textContent = entry.label;
-        button.append(label);
-        button.classList.toggle("is-active", shortcutKey(entry) === state.activeShortcut);
-        button.addEventListener("click", () => {
-          state.query = entry.query || "";
-          state.task = "all";
-          state.office = "all";
-          state.padletCategory = entry.resourceCategory || "none";
-          state.tag = entry.tag || "";
-          state.activeShortcut = shortcutKey(entry);
-          state.resultsMode = entry.targetId && !entry.query && !entry.resourceCategory ? "directory" : "filtered";
-          elements.searchInput.value = state.query;
-          renderAll();
-        });
-        return button;
-      }));
+      const match = shortcuts.find((entry) => shortcutKey(entry) === state.activeShortcut);
+      return match ? match.label : "";
     }
 
     function renderRecentUpdates() {
@@ -3470,7 +3574,6 @@
           state.resultsMode = "filtered";
           elements.searchInput.value = state.query;
           renderAll();
-          document.getElementById("resourceResults").scrollIntoView({ block: "start" });
         });
         const meta = createTextElement("span", "update-meta", item.updated + "｜" + item.office);
         row.append(link, meta);
@@ -3491,7 +3594,6 @@
     }
 
     function renderAll() {
-      renderQuickEntries();
       renderCommonResources();
       updateFilterActiveState();
       updateCurrentContext();
@@ -3554,18 +3656,14 @@
     }
 
     elements.searchInput.addEventListener("input", (event) => {
+      // 搜尋採「共同篩選」：保留已選情境或進階條件，在目前範圍內縮小結果，避免畫面狀態突然被清掉。
       state.query = event.target.value;
-      state.tag = "";
       state.activeShortcut = "";
       state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
       renderAll();
     });
 
     elements.clearFiltersBtn.addEventListener("click", resetFilters);
-    elements.quickNavBtn.addEventListener("click", () => {
-      resetFilters();
-      document.getElementById("quickOpen").scrollIntoView({ block: "start" });
-    });
 
     renderFilters();
     renderRecentUpdates();
