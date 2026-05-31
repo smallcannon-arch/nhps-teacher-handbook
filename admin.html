@@ -425,8 +425,8 @@
 
     .drag-handle {
       align-self: center;
-      width: 12px;
-      min-height: 30px;
+      width: 16px;
+      min-height: 34px;
       display: grid;
       place-items: center;
       border: 0;
@@ -982,6 +982,8 @@
     let selectedResourceIds = new Set();
     let selectedTrashIds = new Set();
     let draggedItemId = "";
+    let draggedEntry = null;
+    let dropTargetEntry = null;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1803,11 +1805,18 @@
       renderBulkState();
     }
 
+    function setDropTarget(entry) {
+      if (dropTargetEntry === entry) return;
+      if (dropTargetEntry) dropTargetEntry.classList.remove("is-drop-target");
+      dropTargetEntry = entry;
+      if (dropTargetEntry) dropTargetEntry.classList.add("is-drop-target");
+    }
+
     function clearDragState() {
+      if (draggedEntry) draggedEntry.classList.remove("is-dragging");
+      setDropTarget(null);
       draggedItemId = "";
-      el.itemList.querySelectorAll(".is-dragging, .is-drop-target").forEach((entry) => {
-        entry.classList.remove("is-dragging", "is-drop-target");
-      });
+      draggedEntry = null;
     }
 
     async function reorderListByDrag(sourceId, targetId) {
@@ -2116,6 +2125,7 @@
       const entry = event.target.closest(".list-entry.is-draggable");
       if (!entry || !idToken || mode === "trash") return;
       draggedItemId = entry.dataset.id || "";
+      draggedEntry = entry;
       entry.classList.add("is-dragging");
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
@@ -2125,11 +2135,13 @@
     el.itemList.addEventListener("dragover", (event) => {
       if (!draggedItemId || mode === "trash") return;
       const entry = event.target.closest(".list-entry.is-draggable");
-      if (!entry || entry.dataset.id === draggedItemId) return;
+      if (!entry || entry.dataset.id === draggedItemId) {
+        setDropTarget(null);
+        return;
+      }
       event.preventDefault();
       if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-      el.itemList.querySelectorAll(".is-drop-target").forEach((item) => item.classList.remove("is-drop-target"));
-      entry.classList.add("is-drop-target");
+      setDropTarget(entry);
     });
     el.itemList.addEventListener("drop", async (event) => {
       if (!draggedItemId || mode === "trash") return;
