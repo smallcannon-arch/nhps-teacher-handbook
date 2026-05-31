@@ -443,12 +443,12 @@ var CURRENT_DIRECTORY_SEED = {
     },
     {
       "id": "padlet-020",
-      "title": "學生管教提報單",
+      "title": "學生事件表單填報",
       "office": "學務處",
-      "category": "學務處",
+      "category": "校安／學生事件",
       "type": "Google 表單",
       "status": "",
-      "note": "",
+      "note": "學生管教或需學務處協助事項，可由導師依實際情形填報。",
       "links": [
         {
           "label": "開啟Google 表單",
@@ -459,6 +459,8 @@ var CURRENT_DIRECTORY_SEED = {
       "tags": [
         "常用資源",
         "學務處",
+        "校安／學生事件",
+        "學生事件",
         "Google 表單"
       ],
       "visible": true,
@@ -836,9 +838,9 @@ var CURRENT_DIRECTORY_SEED = {
     },
     {
       "id": "padlet-037",
-      "title": "校安事件通報類別",
+      "title": "校安通報資料",
       "office": "學務處",
-      "category": "學務處",
+      "category": "校安／學生事件",
       "type": "流程參考",
       "status": "",
       "note": "先確認人員安全並通知學務處；此資料用於判斷校安通報類別，正式處理依校內流程辦理。",
@@ -852,6 +854,9 @@ var CURRENT_DIRECTORY_SEED = {
       "tags": [
         "常用資源",
         "學務處",
+        "校安／學生事件",
+        "校安",
+        "通報",
         "PDF"
       ],
       "visible": true,
@@ -1597,7 +1602,7 @@ var CURRENT_DIRECTORY_SEED = {
       {
         "label": "校安／學生事件",
         "hint": "校安、受傷、通報",
-        "query": "校安"
+        "resourceCategory": "校安／學生事件"
       },
       {
         "label": "場地／平板借用",
@@ -1641,7 +1646,7 @@ var CURRENT_DIRECTORY_SEED = {
       {
         "label": "校安／學生事件",
         "hint": "校安、受傷、通報",
-        "query": "校安"
+        "resourceCategory": "校安／學生事件"
       },
       {
         "label": "學生平安保險",

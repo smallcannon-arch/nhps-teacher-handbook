@@ -200,20 +200,6 @@
       padding: 9px 11px;
     }
 
-    input.suggest-input {
-      padding-right: 34px;
-      background-image:
-        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
-        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-      background-position: calc(100% - 18px) 53%, calc(100% - 12px) 53%;
-      background-repeat: no-repeat;
-      background-size: 6px 6px;
-    }
-
-    input.suggest-input::-webkit-calendar-picker-indicator {
-      opacity: 0;
-    }
-
     textarea {
       min-height: 96px;
       resize: vertical;
@@ -238,6 +224,25 @@
 
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .form-section {
+      margin: 18px 0;
+      padding-top: 16px;
+      border-top: 1px solid #e4ebe9;
+    }
+
+    .form-section h3 {
+      margin-bottom: 2px;
+    }
+
+    .section-help {
+      margin-bottom: 12px;
+    }
+
+    .combo-field {
+      display: grid;
+      gap: 8px;
+    }
 
     .notice {
       margin-bottom: 14px;
@@ -590,7 +595,10 @@
             </div>
             <div class="field">
               <label for="batchCategoryInput">批次改分類</label>
-              <input id="batchCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類；留空不變更">
+              <div class="combo-field">
+                <select id="batchCategorySelect" aria-label="批次改分類"></select>
+                <input id="batchCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+              </div>
             </div>
           </div>
           <div class="grid-2">
@@ -616,7 +624,7 @@
           </div>
         </details>
 
-        <div class="grid-3">
+        <div class="grid-2">
           <div class="field">
             <label for="resourceTitleInput">標題</label>
             <input id="resourceTitleInput" placeholder="例如：差勤系統（請假／補休）">
@@ -625,35 +633,47 @@
             <label for="resourceUpdatedInput">最後更新日期</label>
             <input id="resourceUpdatedInput" type="date">
           </div>
-          <div class="field">
-            <label for="resourceSortInput">顯示順序</label>
-            <input id="resourceSortInput" type="number" min="1" step="1">
-          </div>
         </div>
 
-        <div class="grid-3">
-          <div class="field">
-            <label for="resourceOfficeInput">處室</label>
-            <select id="resourceOfficeInput"></select>
+        <section class="form-section" aria-labelledby="resourcePositionHeading">
+          <h3 id="resourcePositionHeading">卡片位置</h3>
+          <p class="meta section-help">調整處室、分類或顯示順序，就能把卡片移到網站上的另一個位置。數字越小越前面。</p>
+          <div class="grid-3">
+            <div class="field">
+              <label for="resourceOfficeInput">處室</label>
+              <select id="resourceOfficeInput"></select>
+            </div>
+            <div class="field">
+              <label for="resourceCategoryInput">所屬分類</label>
+              <div class="combo-field">
+                <select id="resourceCategorySelect" aria-label="所屬分類"></select>
+                <input id="resourceCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+              </div>
+            </div>
+            <div class="field">
+              <label for="resourceSortInput">顯示順序</label>
+              <input id="resourceSortInput" type="number" min="1" step="1">
+            </div>
           </div>
-          <div class="field">
-            <label for="resourceCategoryInput">所屬分類</label>
-            <input id="resourceCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類">
-          </div>
+        </section>
+
+        <div class="grid-2">
           <div class="field">
             <label for="resourceTypeInput">類型</label>
-            <input id="resourceTypeInput" class="suggest-input" list="typeOptions" autocomplete="off" placeholder="可選既有類型，也可輸入新類型">
+            <div class="combo-field">
+              <select id="resourceTypeSelect" aria-label="類型"></select>
+              <input id="resourceTypeInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新類型">
+            </div>
+          </div>
+          <div class="field">
+            <label for="resourceTagsInput">標籤</label>
+            <input id="resourceTagsInput" autocomplete="off" placeholder="用逗號分隔，例如：常用, 教務處, 表件">
           </div>
         </div>
 
         <div class="field">
           <label for="resourceNoteInput">說明或注意事項</label>
           <textarea id="resourceNoteInput" placeholder="簡短說明，避免放學生個資或未公告資訊。"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="resourceTagsInput">標籤</label>
-          <input id="resourceTagsInput" class="suggest-input" list="tagOptions" autocomplete="off" placeholder="可選既有標籤，也可用逗號新增多個標籤">
         </div>
 
         <div class="checkbox-row">
@@ -725,11 +745,17 @@
           </div>
           <div class="field">
             <label for="shortcutCategoryInput">指定內容分類</label>
-            <input id="shortcutCategoryInput" class="suggest-input" list="categoryOptions" autocomplete="off" placeholder="可選既有分類，也可輸入新分類">
+            <div class="combo-field">
+              <select id="shortcutCategorySelect" aria-label="指定內容分類"></select>
+              <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新分類名稱">
+            </div>
           </div>
           <div class="field">
             <label for="shortcutTagInput">指定標籤</label>
-            <input id="shortcutTagInput" class="suggest-input" list="tagOptions" autocomplete="off" placeholder="可選既有標籤，也可輸入新標籤；可留空">
+            <div class="combo-field">
+              <select id="shortcutTagSelect" aria-label="指定標籤"></select>
+              <input id="shortcutTagInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新標籤">
+            </div>
           </div>
         </div>
 
@@ -753,15 +779,12 @@
     <p>本後台不應放入學生個資、個案內容、成績、通報細節、採購工程細節或未經確認的高風險資訊。</p>
   </footer>
 
-  <datalist id="categoryOptions"></datalist>
-  <datalist id="typeOptions"></datalist>
-  <datalist id="tagOptions"></datalist>
-
   <script>
     const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
     const LOGIN_PAGE = "login.html";
     const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
     const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
+    const CUSTOM_OPTION_VALUE = "__custom__";
     const OFFICES = ["常用入口", "教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
     const RESOURCE_OFFICES = ["教務處", "學務處", "總務處", "輔導室", "人事室", "會計室", "其他"];
     const DEFAULT_CATEGORIES = [
@@ -815,6 +838,7 @@
       bulkPanel: document.getElementById("bulkPanel"),
       bulkPanelSummary: document.getElementById("bulkPanelSummary"),
       batchOfficeInput: document.getElementById("batchOfficeInput"),
+      batchCategorySelect: document.getElementById("batchCategorySelect"),
       batchCategoryInput: document.getElementById("batchCategoryInput"),
       batchFeaturedInput: document.getElementById("batchFeaturedInput"),
       batchVisibleInput: document.getElementById("batchVisibleInput"),
@@ -832,7 +856,9 @@
       resourceTitleInput: document.getElementById("resourceTitleInput"),
       resourceUpdatedInput: document.getElementById("resourceUpdatedInput"),
       resourceOfficeInput: document.getElementById("resourceOfficeInput"),
+      resourceCategorySelect: document.getElementById("resourceCategorySelect"),
       resourceCategoryInput: document.getElementById("resourceCategoryInput"),
+      resourceTypeSelect: document.getElementById("resourceTypeSelect"),
       resourceTypeInput: document.getElementById("resourceTypeInput"),
       resourceSortInput: document.getElementById("resourceSortInput"),
       resourceNoteInput: document.getElementById("resourceNoteInput"),
@@ -852,15 +878,14 @@
       shortcutHintInput: document.getElementById("shortcutHintInput"),
       shortcutSortInput: document.getElementById("shortcutSortInput"),
       shortcutQueryInput: document.getElementById("shortcutQueryInput"),
+      shortcutCategorySelect: document.getElementById("shortcutCategorySelect"),
       shortcutCategoryInput: document.getElementById("shortcutCategoryInput"),
+      shortcutTagSelect: document.getElementById("shortcutTagSelect"),
       shortcutTagInput: document.getElementById("shortcutTagInput"),
       shortcutTargetInput: document.getElementById("shortcutTargetInput"),
       shortcutEnabledInput: document.getElementById("shortcutEnabledInput"),
       saveShortcutBtn: document.getElementById("saveShortcutBtn"),
-      deleteShortcutBtn: document.getElementById("deleteShortcutBtn"),
-      categoryOptions: document.getElementById("categoryOptions"),
-      typeOptions: document.getElementById("typeOptions"),
-      tagOptions: document.getElementById("tagOptions")
+      deleteShortcutBtn: document.getElementById("deleteShortcutBtn")
     };
 
     window.onload = async () => {
@@ -1203,8 +1228,8 @@
       el.resourceTitleInput.value = item.title || "";
       el.resourceUpdatedInput.value = normalizeDate(item.updated);
       el.resourceOfficeInput.value = item.office || "其他";
-      el.resourceCategoryInput.value = item.category || item.office || "";
-      el.resourceTypeInput.value = item.type || "";
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || item.office || "");
+      setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
       el.resourceSortInput.value = item.sort_order || "";
       el.resourceNoteInput.value = item.note || "";
       el.resourceTagsInput.value = (item.tags || []).join(", ");
@@ -1221,8 +1246,8 @@
       el.resourceTitleInput.value = "";
       el.resourceUpdatedInput.value = todayText();
       el.resourceOfficeInput.value = "其他";
-      el.resourceCategoryInput.value = "";
-      el.resourceTypeInput.value = "連結";
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, "");
+      setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
       el.resourceTagsInput.value = "常用";
@@ -1277,8 +1302,8 @@
       el.shortcutHintInput.value = item.hint || "";
       el.shortcutSortInput.value = item.sort_order || "";
       el.shortcutQueryInput.value = item.query || "";
-      el.shortcutCategoryInput.value = item.resourceCategory || "";
-      el.shortcutTagInput.value = item.tag || "";
+      setComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput, item.resourceCategory || "");
+      setComboValue(el.shortcutTagSelect, el.shortcutTagInput, item.tag || "");
       el.shortcutTargetInput.value = item.targetId || "";
       el.shortcutEnabledInput.checked = item.enabled !== false;
     }
@@ -1293,8 +1318,8 @@
       el.shortcutHintInput.value = "";
       el.shortcutSortInput.value = String(flattenShortcuts().length + 1);
       el.shortcutQueryInput.value = "";
-      el.shortcutCategoryInput.value = "";
-      el.shortcutTagInput.value = "";
+      setComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput, "");
+      setComboValue(el.shortcutTagSelect, el.shortcutTagInput, "");
       el.shortcutTargetInput.value = "";
       el.shortcutEnabledInput.checked = true;
     }
@@ -1310,8 +1335,8 @@
         id: resourceId,
         title: el.resourceTitleInput.value.trim(),
         office: el.resourceOfficeInput.value,
-        category: el.resourceCategoryInput.value.trim() || el.resourceOfficeInput.value,
-        type: el.resourceTypeInput.value.trim(),
+        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || el.resourceOfficeInput.value,
+        type: getComboValue(el.resourceTypeSelect, el.resourceTypeInput),
         status: existing ? existing.status || "" : "",
         note: el.resourceNoteInput.value.trim(),
         links,
@@ -1330,8 +1355,8 @@
         label: el.shortcutLabelInput.value.trim(),
         hint: el.shortcutHintInput.value.trim(),
         query: el.shortcutQueryInput.value.trim(),
-        resourceCategory: el.shortcutCategoryInput.value.trim(),
-        tag: el.shortcutTagInput.value.trim(),
+        resourceCategory: getComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput),
+        tag: getComboValue(el.shortcutTagSelect, el.shortcutTagInput),
         targetId: el.shortcutTargetInput.value.trim(),
         enabled: el.shortcutEnabledInput.checked,
         sort_order: Number(el.shortcutSortInput.value || flattenShortcuts().length + 1)
@@ -1370,7 +1395,8 @@
       }
       const changes = {};
       if (el.batchOfficeInput.value) changes.office = el.batchOfficeInput.value;
-      if (el.batchCategoryInput.value.trim()) changes.category = el.batchCategoryInput.value.trim();
+      const batchCategory = getComboValue(el.batchCategorySelect, el.batchCategoryInput);
+      if (batchCategory) changes.category = batchCategory;
       if (el.batchFeaturedInput.value) changes.featured = el.batchFeaturedInput.value === "true";
       if (el.batchVisibleInput.value) changes.visible = el.batchVisibleInput.value === "true";
       if (Object.keys(changes).length === 0) {
@@ -1382,7 +1408,7 @@
       await runCommand("batchUpdateDirectoryResources", { resource_ids: resourceIds, changes }, "已批次更新 " + resourceIds.length + " 筆首頁內容。");
       selectedResourceIds.clear();
       el.batchOfficeInput.value = "";
-      el.batchCategoryInput.value = "";
+      setComboValue(el.batchCategorySelect, el.batchCategoryInput, "");
       el.batchFeaturedInput.value = "";
       el.batchVisibleInput.value = "";
       renderAll();
@@ -1547,7 +1573,7 @@
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = mode === "shortcuts" || !enabled || !idToken;
       el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
-      el.batchCategoryInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
+      setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEdit || mode !== "resources");
       el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.batchVisibleInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
@@ -1593,9 +1619,11 @@
         resourceItems.flatMap((item) => item.tags || []),
         shortcutItems.map((item) => item.tag)
       );
-      renderDatalist(el.categoryOptions, categoryOptions);
-      renderDatalist(el.typeOptions, typeOptions);
-      renderDatalist(el.tagOptions, tagOptions);
+      renderComboOptions(el.batchCategorySelect, el.batchCategoryInput, categoryOptions, "不變更分類", "新增分類...");
+      renderComboOptions(el.resourceCategorySelect, el.resourceCategoryInput, categoryOptions, "請選擇分類", "新增分類...");
+      renderComboOptions(el.resourceTypeSelect, el.resourceTypeInput, typeOptions, "請選擇類型", "新增類型...");
+      renderComboOptions(el.shortcutCategorySelect, el.shortcutCategoryInput, categoryOptions, "不指定分類", "新增分類...");
+      renderComboOptions(el.shortcutTagSelect, el.shortcutTagInput, tagOptions, "不指定標籤", "新增標籤...");
     }
 
     function mergeOptions(defaults, ...groups) {
@@ -1618,10 +1646,44 @@
       }
     }
 
-    function renderDatalist(target, options) {
-      target.innerHTML = options.map((value) => (
-        "<option value='" + escapeHtml(value) + "'></option>"
-      )).join("");
+    function renderComboOptions(select, input, options, emptyLabel, customLabel) {
+      const current = getComboValue(select, input);
+      select.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" +
+        options.map((value) => "<option value='" + escapeHtml(value) + "'>" + escapeHtml(value) + "</option>").join("") +
+        "<option value='" + CUSTOM_OPTION_VALUE + "'>" + escapeHtml(customLabel) + "</option>";
+      setComboValue(select, input, current);
+    }
+
+    function setComboValue(select, input, value) {
+      const text = String(value || "").trim();
+      const hasOption = [...select.options].some((option) => option.value === text);
+      if (!text) {
+        select.value = "";
+        input.value = "";
+      } else if (hasOption) {
+        select.value = text;
+        input.value = "";
+      } else {
+        select.value = CUSTOM_OPTION_VALUE;
+        input.value = text;
+      }
+      syncComboCustomInput(select, input);
+    }
+
+    function getComboValue(select, input) {
+      return select.value === CUSTOM_OPTION_VALUE ? input.value.trim() : select.value.trim();
+    }
+
+    function syncComboCustomInput(select, input) {
+      const isCustom = select.value === CUSTOM_OPTION_VALUE;
+      input.classList.toggle("hidden", !isCustom);
+      input.disabled = select.disabled || !isCustom;
+      if (!isCustom) input.value = "";
+    }
+
+    function setComboDisabled(select, input, disabled) {
+      select.disabled = disabled;
+      syncComboCustomInput(select, input);
     }
 
     function todayText() {
@@ -1650,6 +1712,18 @@
     el.listSearchInput.addEventListener("input", refreshListView);
     el.officeFilter.addEventListener("change", refreshListView);
     el.categoryFilter.addEventListener("change", refreshListView);
+    [
+      [el.batchCategorySelect, el.batchCategoryInput],
+      [el.resourceCategorySelect, el.resourceCategoryInput],
+      [el.resourceTypeSelect, el.resourceTypeInput],
+      [el.shortcutCategorySelect, el.shortcutCategoryInput],
+      [el.shortcutTagSelect, el.shortcutTagInput]
+    ].forEach(([select, input]) => {
+      select.addEventListener("change", () => {
+        syncComboCustomInput(select, input);
+        if (select.value === CUSTOM_OPTION_VALUE) input.focus();
+      });
+    });
     el.moveUpBtn.addEventListener("click", () => moveSelectedItem(-1));
     el.moveDownBtn.addEventListener("click", () => moveSelectedItem(1));
     el.selectVisibleBtn.addEventListener("click", selectVisibleItems);
