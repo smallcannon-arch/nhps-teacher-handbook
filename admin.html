@@ -990,7 +990,7 @@
           高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
         </div>
         <div class="actions">
-          <button id="saveResourceBtn" type="button" disabled>儲存並更新網站</button>
+          <button id="saveResourceBtn" type="button" disabled>儲存資料卡</button>
           <button id="duplicateResourceBtn" type="button" class="secondary" disabled>複製這筆</button>
           <button id="unpublishResourceBtn" type="button" class="secondary" disabled>暫時下架</button>
           <button id="archiveResourceBtn" type="button" class="warn" disabled>移到回收桶</button>
@@ -1895,6 +1895,7 @@
         actionButton: el.saveResourceBtn,
         loadingText: "儲存中，請稍候……",
         loadingButtonText: "儲存中……",
+        idleButtonText: "儲存資料卡",
         isSaveAction: true
       });
     }
@@ -2117,11 +2118,28 @@
     async function runCommand(cmd, payload, successText, options = {}) {
       const actionButton = options.actionButton || null;
       const originalButtonText = actionButton ? actionButton.textContent : "";
+      const idleButtonText = options.idleButtonText || originalButtonText;
       const isSaveAction = options.isSaveAction === true;
+      const slowAfterMs = Number(options.slowAfterMs || 20000);
+      let slowTimer = null;
       try {
         setEnabled(false);
-        if (actionButton) actionButton.textContent = options.loadingButtonText || "處理中……";
+        if (actionButton) {
+          actionButton.disabled = true;
+          actionButton.textContent = options.loadingButtonText || "處理中……";
+        }
         showMessage(options.loadingText || "處理中，請稍候……", false, true);
+        if (slowAfterMs > 0) {
+          slowTimer = window.setTimeout(() => {
+            showMessage(
+              options.slowMessage || (isSaveAction
+                ? "儲存時間較久，仍在等待伺服器回應，請勿重複點擊。"
+                : "處理時間較久，仍在等待伺服器回應，請勿重複點擊。"),
+              false,
+              true
+            );
+          }, slowAfterMs);
+        }
         const data = await api(cmd, payload);
         if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
         if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
@@ -2134,7 +2152,8 @@
       } catch (err) {
         showMessage(commandErrorText(err, isSaveAction), true);
       } finally {
-        if (actionButton) actionButton.textContent = originalButtonText;
+        if (slowTimer) window.clearTimeout(slowTimer);
+        if (actionButton) actionButton.textContent = idleButtonText;
         setEnabled(true);
       }
     }
