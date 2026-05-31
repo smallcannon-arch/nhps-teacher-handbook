@@ -783,6 +783,11 @@
         <select id="categoryFilter" aria-label="資料類別篩選">
           <option value="">全部類別</option>
         </select>
+        <select id="statusFilter" aria-label="上架狀態篩選">
+          <option value="">全部資料</option>
+          <option value="published">上架中</option>
+          <option value="unpublished">已下架</option>
+        </select>
       </div>
       <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
@@ -1103,6 +1108,7 @@
       listSearchInput: document.getElementById("listSearchInput"),
       officeFilter: document.getElementById("officeFilter"),
       categoryFilter: document.getElementById("categoryFilter"),
+      statusFilter: document.getElementById("statusFilter"),
       addItemBtn: document.getElementById("addItemBtn"),
       bulkTools: document.getElementById("bulkTools"),
       bulkToolsSummary: document.getElementById("bulkToolsSummary"),
@@ -1353,6 +1359,7 @@
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
       el.sortHint.classList.toggle("hidden", mode === "trash");
       el.categoryFilter.classList.remove("hidden");
+      el.statusFilter.classList.toggle("hidden", mode === "trash");
       el.categoryFilter.disabled = false;
       el.officeFilter.setAttribute("aria-label", "處室篩選");
       el.listTitle.textContent = mode === "trash" ? "回收桶清單" : "內容管理清單";
@@ -1483,9 +1490,11 @@
       const query = normalizeAdminText(el.listSearchInput.value);
       if (mode === "resources") {
         const category = el.categoryFilter.value;
+        const status = el.statusFilter.value;
         return resources
           .filter((item) => !office || adminOfficeMatches(item.office, office))
           .filter((item) => !category || (category === "__featured" ? item.featured === true : item.category === category))
+          .filter((item) => resourceStatusMatches(item, status))
           .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
           .slice()
           .sort(compareResourceListOrder);
@@ -1521,7 +1530,7 @@
       const visibleItems = isBulkMode ? getVisibleListItems() : [];
       const selectedCount = mode === "trash" ? selectedTrashIds.size : selectedResourceIds.size;
       el.bulkCountText.textContent = "已勾選 " + selectedCount + " 筆";
-      el.visibleCountText.textContent = "目前清單 " + visibleItems.length + " 筆";
+      el.visibleCountText.textContent = listCountText(visibleItems.length);
       el.batchDeleteBtn.textContent = mode === "trash" ? "還原已勾選" : "移到回收桶";
       if (el.bulkToolsSummary) el.bulkToolsSummary.textContent = mode === "trash" ? "回收桶批次整理" : "批次整理";
       if (el.bulkPanelSummary) el.bulkPanelSummary.textContent = "批次整理（已勾選 " + selectedResourceIds.size + " 筆）";
@@ -1541,6 +1550,19 @@
     function isListSelectionMode() {
       if (mode === "trash") return true;
       return mode === "resources" && el.bulkTools.open;
+    }
+
+    function resourceStatusMatches(item, status) {
+      if (status === "published") return item.visible !== false;
+      if (status === "unpublished") return item.visible === false;
+      return true;
+    }
+
+    function listCountText(count) {
+      if (mode !== "resources") return "目前清單 " + count + " 筆";
+      if (el.statusFilter.value === "published") return "上架中 " + count + " 筆";
+      if (el.statusFilter.value === "unpublished") return "已下架 " + count + " 筆";
+      return "目前清單 " + count + " 筆";
     }
 
     function pruneSelectedItems() {
@@ -2098,12 +2120,14 @@
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = !enabled || !idToken;
+      el.statusFilter.disabled = mode === "trash" || !enabled || !idToken;
       el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEdit || mode !== "resources");
       el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.batchVisibleInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
       el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEdit || mode !== "resources" || !activeResourceId;
+      el.unpublishResourceBtn.textContent = activeResource && activeResource.visible === false ? "目前已下架" : "暫時下架";
       el.unpublishResourceBtn.disabled = !enabled || !idToken || !canEdit || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
       el.saveShortcutBtn.disabled = true;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canArchive || !activeResourceId;
@@ -2251,6 +2275,7 @@
       refreshListView();
     });
     el.categoryFilter.addEventListener("change", refreshListView);
+    el.statusFilter.addEventListener("change", refreshListView);
     [
       [el.batchCategorySelect, el.batchCategoryInput],
       [el.resourceCategorySelect, el.resourceCategoryInput],
