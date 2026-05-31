@@ -382,41 +382,6 @@
       background: rgba(255, 253, 248, 0.96);
     }
 
-    .advanced-filter {
-      background: rgba(255, 253, 248, 0.9);
-    }
-
-    .advanced-filter summary {
-      color: var(--navy);
-      list-style-position: outside;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .advanced-filter .chip-list {
-      margin-top: 12px;
-    }
-
-    .advanced-filter-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .filter-group {
-      display: grid;
-      gap: 8px;
-      align-content: start;
-    }
-
-    .filter-subtitle {
-      margin: 0;
-      color: var(--navy);
-      font-size: 0.92rem;
-      line-height: 1.4;
-    }
-
     .filter-title {
       margin-bottom: 10px;
       color: var(--muted);
@@ -1018,8 +983,7 @@
         gap: 18px;
       }
 
-      .task-grid,
-      .advanced-filter-grid {
+      .task-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
@@ -1124,18 +1088,13 @@
         line-height: 1.45;
       }
 
-      .quick-band,
-      .advanced-filter {
+      .quick-band {
         padding-top: 12px;
         padding-bottom: 12px;
       }
 
       .quick-entry strong {
         font-size: 0.88rem;
-      }
-
-      .advanced-filter-grid {
-        grid-template-columns: 1fr;
       }
 
       .site-summary {
@@ -1257,21 +1216,6 @@
           <p id="padletEmpty" class="padlet-empty"></p>
           <p class="padlet-warning" hidden>已排除匯出資料中帶期限簽章的附件網址；年度文件只保留大標題與更新提示。連結權限沿用原檔設定，本頁不直接公開學生名單或附件內容。</p>
         </section>
-
-        <details class="workbench-section advanced-filter">
-          <summary>進階篩選</summary>
-          <p class="section-note">標籤與資料類型可用來補充縮小結果。</p>
-          <div class="advanced-filter-grid">
-            <div class="filter-group">
-              <h3 class="filter-subtitle">依標籤</h3>
-              <div id="tagFilters" class="chip-list"></div>
-            </div>
-            <div class="filter-group">
-              <h3 class="filter-subtitle">依資料類型</h3>
-              <div id="categoryFilters" class="chip-list"></div>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
 
@@ -2834,8 +2778,6 @@
       currentDescription: document.getElementById("currentDescription"),
       taskFilters: document.getElementById("taskFilters"),
       officeFilters: document.getElementById("officeFilters"),
-      tagFilters: document.getElementById("tagFilters"),
-      categoryFilters: document.getElementById("categoryFilters"),
       padletGrid: document.getElementById("padletGrid"),
       padletCount: document.getElementById("padletCount"),
       padletEmpty: document.getElementById("padletEmpty"),
@@ -3402,7 +3344,7 @@
         elements.cardGrid.hidden = true;
         elements.guideState.hidden = false;
         elements.emptyState.classList.remove("is-visible");
-        elements.resultCount.textContent = "請先使用搜尋、處室或資源分類。";
+        elements.resultCount.textContent = "請先使用搜尋、處室或需求入口。";
         return;
       }
 
@@ -3431,16 +3373,6 @@
       elements.padletCount.textContent = (isIdle ? "全部資料" : "符合條件") + " " + visible.length + " 筆";
     }
 
-    function getFilterCategories() {
-      return [...new Set(getDirectoryItems().map((item) => item.category).filter(Boolean))]
-        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
-    }
-
-    function getFilterTags() {
-      return [...new Set(getDirectoryItems().flatMap((item) => item.tags || []).filter(Boolean))]
-        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
-    }
-
     function updateCurrentContext() {
       const task = taskCategories.find((item) => item.id === state.task);
       if (task) {
@@ -3459,16 +3391,6 @@
       if (state.office !== "all") {
         elements.currentTitle.textContent = "目前結果：" + state.office;
         elements.currentDescription.textContent = "以下顯示此承辦處室相關資源。";
-        return;
-      }
-      if (state.tag) {
-        elements.currentTitle.textContent = "目前結果：標籤「" + state.tag + "」";
-        elements.currentDescription.textContent = "以下顯示帶有此標籤的資源。";
-        return;
-      }
-      if (state.padletCategory !== "none") {
-        elements.currentTitle.textContent = "目前結果：" + state.padletCategory;
-        elements.currentDescription.textContent = "以下顯示此分類相關資源。";
         return;
       }
       elements.currentTitle.textContent = "目前結果：全部資料";
@@ -3529,14 +3451,6 @@
       elements.officeFilters.replaceChildren(
         ...officeCategories.map((office) => createChip(office, office, "office"))
       );
-      elements.tagFilters.replaceChildren(
-        createChip("全部標籤", "", "tag"),
-        ...getFilterTags().map((tag) => createChip(tag, tag, "tag"))
-      );
-      elements.categoryFilters.replaceChildren(
-        createChip("全部分類", "none", "padlet"),
-        ...getFilterCategories().map((category) => createChip(category, category, "padlet"))
-      );
     }
 
     function updateFilterActiveState() {
@@ -3545,12 +3459,6 @@
       });
       document.querySelectorAll("[data-type='office']").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.value === state.office);
-      });
-      document.querySelectorAll("[data-type='tag']").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.value === state.tag);
-      });
-      document.querySelectorAll("[data-type='padlet']").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.value === state.padletCategory);
       });
     }
 
@@ -3675,7 +3583,7 @@
     }
 
     elements.searchInput.addEventListener("input", (event) => {
-      // 搜尋採「共同篩選」：保留已選情境或進階條件，在目前範圍內縮小結果，避免畫面狀態突然被清掉。
+      // 搜尋採「共同篩選」：保留已選情境或處室，在目前範圍內縮小結果，避免畫面狀態突然被清掉。
       state.query = event.target.value;
       state.activeShortcut = "";
       state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
