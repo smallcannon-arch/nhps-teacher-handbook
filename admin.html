@@ -910,7 +910,7 @@
       <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
       </div>
-      <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整顯示順序。</p>
+      <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整同群組內顯示順序。</p>
       <details id="bulkTools" class="sidebar-tools bulk-tools">
         <summary id="bulkToolsSummary">批次整理</summary>
         <div class="sidebar-tools-body">
@@ -1044,9 +1044,9 @@
 
         <section class="form-section" aria-labelledby="resourceManageHeading">
           <h3 id="resourceManageHeading">排序與管理</h3>
-          <p class="meta section-help">顯示順序數字越小越前面；回收桶操作會讓資料卡離開內容管理清單。</p>
+          <p class="meta section-help">數字越小越前面；排序只在相同承辦處室與資料類別內比較。回收桶操作會讓資料卡離開內容管理清單。</p>
           <div class="field">
-            <label for="resourceSortInput">顯示順序</label>
+            <label for="resourceSortInput">群組內顯示順序</label>
             <input id="resourceSortInput" type="number" min="1" step="1">
           </div>
         </section>
@@ -1126,7 +1126,7 @@
               <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
             </div>
             <div class="field">
-              <label for="shortcutSortInput">顯示順序</label>
+              <label for="shortcutSortInput">舊版入口順序</label>
               <input id="shortcutSortInput" type="number" min="1" step="1">
             </div>
           </div>
@@ -1179,9 +1179,16 @@
     const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
     const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
     const CUSTOM_OPTION_VALUE = "__custom__";
-    const OFFICES = ["常用入口", "校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
-    const RESOURCE_OFFICES = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
-    const LEGACY_RESOURCE_OFFICES = ["人事室", "會計室", "其他"];
+    const OFFICES = ["常用入口", "校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事室", "會計室", "全校共用"];
+    const RESOURCE_OFFICES = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事室", "會計室", "全校共用"];
+    const LEGACY_RESOURCE_OFFICES = ["人事", "會計", "其他"];
+    const OFFICE_ALIASES = {
+      "人事": "人事室",
+      "會計": "會計室",
+      "其他": "全校共用",
+      "共同": "全校共用",
+      "常用入口": "全校共用"
+    };
     const FRONTEND_NEED_ENTRIES = [
       { label: "請假／補休", hint: "差勤、課務安排", keywords: ["請假", "補休", "差勤", "調課", "代課"] },
       { label: "處理學生事件", hint: "受傷、通報、輔導", keywords: ["學生事件", "受傷", "校安", "通報", "霸凌", "性平", "輔導"] },
@@ -1358,7 +1365,7 @@
     }
 
     function renderOfficeFilter() {
-      const current = el.officeFilter.value;
+      const current = normalizeResourceOffice(el.officeFilter.value);
       const offices = getResourceOfficeOptions();
       const emptyLabel = "全部處室";
       el.officeFilter.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" + offices.map((office) => (
@@ -1368,8 +1375,8 @@
     }
 
     function renderOfficeSelects() {
-      const resourceOffice = el.resourceOfficeInput.value || "全校共用";
-      const batchOffice = el.batchOfficeInput.value;
+      const resourceOffice = normalizeResourceOffice(el.resourceOfficeInput.value || "全校共用");
+      const batchOffice = normalizeResourceOffice(el.batchOfficeInput.value);
       const shortcutParent = el.shortcutParentInput.value || "常用入口";
       const resourceOptions = getResourceOfficeOptions();
       const shortcutOptions = getShortcutOfficeOptions();
@@ -1388,12 +1395,7 @@
     }
 
     function getResourceOfficeOptions() {
-      return mergeOptions(
-        RESOURCE_OFFICES,
-        LEGACY_RESOURCE_OFFICES,
-        resources.map((item) => item.office),
-        trash.map((item) => item.office)
-      );
+      return RESOURCE_OFFICES.slice();
     }
 
     function getShortcutOfficeOptions() {
@@ -1508,20 +1510,20 @@
     }
 
     function getDisplayResourceCategory(item) {
-      const office = String(item.office || "全校共用").trim();
+      const office = normalizeResourceOffice(item.office || "全校共用");
       const category = String(item.category || "").trim();
-      return category && category !== office ? category : "";
+      return category && normalizeResourceOffice(category) !== office ? category : "";
     }
 
     function getOfficeCategoryText(item) {
-      const parts = [item.office || "全校共用"];
+      const parts = [normalizeResourceOffice(item.office || "全校共用")];
       const category = getDisplayResourceCategory(item);
       if (category) parts.push(category);
       return parts.join("｜");
     }
 
     function getResourceListMeta(item) {
-      const parts = [getOfficeCategoryText(item), "順序 " + (item.sort_order || "")];
+      const parts = [getOfficeCategoryText(item), "組內順序 " + (item.sort_order || "")];
       if (item.featured) parts.push("常用資料");
       return parts.filter(Boolean).join("｜");
     }
@@ -1540,7 +1542,7 @@
           const count = resources.filter((item) => item.visible !== false && adminOfficeMatches(item.office, office)).length;
           return renderStaticEntryCard({
             title: office,
-            lines: ["顯示順序 " + (index + 1), "目前 " + count + " 筆上架資料"],
+            lines: ["入口順序 " + (index + 1), "目前 " + count + " 筆上架資料"],
             badge: "固定入口"
           });
         }).join("");
@@ -1555,7 +1557,7 @@
             lines: [
               entry.hint,
               "推論關鍵字：" + entry.keywords.join("、"),
-              "顯示順序 " + (index + 1) + "｜目前 " + count + " 筆可能相關資料"
+              "入口順序 " + (index + 1) + "｜目前 " + count + " 筆可能相關資料"
             ],
             badge: "固定入口"
           });
@@ -1732,7 +1734,7 @@
     }
 
     function officeRank(value, list) {
-      const index = list.indexOf(value || "其他");
+      const index = list.indexOf(normalizeResourceOffice(value));
       return index >= 0 ? index : list.length;
     }
 
@@ -1748,6 +1750,7 @@
       return [
         item.title,
         item.office,
+        normalizeResourceOffice(item.office),
         item.category,
         item.type,
         item.status,
@@ -1779,14 +1782,15 @@
       return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
     }
 
+    function normalizeResourceOffice(value) {
+      const office = String(value || "").trim();
+      if (!office) return "";
+      return OFFICE_ALIASES[office] || office;
+    }
+
     function adminOfficeMatches(value, selectedOffice) {
       if (!selectedOffice) return true;
-      const office = String(value || "").trim();
-      if (office === selectedOffice) return true;
-      if (selectedOffice === "人事") return office === "人事室";
-      if (selectedOffice === "會計") return office === "會計室";
-      if (selectedOffice === "全校共用") return office === "其他" || office === "共同" || office === "常用入口";
-      return false;
+      return normalizeResourceOffice(value) === normalizeResourceOffice(selectedOffice);
     }
 
     function renderResourceEditor() {
@@ -1801,7 +1805,7 @@
       el.resourceIdInput.value = item.id || "";
       el.resourceTitleInput.value = item.title || "";
       el.resourceUpdatedInput.value = normalizeDate(item.updated);
-      el.resourceOfficeInput.value = item.office || "全校共用";
+      el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
       setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "");
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
       el.resourceSortInput.value = item.sort_order || "";
@@ -1910,8 +1914,8 @@
       return {
         id: resourceId,
         title: el.resourceTitleInput.value.trim(),
-        office: el.resourceOfficeInput.value,
-        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || el.resourceOfficeInput.value,
+        office: normalizeResourceOffice(el.resourceOfficeInput.value),
+        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || normalizeResourceOffice(el.resourceOfficeInput.value),
         type: getComboValue(el.resourceTypeSelect, el.resourceTypeInput),
         status: existing ? existing.status || "" : "",
         note: el.resourceNoteInput.value.trim(),
@@ -1988,7 +1992,7 @@
         resource: {
           id: item.id,
           title: item.title || "",
-          office: item.office || "全校共用",
+          office: normalizeResourceOffice(item.office || "全校共用"),
           category: item.category || "一般資料",
           type: item.type || "連結",
           status: item.status || "",
@@ -2019,7 +2023,7 @@
       el.resourceIdInput.value = "";
       el.resourceTitleInput.value = (item.title || "未命名資料卡") + "（副本）";
       el.resourceUpdatedInput.value = todayText();
-      el.resourceOfficeInput.value = item.office || "全校共用";
+      el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
       setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "一般資料");
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "連結");
       el.resourceSortInput.value = String(resources.length + 1);
@@ -2165,7 +2169,7 @@
       const sourceGroup = getListGroupName(source);
       const targetGroup = getListGroupName(target);
       if (sourceGroup !== targetGroup) {
-        showMessage("拖曳排序只能在同一個處室與資料類別內調整。", true);
+        showMessage("拖曳排序只能在同一個承辦處室與資料類別群組內調整。", true);
         return;
       }
 
@@ -2186,7 +2190,7 @@
       await runCommand("reorderDirectoryItems", {
         kind,
         items: reordered.map((item, index) => ({ id: item.id, sort_order: sortOrders[index] }))
-      }, "已用拖曳調整顯示順序。");
+      }, "已用拖曳調整群組內顯示順序。");
     }
 
     async function runCommand(cmd, payload, successText, options = {}) {
@@ -2238,6 +2242,7 @@
         const resource = { ...(payload.resource || {}) };
         resource.id = data.resource_id || resource.id || activeResourceId;
         if (!resource.id) return;
+        resource.office = normalizeResourceOffice(resource.office || "全校共用");
         resource.links = Array.isArray(resource.links) ? resource.links : [];
         resource.tags = Array.isArray(resource.tags) ? resource.tags : [];
         resource.visible = resource.visible !== false;
