@@ -1854,7 +1854,12 @@
     async function saveResource() {
       const resource = collectResource();
       if (!validateResourceBeforeSave(resource)) return;
-      await runCommand("saveDirectoryResource", { resource }, "已儲存資料卡並更新網站。");
+      await runCommand("saveDirectoryResource", { resource }, saveSuccessText, {
+        actionButton: el.saveResourceBtn,
+        loadingText: "儲存中，請稍候……",
+        loadingButtonText: "儲存中……",
+        isSaveAction: true
+      });
     }
 
     async function unpublishResource() {
@@ -1883,7 +1888,12 @@
           featured: item.featured === true,
           sort_order: Number(item.sort_order || resources.length + 1)
         }
-      }, "已暫時下架，資料卡仍保留在內容管理清單。");
+      }, "已暫時下架，前台將不再顯示此資料。若前台仍顯示舊資料，請稍候 30 秒後重新整理，或按 Ctrl + F5 強制重新整理。", {
+        actionButton: el.unpublishResourceBtn,
+        loadingText: "暫時下架中，請稍候……",
+        loadingButtonText: "下架中……",
+        isSaveAction: true
+      });
     }
 
     function duplicateResource() {
@@ -1906,7 +1916,7 @@
       el.resourceVisibleInput.checked = false;
       el.resourceFeaturedInput.checked = false;
       renderLinkRows((item.links || []).map((link) => ({ label: link.label || "", url: link.url || "" })));
-      showMessage("已建立尚未儲存的副本；請確認標題、上架狀態與連結後再儲存。", false);
+      showMessage("已建立副本，請確認內容後再儲存。這是尚未儲存的副本，不會影響原資料。", false);
       renderList();
       setEnabled(true);
     }
@@ -1915,19 +1925,32 @@
       if (!activeResourceId) return;
       const ok = window.confirm("確定要將這筆資料卡移到回收桶？建議先使用「暫時下架」；移到回收桶後，網站與內容管理清單將不再顯示，可從回收桶還原。");
       if (!ok) return;
-      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已移到回收桶。");
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已移到回收桶。", {
+        actionButton: el.archiveResourceBtn,
+        loadingText: "移到回收桶中，請稍候……",
+        loadingButtonText: "移動中……"
+      });
       activeResourceId = "";
     }
 
     async function saveShortcut() {
-      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, "已儲存舊版入口按鈕。");
+      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, () => "已儲存於 " + currentTimeText() + "。舊版入口按鈕已更新。", {
+        actionButton: el.saveShortcutBtn,
+        loadingText: "儲存中，請稍候……",
+        loadingButtonText: "儲存中……",
+        isSaveAction: true
+      });
     }
 
     async function deleteShortcut() {
       if (!activeShortcutId) return;
       const ok = window.confirm("確定要停用這個舊版入口按鈕？");
       if (!ok) return;
-      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用舊版入口按鈕。");
+      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用舊版入口按鈕。", {
+        actionButton: el.deleteShortcutBtn,
+        loadingText: "停用中，請稍候……",
+        loadingButtonText: "停用中……"
+      });
       activeShortcutId = "";
     }
 
@@ -2085,10 +2108,14 @@
       }, "已調整顯示順序並更新網站。");
     }
 
-    async function runCommand(cmd, payload, successText) {
+    async function runCommand(cmd, payload, successText, options = {}) {
+      const actionButton = options.actionButton || null;
+      const originalButtonText = actionButton ? actionButton.textContent : "";
+      const isSaveAction = options.isSaveAction === true;
       try {
         setEnabled(false);
-        showMessage("正在儲存，請稍候...", false, true);
+        if (actionButton) actionButton.textContent = options.loadingButtonText || "處理中……";
+        showMessage(options.loadingText || "處理中，請稍候……", false, true);
         const data = await api(cmd, payload);
         if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
         if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
@@ -2097,12 +2124,37 @@
         if (cmd === "restoreDirectoryResources") activeTrashId = "";
         if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
         await loadDirectoryData();
-        showMessage(successText, false);
+        showMessage(resolveSuccessText(successText), false);
       } catch (err) {
-        showMessage(err.message, true);
+        showMessage(commandErrorText(err, isSaveAction), true);
       } finally {
+        if (actionButton) actionButton.textContent = originalButtonText;
         setEnabled(true);
       }
+    }
+
+    function resolveSuccessText(successText) {
+      return typeof successText === "function" ? successText() : successText;
+    }
+
+    function saveSuccessText() {
+      return "已儲存於 " + currentTimeText() + "。若前台尚未更新，請稍候 30 秒後重新整理；若前台仍顯示舊資料，可按 Ctrl + F5 強制重新整理。";
+    }
+
+    function currentTimeText() {
+      return new Date().toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+    }
+
+    function commandErrorText(err, isSaveAction) {
+      const message = err && err.message ? err.message : "";
+      if (isSaveAction) {
+        return message ? "儲存失敗：" + message : "儲存失敗，請檢查網路或重新登入後再試。";
+      }
+      return message || "操作失敗，請檢查網路或重新登入後再試。";
     }
 
     function getMoveTargetId() {
