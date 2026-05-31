@@ -172,6 +172,13 @@
       width: 100%;
     }
 
+    .sidebar-sort-hint {
+      margin: -2px 0 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
     .sidebar-tools {
       margin: 5px 0;
       border: 1px solid #d8e4e7;
@@ -192,19 +199,6 @@
       display: grid;
       gap: 6px;
       padding: 0 8px 8px;
-    }
-
-    .list-command-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .list-command-row button {
-      width: 100%;
-      min-height: 38px;
-      padding: 7px 8px;
-      white-space: nowrap;
     }
 
     button {
@@ -711,9 +705,6 @@
         grid-template-columns: 1fr;
       }
 
-      .list-command-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     }
 
     @media (min-width: 901px) {
@@ -814,15 +805,7 @@
       <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
       </div>
-      <details id="manageTools" class="sidebar-tools">
-        <summary>管理工具</summary>
-        <div class="sidebar-tools-body">
-          <div class="list-command-row" aria-label="資料卡排序操作">
-            <button id="moveUpBtn" type="button" class="secondary" disabled>資料上移</button>
-            <button id="moveDownBtn" type="button" class="secondary" disabled>資料下移</button>
-          </div>
-        </div>
-      </details>
+      <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整顯示順序。</p>
       <details id="bulkTools" class="sidebar-tools bulk-tools">
         <summary id="bulkToolsSummary">批次整理</summary>
         <div class="sidebar-tools-body">
@@ -1139,9 +1122,6 @@
       officeFilter: document.getElementById("officeFilter"),
       categoryFilter: document.getElementById("categoryFilter"),
       addItemBtn: document.getElementById("addItemBtn"),
-      moveUpBtn: document.getElementById("moveUpBtn"),
-      moveDownBtn: document.getElementById("moveDownBtn"),
-      manageTools: document.getElementById("manageTools"),
       bulkTools: document.getElementById("bulkTools"),
       bulkToolsSummary: document.getElementById("bulkToolsSummary"),
       bulkCountText: document.getElementById("bulkCountText"),
@@ -1167,6 +1147,7 @@
       trashPreview: document.getElementById("trashPreview"),
       restoreTrashBtn: document.getElementById("restoreTrashBtn"),
       shortcutForm: document.getElementById("shortcutForm"),
+      sortHint: document.getElementById("sortHint"),
       officeEntryOverview: document.getElementById("officeEntryOverview"),
       needEntryOverview: document.getElementById("needEntryOverview"),
       legacyShortcutPanel: document.getElementById("legacyShortcutPanel"),
@@ -1383,9 +1364,9 @@
       el.resourceForm.classList.toggle("hidden", mode !== "resources");
       el.shortcutForm.classList.toggle("hidden", mode !== "shortcuts");
       el.trashForm.classList.toggle("hidden", mode !== "trash");
-      el.manageTools.classList.toggle("hidden", mode === "trash");
       el.bulkTools.classList.toggle("hidden", mode === "shortcuts");
       el.bulkPanel.classList.toggle("hidden", mode !== "resources");
+      el.sortHint.classList.toggle("hidden", mode === "trash");
       el.categoryFilter.classList.toggle("hidden", mode === "shortcuts");
       el.categoryFilter.disabled = mode === "shortcuts";
       el.officeFilter.setAttribute("aria-label", mode === "shortcuts" ? "舊版分組篩選" : "處室篩選");
@@ -2077,37 +2058,6 @@
       }, "已用拖曳調整顯示順序。");
     }
 
-    async function moveSelectedItem(direction) {
-      if (mode === "trash") return;
-      const items = getVisibleListItems();
-      const moveTargetId = getMoveTargetId();
-      if (!moveTargetId) {
-        if (mode === "resources" && selectedResourceIds.size > 1) {
-          showMessage("資料上移／下移一次只能調整 1 筆，請先保留單一勾選。", true);
-        }
-        return;
-      }
-      const currentIndex = items.findIndex((item) => item.id === moveTargetId);
-      const nextIndex = currentIndex + direction;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= items.length) return;
-
-      const current = items[currentIndex];
-      const target = items[nextIndex];
-      const currentOrder = Number(current.sort_order || currentIndex + 1);
-      const targetOrder = Number(target.sort_order || nextIndex + 1);
-      const kind = mode === "resources" ? "resource" : "shortcut";
-      if (mode === "resources") activeResourceId = current.id;
-      if (mode === "shortcuts") activeShortcutId = current.id;
-
-      await runCommand("reorderDirectoryItems", {
-        kind,
-        items: [
-          { id: current.id, sort_order: targetOrder },
-          { id: target.id, sort_order: currentOrder }
-        ]
-      }, "已調整顯示順序並更新網站。");
-    }
-
     async function runCommand(cmd, payload, successText, options = {}) {
       const actionButton = options.actionButton || null;
       const originalButtonText = actionButton ? actionButton.textContent : "";
@@ -2157,16 +2107,6 @@
       return message || "操作失敗，請檢查網路或重新登入後再試。";
     }
 
-    function getMoveTargetId() {
-      if (mode === "resources") {
-        if (selectedResourceIds.size === 1) return [...selectedResourceIds][0];
-        if (selectedResourceIds.size > 1) return "";
-        return activeResourceId;
-      }
-      if (mode === "shortcuts") return activeShortcutId;
-      return "";
-    }
-
     function setMode(nextMode) {
       mode = nextMode;
       renderOfficeFilter();
@@ -2184,14 +2124,8 @@
       const role = currentUser && currentUser.role;
       const canEdit = ["admin", "editor", "reviewer"].includes(role);
       const canArchive = ["admin", "reviewer"].includes(role);
-      const items = getVisibleListItems();
       const activeResource = resources.find((item) => item.id === activeResourceId);
-      const moveTargetId = getMoveTargetId();
-      const moveIndex = items.findIndex((item) => item.id === moveTargetId);
-      const hasMultipleMoveTargets = mode === "resources" && selectedResourceIds.size > 1;
       el.addItemBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash";
-      el.moveUpBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || hasMultipleMoveTargets || moveIndex <= 0;
-      el.moveDownBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash" || hasMultipleMoveTargets || moveIndex < 0 || moveIndex >= items.length - 1;
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = mode === "shortcuts" || !enabled || !idToken;
@@ -2361,8 +2295,6 @@
         if (select.value === CUSTOM_OPTION_VALUE) input.focus();
       });
     });
-    el.moveUpBtn.addEventListener("click", () => moveSelectedItem(-1));
-    el.moveDownBtn.addEventListener("click", () => moveSelectedItem(1));
     el.selectVisibleBtn.addEventListener("click", selectVisibleItems);
     el.clearSelectionBtn.addEventListener("click", clearSelectedItems);
     el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
