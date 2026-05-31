@@ -242,23 +242,21 @@
     .quick-entry {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      min-height: 40px;
-      padding: 8px 12px;
+      min-height: 32px;
+      padding: 4px 10px;
+      border-radius: 999px;
       text-align: left;
-      box-shadow: 0 8px 20px rgba(32, 48, 68, 0.05);
+      box-shadow: none;
     }
 
     .quick-entry strong {
       color: var(--navy);
-      font-size: 0.94rem;
+      font-size: 0.84rem;
       line-height: 1.35;
     }
 
     .quick-entry span {
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.4;
+      display: none;
     }
 
     .quick-entry.is-active {
@@ -288,9 +286,18 @@
       border-bottom: 1px solid #d7e4ef;
     }
 
-    .today-band {
+    .quick-band {
       border-bottom: 1px solid #e3ebe5;
       background: rgba(255, 253, 248, 0.96);
+    }
+
+    .quick-band h2 {
+      font-size: 1.05rem;
+    }
+
+    .quick-band .section-note {
+      margin-bottom: 0;
+      font-size: 0.88rem;
     }
 
     .shortcut-band {
@@ -310,6 +317,26 @@
 
     .advanced-filter .chip-list {
       margin-top: 12px;
+    }
+
+    .advanced-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .filter-group {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .filter-subtitle {
+      margin: 0;
+      color: var(--navy);
+      font-size: 0.92rem;
+      line-height: 1.4;
     }
 
     .filter-title {
@@ -950,23 +977,18 @@
         font-size: 0.76rem;
       }
 
-      .today-band,
+      .quick-band,
       .advanced-filter {
         padding-top: 12px;
         padding-bottom: 12px;
-      }
-
-      .quick-entry {
-        min-height: 36px;
-        padding: 7px 10px;
       }
 
       .quick-entry strong {
         font-size: 0.88rem;
       }
 
-      .quick-entry span {
-        display: none;
+      .advanced-filter-grid {
+        grid-template-columns: 1fr;
       }
 
       .site-summary {
@@ -1049,26 +1071,39 @@
         <section class="entry-card" aria-label="首頁入口">
           <div class="filter-layout">
             <div class="filter-band task-band">
-              <h2>先選情境</h2>
+              <h2>我想要……</h2>
               <p class="section-note">從老師常遇到的任務進入，再看要開哪個表單或連結。</p>
               <div id="taskFilters" class="chip-list task-grid"></div>
             </div>
-            <div class="filter-band today-band">
-              <h2>今日常用</h2>
-              <p class="section-note">常開的系統與連結放這裡，不再混在處室分類中。</p>
+            <div class="filter-band quick-band">
+              <h2>快速開啟</h2>
+              <p class="section-note">常用系統與高頻連結，作為捷徑使用。</p>
               <div id="quickEntries" class="quick-grid"></div>
               <p id="shortcutEmpty" class="section-note"></p>
             </div>
             <details class="filter-band advanced-filter">
-              <summary>依處室篩選</summary>
-              <div id="officeFilters" class="chip-list"></div>
+              <summary>進階篩選</summary>
+              <div class="advanced-filter-grid">
+                <div class="filter-group">
+                  <h3 class="filter-subtitle">依處室</h3>
+                  <div id="officeFilters" class="chip-list"></div>
+                </div>
+                <div class="filter-group">
+                  <h3 class="filter-subtitle">依標籤</h3>
+                  <div id="tagFilters" class="chip-list"></div>
+                </div>
+                <div class="filter-group">
+                  <h3 class="filter-subtitle">依分類</h3>
+                  <div id="categoryFilters" class="chip-list"></div>
+                </div>
+              </div>
             </details>
           </div>
         </section>
       </div>
     </section>
 
-    <section id="resourceResults" class="section resource-results" aria-label="連結清單">
+    <section id="resourceResults" class="section resource-results" aria-label="搜尋與篩選結果">
       <p id="padletCount" class="result-count"></p>
       <div id="padletGrid" class="padlet-grid"></div>
       <p id="padletEmpty" class="padlet-empty"></p>
@@ -2601,6 +2636,8 @@
       quickEntries: document.getElementById("quickEntries"),
       shortcutEmpty: document.getElementById("shortcutEmpty"),
       officeFilters: document.getElementById("officeFilters"),
+      tagFilters: document.getElementById("tagFilters"),
+      categoryFilters: document.getElementById("categoryFilters"),
       padletGrid: document.getElementById("padletGrid"),
       padletCount: document.getElementById("padletCount"),
       padletEmpty: document.getElementById("padletEmpty"),
@@ -3085,10 +3122,20 @@
       elements.padletGrid.replaceChildren(...visible.map(createCommonResourceCard));
       elements.padletEmpty.hidden = visible.length > 0;
       if (visible.length === 0) {
-        elements.padletEmpty.textContent = isIdle ? "目前尚未設定常用入口資源。" : "目前沒有符合條件的連結。";
+        elements.padletEmpty.textContent = isIdle ? "目前尚未設定快速開啟項目。" : "目前沒有符合條件的連結。";
       }
 
-      elements.padletCount.textContent = (isIdle ? "今日常用" : "搜尋結果") + " " + visible.length + " 筆";
+      elements.padletCount.textContent = (isIdle ? "快速開啟項目" : "搜尋／篩選結果") + " " + visible.length + " 筆";
+    }
+
+    function getFilterCategories() {
+      return [...new Set(getDirectoryItems().map((item) => item.category).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
+    }
+
+    function getFilterTags() {
+      return [...new Set(getDirectoryItems().flatMap((item) => item.tags || []).filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
     }
 
     function createChip(label, value, type, hint = "") {
@@ -3112,18 +3159,21 @@
           state.task = value;
           state.office = "all";
           state.padletCategory = "none";
+          state.tag = "";
           state.activeShortcut = "";
         }
         if (type === "office") {
           state.office = value;
-          state.padletCategory = "none";
-          state.query = "";
-          state.task = "all";
           state.activeShortcut = "";
-          elements.searchInput.value = "";
         }
-        if (type === "padlet") state.padletCategory = value;
-        state.tag = "";
+        if (type === "padlet") {
+          state.padletCategory = value;
+          state.activeShortcut = "";
+        }
+        if (type === "tag") {
+          state.tag = value;
+          state.activeShortcut = "";
+        }
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         renderAll();
       });
@@ -3137,6 +3187,14 @@
       elements.officeFilters.replaceChildren(
         ...officeCategories.map((office) => createChip(office === "all" ? "全部處室" : office, office, "office"))
       );
+      elements.tagFilters.replaceChildren(
+        createChip("全部標籤", "", "tag"),
+        ...getFilterTags().map((tag) => createChip(tag, tag, "tag"))
+      );
+      elements.categoryFilters.replaceChildren(
+        createChip("全部分類", "none", "padlet"),
+        ...getFilterCategories().map((category) => createChip(category, category, "padlet"))
+      );
     }
 
     function updateFilterActiveState() {
@@ -3145,6 +3203,12 @@
       });
       document.querySelectorAll("[data-type='office']").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.value === state.office);
+      });
+      document.querySelectorAll("[data-type='tag']").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.value === state.tag);
+      });
+      document.querySelectorAll("[data-type='padlet']").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.value === state.padletCategory);
       });
     }
 
@@ -3160,16 +3224,15 @@
     function renderQuickEntries() {
       const shortcuts = officeShortcuts[defaultOfficeTab] || [];
       elements.shortcutEmpty.hidden = shortcuts.length > 0;
-      elements.shortcutEmpty.textContent = shortcuts.length ? "" : "目前尚未設定今日常用。";
+      elements.shortcutEmpty.textContent = shortcuts.length ? "" : "目前尚未設定快速開啟。";
       elements.quickEntries.replaceChildren(...shortcuts.map((entry) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "quick-entry";
+        button.title = entry.hint || entry.label || "快速開啟";
         const label = document.createElement("strong");
         label.textContent = entry.label;
-        const hint = document.createElement("span");
-        hint.textContent = entry.hint;
-        button.append(label, hint);
+        button.append(label);
         button.classList.toggle("is-active", shortcutKey(entry) === state.activeShortcut);
         button.addEventListener("click", () => {
           state.query = entry.query || "";
@@ -3282,6 +3345,7 @@
         const dynamicShortcuts = normalizeShortcutsFromApi(data.shortcuts);
         if (dynamicShortcuts) officeShortcuts = dynamicShortcuts;
         padletCategories = getPadletCategories();
+        renderFilters();
         renderRecentUpdates();
         renderAll();
         return true;
