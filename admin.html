@@ -941,7 +941,7 @@
 
         <details id="bulkPanel" class="bulk-panel">
           <summary id="bulkPanelSummary">批次整理（已勾選 0 筆）</summary>
-          <p class="meta">先在左側勾選多筆資料卡，再一次調整處室、資料類別、常用資料標記或上架狀態。空白欄位會保持原狀。</p>
+          <p class="meta">先在左側勾選多筆資料卡，再一次調整處室、資料類別或上架狀態。空白欄位會保持原狀。</p>
           <div class="grid-2">
             <div class="field">
               <label for="batchOfficeInput">批次改處室</label>
@@ -956,7 +956,7 @@
             </div>
           </div>
           <div class="grid-2">
-            <div class="field">
+            <div class="field hidden" hidden aria-hidden="true">
               <label for="batchFeaturedInput">常用資料</label>
               <select id="batchFeaturedInput">
                 <option value="">不變更</option>
@@ -1020,7 +1020,7 @@
 
         <section class="form-section" aria-labelledby="resourceDisplayHeading">
           <h3 id="resourceDisplayHeading">前台顯示</h3>
-          <p class="meta section-help">這裡控制資料卡在前台是否上架、是否標記為常用資料，以及卡片上的補充文字。</p>
+          <p class="meta section-help">這裡控制資料卡在前台是否上架，以及卡片上的補充文字。</p>
           <div class="field">
             <label for="resourceNoteInput">補充說明／注意事項</label>
             <textarea id="resourceNoteInput" placeholder="簡短說明，避免放學生個資或未公告資訊。"></textarea>
@@ -1031,7 +1031,7 @@
           </div>
           <div class="checkbox-row">
             <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 上架顯示</label>
-            <label class="checkbox-row"><input id="resourceFeaturedInput" type="checkbox"> 標記為常用資料</label>
+            <label class="checkbox-row hidden" hidden aria-hidden="true"><input id="resourceFeaturedInput" type="checkbox"> 標記為常用資料</label>
           </div>
         </section>
 
@@ -1931,9 +1931,6 @@
       const invalidLinks = resource.links.filter((link) => !/^(https?:\/\/|#)/i.test(link.url));
       if (invalidLinks.length) {
         warnings.push("有連結網址不是 http、https 或 # 開頭：" + invalidLinks.map((link) => link.label || link.url).join("、"));
-      }
-      if (resource.featured === true && resource.links.length === 0) {
-        warnings.push("這筆已標記為常用資料，但目前沒有任何連結。");
       }
       if ((resource.tags || []).some((tag) => tag.includes("高風險"))) {
         warnings.push("請勿放入學生個資、個案細節、通報細節或未公告資訊。");
