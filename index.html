@@ -1398,6 +1398,7 @@
       "總務主任", "事務組", "出納組", "文書組",
       "輔導主任", "輔導組", "親職組", "專輔教師"
     ]);
+    const commonContentPinnedTag = "常用置頂";
     const commonContentTags = new Set(["常用內容", "常用系統", "常用表件", "常用流程", "常用校務資料"]);
     const commonContentLimit = 10;
 
@@ -3492,7 +3493,15 @@
 
     function isCommonContentResource(resource) {
       if (resource.visible === false || resource.archived === true || resource.trash === true) return false;
-      return (Array.isArray(resource.tags) ? resource.tags : []).some((tag) => commonContentTags.has(String(tag || "").trim()));
+      const tags = Array.isArray(resource.tags) ? resource.tags : [];
+      return tags.some((tag) => {
+        const text = String(tag || "").trim();
+        return commonContentTags.has(text) || text === commonContentPinnedTag;
+      });
+    }
+
+    function isPinnedCommonContentResource(resource) {
+      return (Array.isArray(resource.tags) ? resource.tags : []).some((tag) => String(tag || "").trim() === commonContentPinnedTag);
     }
 
     function getCommonContentItems() {
@@ -3500,6 +3509,9 @@
         .map((item, index) => ({ item, index }))
         .filter(({ item }) => isCommonContentResource(item))
         .sort((a, b) => {
+          const aPinned = isPinnedCommonContentResource(a.item);
+          const bPinned = isPinnedCommonContentResource(b.item);
+          if (aPinned !== bPinned) return aPinned ? -1 : 1;
           const aOrder = Number(a.item.sort_order || 0);
           const bOrder = Number(b.item.sort_order || 0);
           if (aOrder || bOrder) {

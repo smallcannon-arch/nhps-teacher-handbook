@@ -1016,6 +1016,10 @@
             <p id="staffUnitHelp" class="staff-unit-help">組別會存入既有標籤欄位，不新增資料欄位。</p>
             <div id="staffUnitOptions" class="staff-unit-options" aria-label="組別"></div>
           </div>
+          <div class="field">
+            <label class="checkbox-row"><input id="resourceCommonPinnedInput" type="checkbox"> 置頂於常用內容</label>
+            <p class="meta">勾選後會加入「常用內容」與「常用置頂」標籤；取消只移除「常用置頂」。</p>
+          </div>
         </section>
 
         <section class="form-section" aria-labelledby="resourceDisplayHeading">
@@ -1214,6 +1218,8 @@
       "常用", "重要", "高風險", "表件", "流程", "新進教師必讀", "教務處", "學務處", "總務處",
       "輔導室", "人事室", "會計室", "資訊設備", "硬體設備", "場地借用", "平板借用", "校安", "性平", "霸凌"
     ];
+    const COMMON_CONTENT_TAG = "常用內容";
+    const COMMON_CONTENT_PIN_TAG = "常用置頂";
     const STAFF_UNITS_BY_OFFICE = {
       "教務處": ["教務主任", "教學組", "課研組", "資訊組", "特教組"],
       "學務處": ["學務主任", "生教組", "體育組", "環教組", "護理師"],
@@ -1295,6 +1301,7 @@
       resourceSortInput: document.getElementById("resourceSortInput"),
       resourceNoteInput: document.getElementById("resourceNoteInput"),
       resourceTagsInput: document.getElementById("resourceTagsInput"),
+      resourceCommonPinnedInput: document.getElementById("resourceCommonPinnedInput"),
       resourceVisibleInput: document.getElementById("resourceVisibleInput"),
       resourceFeaturedInput: document.getElementById("resourceFeaturedInput"),
       resourceLinksBox: document.getElementById("resourceLinksBox"),
@@ -1812,6 +1819,7 @@
       el.resourceSortInput.value = item.sort_order || "";
       el.resourceNoteInput.value = item.note || "";
       el.resourceTagsInput.value = (item.tags || []).join(", ");
+      syncCommonPinnedCheckboxFromTags();
       el.resourceVisibleInput.checked = item.visible !== false;
       el.resourceFeaturedInput.checked = item.featured === true;
       renderStaffUnitPicker();
@@ -1831,6 +1839,7 @@
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
       el.resourceTagsInput.value = "常用";
+      syncCommonPinnedCheckboxFromTags();
       el.resourceVisibleInput.checked = true;
       el.resourceFeaturedInput.checked = false;
       renderStaffUnitPicker();
@@ -2030,6 +2039,7 @@
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = item.note || "";
       el.resourceTagsInput.value = (item.tags || []).join(", ");
+      syncCommonPinnedCheckboxFromTags();
       el.resourceVisibleInput.checked = false;
       el.resourceFeaturedInput.checked = false;
       renderStaffUnitPicker();
@@ -2476,11 +2486,26 @@
     function collectResourceTags() {
       const visibleUnits = new Set(getVisibleStaffUnits());
       const tagsWithoutVisibleUnits = splitTags(el.resourceTagsInput.value).filter((tag) => !visibleUnits.has(tag));
-      return mergeTagList(tagsWithoutVisibleUnits, getCheckedStaffUnits());
+      return applyCommonContentPinTags(mergeTagList(tagsWithoutVisibleUnits, getCheckedStaffUnits()));
     }
 
     function syncStaffUnitSelectionToTags() {
       el.resourceTagsInput.value = collectResourceTags().join(", ");
+      renderStaffUnitPicker();
+    }
+
+    function applyCommonContentPinTags(tags) {
+      const withoutPin = tags.filter((tag) => tag !== COMMON_CONTENT_PIN_TAG);
+      if (!el.resourceCommonPinnedInput.checked) return withoutPin;
+      return mergeTagList(withoutPin, [COMMON_CONTENT_TAG, COMMON_CONTENT_PIN_TAG]);
+    }
+
+    function syncCommonPinnedCheckboxFromTags() {
+      el.resourceCommonPinnedInput.checked = splitTags(el.resourceTagsInput.value).includes(COMMON_CONTENT_PIN_TAG);
+    }
+
+    function syncCommonPinnedSelectionToTags() {
+      el.resourceTagsInput.value = applyCommonContentPinTags(splitTags(el.resourceTagsInput.value)).join(", ");
       renderStaffUnitPicker();
     }
 
@@ -2608,7 +2633,11 @@
     el.categoryFilter.addEventListener("change", refreshListView);
     el.statusFilter.addEventListener("change", refreshListView);
     el.resourceOfficeInput.addEventListener("change", renderStaffUnitPicker);
-    el.resourceTagsInput.addEventListener("change", renderStaffUnitPicker);
+    el.resourceTagsInput.addEventListener("change", () => {
+      renderStaffUnitPicker();
+      syncCommonPinnedCheckboxFromTags();
+    });
+    el.resourceCommonPinnedInput.addEventListener("change", syncCommonPinnedSelectionToTags);
     el.staffUnitOptions.addEventListener("change", (event) => {
       if (event.target.matches("[data-staff-unit]")) syncStaffUnitSelectionToTags();
     });
