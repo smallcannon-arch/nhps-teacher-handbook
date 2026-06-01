@@ -4,6 +4,19 @@ const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "he
 const LINE_REPLY_API_URL = "https://api.line.me/v2/bot/message/reply";
 const HANDBOOK_HOME_URL = "https://smallcannon-arch.github.io/nhps-teacher-handbook/";
 const LINE_QUICK_REPLY_LABELS = ["總務", "教務", "學務", "輔導", "人事", "會計", "系統入口", "線上填報", "表件", "流程", "校內規範"];
+const LINE_QUERY_ALIASES = {
+  "請假": ["差勤", "補休", "假單"],
+  "補休": ["請假", "差勤"],
+  "報修": ["設備", "維修", "修繕", "故障"],
+  "冷氣": ["報修", "異常", "設備"],
+  "霸凌": ["疑似霸凌", "學生事件", "校安", "通報"],
+  "性平": ["疑似性平", "性別平等", "學生事件", "校安", "通報"],
+  "表件": ["表單", "申請"],
+  "表單": ["表件", "申請"],
+  "線上填報": ["Google 表單", "表單", "填報"],
+  "系統入口": ["系統", "入口", "登入"],
+  "採購": ["請購", "核銷"]
+};
 const LINE_SEARCH_RESULT_LIMIT = 5;
 const LINE_SEARCH_TEXT_LIMIT = 4800;
 const LINE_BOT_INDEX_KEY = "teacher-handbook:bot-search-index";
@@ -428,14 +441,12 @@ function getLineQueryTerms(query) {
   if (!normalized) return [];
 
   const terms = new Set([normalized, ...normalized.split(" ").filter(Boolean)]);
-  const aliases = {
-    "表件": ["表單", "申請", "表單 申請"],
-    "表單": ["表單", "申請", "表單 申請"]
-  };
-
-  for (const [term, values] of Object.entries(aliases)) {
-    if (terms.has(term)) {
-      values.forEach((value) => terms.add(normalizeLineSearchText(value)));
+  for (const [term, values] of Object.entries(LINE_QUERY_ALIASES)) {
+    const normalizedTerm = normalizeLineSearchText(term);
+    const normalizedValues = values.map((value) => normalizeLineSearchText(value)).filter(Boolean);
+    if (terms.has(normalizedTerm) || normalizedValues.some((value) => terms.has(value))) {
+      terms.add(normalizedTerm);
+      normalizedValues.forEach((value) => terms.add(value));
     }
   }
 
@@ -556,6 +567,14 @@ function createLineFallbackMessage(text) {
 
 function createLineQuickReplyItems() {
   return [
+    {
+      type: "action",
+      action: {
+        type: "uri",
+        label: "教師手冊",
+        uri: HANDBOOK_HOME_URL
+      }
+    },
     ...LINE_QUICK_REPLY_LABELS.map((label) => ({
       type: "action",
       action: {
@@ -563,15 +582,7 @@ function createLineQuickReplyItems() {
         label,
         text: label
       }
-    })),
-    {
-      type: "action",
-      action: {
-        type: "uri",
-        label: "教師手冊首頁",
-        uri: HANDBOOK_HOME_URL
-      }
-    }
+    }))
   ];
 }
 
