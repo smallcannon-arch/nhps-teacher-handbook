@@ -1986,13 +1986,14 @@
       })).filter((link) => link.label && link.url);
       const resourceId = el.resourceIdInput.value.trim();
       const existing = resources.find((resource) => resource.id === resourceId);
+      const existingStatus = existing ? existing.status || "" : "";
       return {
         id: resourceId,
         title: el.resourceTitleInput.value.trim(),
         office: normalizeResourceOffice(el.resourceOfficeInput.value),
         category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || DEFAULT_RESOURCE_CATEGORY,
         type: getComboValue(el.resourceTypeSelect, el.resourceTypeInput),
-        status: existing ? existing.status || "" : "",
+        status: normalizeResourceStatusForLinks(existingStatus, links),
         note: el.resourceNoteInput.value.trim(),
         links,
         tags: collectResourceTags(),
@@ -2001,6 +2002,12 @@
         featured: el.resourceFeaturedInput.checked,
         sort_order: Number(el.resourceSortInput.value || resources.length + 1)
       };
+    }
+
+    function normalizeResourceStatusForLinks(status, links) {
+      const text = String(status || "").trim();
+      const hasValidLink = (links || []).some((link) => /^https?:\/\//i.test(String(link.url || "").trim()));
+      return text === "連結待補" && hasValidLink ? "" : text;
     }
 
     function validateResourceBeforeSave(resource) {
