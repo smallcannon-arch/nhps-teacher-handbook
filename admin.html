@@ -1209,7 +1209,6 @@
       "系統入口", "線上填報", "表單／申請", "流程說明", "校內規範",
       "校務參考", "年度資料", "操作說明", "其他"
     ];
-    const DEFAULT_CATEGORY_SET = new Set(DEFAULT_CATEGORIES);
     const DEFAULT_TYPES = [
       "連結", "常用系統", "校網", "Google 表單", "Google 文件", "Google 試算表",
       "Drive 資料夾", "PDF", "年度文件", "操作與申請", "資訊分享", "公告頁", "外部系統"
@@ -2615,18 +2614,12 @@
       renderComboOptions(el.shortcutTagSelect, el.shortcutTagInput, tagOptions, "不指定標籤", "新增標籤...");
     }
 
-    function buildCategoryOptions(resourceItems, shortcutItems) {
-      return mergeOptions(
-        DEFAULT_CATEGORIES,
-        resourceItems.map((item) => item.category),
-        shortcutItems.map((item) => item.resourceCategory)
-      );
+    function buildCategoryOptions() {
+      return DEFAULT_CATEGORIES.slice();
     }
 
     function categoryOptionLabel(value) {
-      const text = String(value || "").trim();
-      if (text === "常用資料") return "舊分類：高頻參考資料（原值保留）";
-      return DEFAULT_CATEGORY_SET.has(text) ? text : "舊分類：" + text + "（原值保留）";
+      return String(value || "").trim();
     }
 
     function mergeOptions(defaults, ...groups) {
