@@ -6,9 +6,15 @@ const HANDBOOK_HOME_URL = "https://smallcannon-arch.github.io/nhps-teacher-handb
 const LINE_QUICK_REPLY_LABELS = ["總務", "教務", "學務", "輔導", "人事", "會計", "系統入口", "線上填報", "表件", "流程", "校內規範"];
 const LINE_SEARCH_RESULT_LIMIT = 5;
 const LINE_SEARCH_TEXT_LIMIT = 4800;
+const LINE_DIRECTORY_CACHE_KEY = "https://line-directory.local/latest";
+const LINE_DIRECTORY_MEMORY_TTL_MS = 300000;
+const LINE_DIRECTORY_EDGE_TTL_SECONDS = 600;
+const LINE_DIRECTORY_FETCH_TIMEOUT_MS = 1500;
 
 let cachedCacheVersion = "";
 let cachedCacheVersionAt = 0;
+let lineDirectoryMemoryCache = null;
+let lineDirectoryMemoryCacheAt = 0;
 
 export default {
   async fetch(request, env, ctx) {
@@ -226,56 +232,90 @@ async function handleLineTextMessage(text, env) {
 async function fetchLineDirectory(env) {
   if (!env.GAS_URL) return { ok: false, data: null };
 
-  try {
-    const cacheVersionResult = await getCacheVersion(env);
-    const cacheVersion = cacheVersionResult.value;
-    const cacheKey = cacheVersion
-      ? new Request(`https://line-directory.local/?action=getDirectory&cache_version=${encodeURIComponent(cacheVersion)}`)
-      : null;
-    const cache = cacheKey ? caches.default : null;
+  const cachedDirectory = getLineDirectoryMemoryCache();
+  if (cachedDirectory) return { ok: true, data: cachedDirectory };
 
-    if (cacheKey) {
-      const hit = await cache.match(cacheKey);
-      if (hit) {
-        try {
-          const data = await hit.clone().json();
-          if (data && data.ok !== false && Array.isArray(data.resources)) {
-            return { ok: true, data };
-          }
-        } catch (err) {}
+  const cacheKey = new Request(LINE_DIRECTORY_CACHE_KEY);
+  const cache = caches.default;
+
+  try {
+    const hit = await cache.match(cacheKey);
+    if (hit) {
+      const data = await hit.clone().json();
+      if (isValidLineDirectory(data)) {
+        setLineDirectoryMemoryCache(data);
+        return { ok: true, data };
       }
     }
+  } catch (err) {}
 
+  try {
     const gasUrl = new URL(env.GAS_URL);
     gasUrl.searchParams.set("action", "getDirectory");
-    if (cacheVersion) gasUrl.searchParams.set("cache_version", cacheVersion);
 
-    const upstream = await fetch(gasUrl.toString(), {
+    const upstream = await fetchWithTimeout(gasUrl.toString(), {
       method: "GET",
       headers: { "Accept": "application/json" }
-    });
+    }, LINE_DIRECTORY_FETCH_TIMEOUT_MS);
     const text = await upstream.text();
     if (!upstream.ok || !looksLikeJson(text)) return { ok: false, data: null };
 
     const parsed = safeParseJson(text);
-    if (!parsed.ok || !parsed.data || parsed.data.ok === false || !Array.isArray(parsed.data.resources)) {
-      return { ok: false, data: null };
-    }
+    const directory = createLineDirectorySnapshot(parsed.data);
+    if (!parsed.ok || !isValidLineDirectory(directory)) return { ok: false, data: null };
 
-    if (cacheKey) {
-      try {
-        await cache.put(cacheKey, new Response(JSON.stringify(parsed.data), {
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-            "Cache-Control": `public, max-age=${DEFAULT_CACHE_SECONDS}`
-          }
-        }));
-      } catch (err) {}
-    }
+    setLineDirectoryMemoryCache(directory);
+    try {
+      await cache.put(cacheKey, new Response(JSON.stringify(directory), {
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Cache-Control": `public, max-age=${LINE_DIRECTORY_EDGE_TTL_SECONDS}`
+        }
+      }));
+    } catch (err) {}
 
-    return { ok: true, data: parsed.data };
+    return { ok: true, data: directory };
   } catch (err) {
     return { ok: false, data: null };
+  }
+}
+
+function getLineDirectoryMemoryCache() {
+  if (!lineDirectoryMemoryCache) return null;
+  if (Date.now() - lineDirectoryMemoryCacheAt > LINE_DIRECTORY_MEMORY_TTL_MS) {
+    lineDirectoryMemoryCache = null;
+    lineDirectoryMemoryCacheAt = 0;
+    return null;
+  }
+  return lineDirectoryMemoryCache;
+}
+
+function setLineDirectoryMemoryCache(data) {
+  lineDirectoryMemoryCache = data;
+  lineDirectoryMemoryCacheAt = Date.now();
+}
+
+function createLineDirectorySnapshot(data) {
+  if (!data || data.ok === false || !Array.isArray(data.resources)) return null;
+  return {
+    ok: true,
+    cache_version: data.cache_version || "",
+    generated_at: data.generated_at || "",
+    resources: data.resources
+  };
+}
+
+function isValidLineDirectory(data) {
+  return !!(data && data.ok !== false && Array.isArray(data.resources));
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
