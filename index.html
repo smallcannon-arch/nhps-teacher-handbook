@@ -378,6 +378,54 @@
       margin-top: 2px;
     }
 
+    .common-content-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .common-content-panel[hidden] {
+      display: none;
+    }
+
+    .common-content-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .common-content-item {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      max-width: min(100%, 280px);
+      padding: 6px 12px;
+      border: 1px solid #c8d9e8;
+      border-radius: 999px;
+      background: #f8fbfc;
+      color: var(--navy);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(23, 55, 94, 0.06);
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .common-content-item:hover,
+    .common-content-item:focus-visible {
+      transform: translateY(-1px);
+      border-color: var(--navy);
+      background: var(--blue-soft);
+      outline: none;
+    }
+
+    .common-content-item span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .shortcut-band {
       background: rgba(255, 253, 248, 0.96);
     }
@@ -1181,6 +1229,16 @@
       <p class="search-scope-note">目前會在所選情境內搜尋；未選情境時搜尋全站資料。</p>
     </section>
 
+    <section id="commonContentPanel" class="workbench-section common-content-panel" aria-labelledby="commonContentTitle" hidden>
+      <div class="section-heading">
+        <div>
+          <h2 id="commonContentTitle">常用內容</h2>
+          <p class="section-note">把老師最常找的系統、表件與流程收在這裡。</p>
+        </div>
+      </div>
+      <div id="commonContentList" class="common-content-list"></div>
+    </section>
+
     <section id="quickOpen" class="workbench-section quick-band" aria-labelledby="quickOpenTitle">
       <h2 id="quickOpenTitle">依處室快速查找</h2>
       <div id="officeFilters" class="chip-list"></div>
@@ -1300,6 +1358,8 @@
       "總務主任", "事務組", "出納組", "文書組",
       "輔導主任", "輔導組", "親職組", "專輔教師"
     ]);
+    const commonContentTags = new Set(["常用內容", "常用系統", "常用表件", "常用流程", "常用校務資料"]);
+    const commonContentLimit = 10;
 
     const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
     const defaultOfficeTab = "常用入口";
@@ -2761,6 +2821,8 @@
       currentDescription: document.getElementById("currentDescription"),
       taskFilters: document.getElementById("taskFilters"),
       officeFilters: document.getElementById("officeFilters"),
+      commonContentPanel: document.getElementById("commonContentPanel"),
+      commonContentList: document.getElementById("commonContentList"),
       padletGrid: document.getElementById("padletGrid"),
       padletCount: document.getElementById("padletCount"),
       padletEmpty: document.getElementById("padletEmpty"),
@@ -3383,6 +3445,57 @@
       elements.padletCount.textContent = (isIdle ? "全部資料" : "符合條件") + " " + visible.length + " 筆";
     }
 
+    function isCommonContentResource(resource) {
+      if (resource.visible === false || resource.archived === true || resource.trash === true) return false;
+      return (Array.isArray(resource.tags) ? resource.tags : []).some((tag) => commonContentTags.has(String(tag || "").trim()));
+    }
+
+    function getCommonContentItems() {
+      return getDirectoryItems()
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => isCommonContentResource(item))
+        .sort((a, b) => {
+          const aOrder = Number(a.item.sort_order || 0);
+          const bOrder = Number(b.item.sort_order || 0);
+          if (aOrder || bOrder) {
+            const orderDiff = (aOrder || 999999) - (bOrder || 999999);
+            if (orderDiff !== 0) return orderDiff;
+          }
+          const updatedDiff = String(b.item.updated || "").localeCompare(String(a.item.updated || ""));
+          return updatedDiff || a.index - b.index;
+        })
+        .slice(0, commonContentLimit)
+        .map(({ item }) => item);
+    }
+
+    function createCommonContentItem(resource) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "common-content-item";
+      button.title = resource.title;
+      const label = document.createElement("span");
+      label.textContent = resource.title;
+      button.appendChild(label);
+      button.addEventListener("click", () => {
+        state.query = resource.title;
+        state.task = "all";
+        state.office = "all";
+        state.padletCategory = "none";
+        state.tag = "";
+        state.activeShortcut = "";
+        state.resultsMode = "filtered";
+        elements.searchInput.value = state.query;
+        renderAll();
+      });
+      return button;
+    }
+
+    function renderCommonContent() {
+      const items = getCommonContentItems();
+      elements.commonContentPanel.hidden = items.length === 0;
+      elements.commonContentList.replaceChildren(...items.map(createCommonContentItem));
+    }
+
     function updateCurrentContext() {
       const task = taskCategories.find((item) => item.id === state.task);
       if (task) {
@@ -3531,6 +3644,7 @@
     }
 
     function renderAll() {
+      renderCommonContent();
       renderCommonResources();
       updateFilterActiveState();
       updateCurrentContext();
