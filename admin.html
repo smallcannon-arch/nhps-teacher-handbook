@@ -957,11 +957,11 @@
           </div>
           <div class="grid-2">
             <div class="field hidden" hidden aria-hidden="true">
-              <label for="batchFeaturedInput">常用資料</label>
+              <label for="batchFeaturedInput">內部整理標記</label>
               <select id="batchFeaturedInput">
                 <option value="">不變更</option>
-                <option value="true">標記為常用資料</option>
-                <option value="false">取消常用資料標記</option>
+                <option value="true">啟用內部整理標記</option>
+                <option value="false">取消內部整理標記</option>
               </select>
             </div>
             <div class="field">
@@ -1031,7 +1031,7 @@
           </div>
           <div class="checkbox-row">
             <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 上架顯示</label>
-            <label class="checkbox-row hidden" hidden aria-hidden="true"><input id="resourceFeaturedInput" type="checkbox"> 標記為常用資料</label>
+            <label class="checkbox-row hidden" hidden aria-hidden="true"><input id="resourceFeaturedInput" type="checkbox"> 內部整理標記</label>
           </div>
         </section>
 
@@ -1202,7 +1202,7 @@
     const CANNED_TEXT = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
     const DEFAULT_CATEGORIES = [
       "一般資料", "表單／申請", "流程說明", "系統入口",
-      "年度資料", "操作說明", "常用資料", "其他"
+      "年度資料", "操作說明", "其他"
     ];
     const DEFAULT_CATEGORY_SET = new Set(DEFAULT_CATEGORIES);
     const DEFAULT_TYPES = [
@@ -1419,15 +1419,14 @@
         .map((item) => item.category)
         .filter(Boolean))]
         .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
-      const featuredOption = office ? "" : "<option value='__featured'>標記為常用資料</option>";
       const keepCurrent = options.keepCurrent === true && current && current !== "__featured" && !categories.includes(current);
       const currentOption = keepCurrent
         ? "<option value='" + escapeHtml(current) + "'>" + escapeHtml(categoryOptionLabel(current)) + "</option>"
         : "";
-      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + featuredOption + currentOption + categories.map((category) => (
+      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + currentOption + categories.map((category) => (
         "<option value='" + escapeHtml(category) + "'>" + escapeHtml(categoryOptionLabel(category)) + "</option>"
       )).join("");
-      el.categoryFilter.value = (!office && current === "__featured") || categories.includes(current) || keepCurrent ? current : "";
+      el.categoryFilter.value = categories.includes(current) || keepCurrent ? current : "";
     }
 
     async function api(cmd, extra = {}) {
@@ -1525,7 +1524,6 @@
     function getResourceListMeta(item, listIndex) {
       const positionText = Number.isInteger(listIndex) ? "本清單第 " + (listIndex + 1) + " 筆" : "";
       const parts = [getOfficeCategoryText(item), positionText];
-      if (item.featured) parts.push("常用資料");
       return parts.filter(Boolean).join("｜");
     }
 
@@ -1641,7 +1639,7 @@
         const status = el.statusFilter.value;
         return resources
           .filter((item) => !office || adminOfficeMatches(item.office, office))
-          .filter((item) => !category || (category === "__featured" ? item.featured === true : item.category === category))
+          .filter((item) => !category || item.category === category)
           .filter((item) => resourceStatusMatches(item, status))
           .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
           .slice()
@@ -1651,7 +1649,7 @@
         const category = el.categoryFilter.value;
         return trash
           .filter((item) => !office || adminOfficeMatches(item.office, office))
-          .filter((item) => !category || (category === "__featured" ? item.featured === true : item.category === category))
+          .filter((item) => !category || item.category === category)
           .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
           .slice()
           .sort(compareResourceListOrder);
@@ -2488,6 +2486,7 @@
 
     function categoryOptionLabel(value) {
       const text = String(value || "").trim();
+      if (text === "常用資料") return "舊分類：高頻參考資料（原值保留）";
       return DEFAULT_CATEGORY_SET.has(text) ? text : "舊分類：" + text;
     }
 
