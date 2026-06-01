@@ -24,7 +24,7 @@
       --danger-soft: #f8e9e6;
       --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
       --radius: 8px;
-      --max: 1240px;
+      --max: 1440px;
     }
 
     * {
@@ -496,6 +496,7 @@
 
     .padlet-grid {
       display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
       gap: 9px;
     }
 
