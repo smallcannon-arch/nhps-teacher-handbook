@@ -2862,6 +2862,7 @@
     const elements = {
       searchInput: document.getElementById("searchInput"),
       clearFiltersBtn: document.getElementById("clearFiltersBtn"),
+      resourceResults: document.getElementById("resourceResults"),
       currentTitle: document.getElementById("currentTitle"),
       currentDescription: document.getElementById("currentDescription"),
       taskFilters: document.getElementById("taskFilters"),
@@ -2878,6 +2879,18 @@
 
     function updateBackToTopVisibility() {
       elements.backToTopBtn.hidden = window.scrollY <= 360;
+    }
+
+    function isMobileResultsLayout() {
+      return window.matchMedia("(max-width: 980px)").matches;
+    }
+
+    function scrollCurrentResultsIntoViewOnMobile() {
+      if (!isMobileResultsLayout()) return;
+      const target = elements.currentTitle || elements.resourceResults;
+      if (!target) return;
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      target.scrollIntoView({ behavior, block: "start", inline: "nearest" });
     }
 
     function getTaskLabel(taskId) {
@@ -3699,6 +3712,7 @@
         }
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         renderAll();
+        scrollCurrentResultsIntoViewOnMobile();
       });
       return button;
     }
