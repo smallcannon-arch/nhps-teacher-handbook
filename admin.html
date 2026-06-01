@@ -42,7 +42,7 @@
     .header-tabs-bar,
     main,
     footer {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1440px, calc(100% - 32px));
       margin: 0 auto;
     }
 
@@ -79,7 +79,7 @@
 
     main {
       display: grid;
-      grid-template-columns: 400px minmax(0, 1fr);
+      grid-template-columns: clamp(400px, 30vw, 440px) minmax(0, 1fr);
       gap: 22px;
       padding: 26px 0 46px;
     }
