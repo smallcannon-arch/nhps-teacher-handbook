@@ -1401,6 +1401,9 @@
     const commonContentPinnedTag = "常用置頂";
     const commonContentTags = new Set(["常用內容", "常用系統", "常用表件", "常用流程", "常用校務資料"]);
     const commonContentLimit = 10;
+    const commonContentCacheKey = "nhps-teacher-handbook-common-content";
+    const commonContentCacheVersion = 1;
+    const commonContentCacheTtlMs = 12 * 60 * 60 * 1000;
 
     const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
     const defaultOfficeTab = "常用入口";
@@ -3505,6 +3508,73 @@
       return (Array.isArray(resource.tags) ? resource.tags : []).some((tag) => String(tag || "").trim() === commonContentPinnedTag);
     }
 
+    function normalizeCommonContentEntry(entry, index, source) {
+      const title = String(entry.title || entry.label || "").trim();
+      if (!title) return null;
+      const hasQuery = Object.prototype.hasOwnProperty.call(entry, "query");
+      return {
+        id: String(entry.id || source + "-" + index),
+        title,
+        query: String(hasQuery ? entry.query || "" : title).trim(),
+        resourceCategory: String(entry.resourceCategory || entry.resource_category || "").trim(),
+        tag: String(entry.tag || "").trim(),
+        targetId: String(entry.targetId || entry.target_id || "").trim(),
+        source
+      };
+    }
+
+    function toCommonContentCacheItems(items, source) {
+      return (Array.isArray(items) ? items : [])
+        .slice(0, commonContentLimit)
+        .map((item, index) => normalizeCommonContentEntry(item, index, source))
+        .filter(Boolean);
+    }
+
+    function getDefaultCommonContentItems() {
+      return toCommonContentCacheItems(officeShortcuts[defaultOfficeTab] || [], "default-common-content");
+    }
+
+    function isCommonContentCacheValid(cache) {
+      return Boolean(
+        cache &&
+        cache.version === commonContentCacheVersion &&
+        Number.isFinite(cache.savedAt) &&
+        Date.now() - cache.savedAt <= commonContentCacheTtlMs &&
+        Array.isArray(cache.items) &&
+        cache.items.length > 0
+      );
+    }
+
+    function readCommonContentCache() {
+      try {
+        const raw = window.localStorage.getItem(commonContentCacheKey);
+        if (!raw) return null;
+        const cache = JSON.parse(raw);
+        if (!isCommonContentCacheValid(cache)) return null;
+        return toCommonContentCacheItems(cache.items, "cached-common-content");
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function writeCommonContentCache(items) {
+      const cacheItems = toCommonContentCacheItems(items, "api-common-content");
+      if (!cacheItems.length) return;
+      try {
+        window.localStorage.setItem(commonContentCacheKey, JSON.stringify({
+          version: commonContentCacheVersion,
+          savedAt: Date.now(),
+          items: cacheItems
+        }));
+      } catch (err) {
+        // localStorage may be unavailable in private browsing or when quota is full.
+      }
+    }
+
+    function initializeCommonContentItems() {
+      cachedCommonContentItems = readCommonContentCache() || getDefaultCommonContentItems();
+    }
+
     function getCommonContentItems() {
       return cachedCommonContentItems;
     }
@@ -3539,13 +3609,17 @@
       label.textContent = resource.title;
       button.appendChild(label);
       button.addEventListener("click", () => {
-        state.query = resource.title;
+        const hasQuery = Object.prototype.hasOwnProperty.call(resource, "query");
+        const query = String(hasQuery ? resource.query || "" : resource.title || "").trim();
+        const resourceCategory = String(resource.resourceCategory || resource.resource_category || "").trim();
+        const tag = String(resource.tag || "").trim();
+        state.query = query;
         state.task = "all";
         state.office = "all";
-        state.padletCategory = "none";
-        state.tag = "";
+        state.padletCategory = resourceCategory || "none";
+        state.tag = tag;
         state.activeShortcut = "";
-        state.resultsMode = "filtered";
+        state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         elements.searchInput.value = state.query;
         renderAll();
       });
@@ -3764,6 +3838,7 @@
         if (dynamicShortcuts) officeShortcuts = dynamicShortcuts;
         padletCategories = getPadletCategories();
         updateCommonContentItems();
+        writeCommonContentCache(cachedCommonContentItems);
         renderFilters();
         renderRecentUpdates();
         renderAll();
@@ -3795,7 +3870,7 @@
 
     renderFilters();
     renderRecentUpdates();
-    updateCommonContentItems();
+    initializeCommonContentItems();
     renderAll();
     updateBackToTopVisibility();
     loadDirectoryFromApi();
