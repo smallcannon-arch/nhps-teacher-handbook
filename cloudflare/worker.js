@@ -10,11 +10,13 @@ const LINE_DIRECTORY_CACHE_KEY = "https://line-directory.local/latest";
 const LINE_DIRECTORY_MEMORY_TTL_MS = 300000;
 const LINE_DIRECTORY_EDGE_TTL_SECONDS = 600;
 const LINE_DIRECTORY_FETCH_TIMEOUT_MS = 1500;
+const LINE_DIRECTORY_WARMUP_TIMEOUT_MS = 10000;
 
 let cachedCacheVersion = "";
 let cachedCacheVersionAt = 0;
 let lineDirectoryMemoryCache = null;
 let lineDirectoryMemoryCacheAt = 0;
+let lineDirectoryWarmupPromise = null;
 
 export default {
   async fetch(request, env, ctx) {
@@ -22,7 +24,7 @@ export default {
 
     if (request.method === "OPTIONS") return corsResponse(null, 204);
     if (isLineWebhookRequest(request, url)) {
-      return handleLineWebhook(request, env);
+      return handleLineWebhook(request, env, ctx);
     }
     if (!env.GAS_URL) {
       return corsResponse(JSON.stringify({ ok: false, error: "MISSING_GAS_URL" }), 500);
@@ -117,7 +119,7 @@ function isLineWebhookRequest(request, url) {
   return request.method === "POST" && url.pathname === "/line/webhook";
 }
 
-async function handleLineWebhook(request, env) {
+async function handleLineWebhook(request, env, ctx) {
   if (!env.LINE_CHANNEL_SECRET) {
     return lineJsonResponse({ ok: false, error: "SERVICE_UNAVAILABLE" }, 503);
   }
@@ -143,7 +145,7 @@ async function handleLineWebhook(request, env) {
   for (const event of events) {
     if (!event || event.type !== "message" || !event.replyToken) continue;
     const message = event.message && event.message.type === "text"
-      ? await handleLineTextMessage(event.message.text, env)
+      ? await handleLineTextMessage(event.message.text, env, ctx)
       : createLineFallbackMessage("目前只支援文字訊息。請輸入關鍵字，或使用下方選單。");
     replyJobs.push({ replyToken: event.replyToken, messages: [message] });
   }
@@ -208,7 +210,7 @@ async function replyToLine(replyToken, messages, env) {
   }
 }
 
-async function handleLineTextMessage(text, env) {
+async function handleLineTextMessage(text, env, ctx) {
   const value = String(text || "").trim();
   if (value === "選單" || value.toLowerCase() === "menu") {
     return createLineQuickReplyMessage();
@@ -217,7 +219,7 @@ async function handleLineTextMessage(text, env) {
     return createLineFallbackMessage("請輸入關鍵字，或使用下方選單快速查詢。");
   }
 
-  const directory = await fetchLineDirectory(env);
+  const directory = await fetchLineDirectory(env, ctx);
   if (!directory.ok) {
     return createLineDirectoryErrorMessage(value);
   }
@@ -229,7 +231,7 @@ async function handleLineTextMessage(text, env) {
   return createLineSearchResultsMessage(value, results);
 }
 
-async function fetchLineDirectory(env) {
+async function fetchLineDirectory(env, ctx) {
   if (!env.GAS_URL) return { ok: false, data: null };
 
   const cachedDirectory = getLineDirectoryMemoryCache();
@@ -249,6 +251,29 @@ async function fetchLineDirectory(env) {
     }
   } catch (err) {}
 
+  const warmupPromise = scheduleLineDirectoryWarmup(env, ctx);
+  const warmedDirectory = await resolveLineDirectoryBeforeTimeout(warmupPromise, LINE_DIRECTORY_FETCH_TIMEOUT_MS);
+  if (isValidLineDirectory(warmedDirectory)) return { ok: true, data: warmedDirectory };
+
+  return { ok: false, data: null };
+}
+
+function scheduleLineDirectoryWarmup(env, ctx) {
+  if (!lineDirectoryWarmupPromise) {
+    lineDirectoryWarmupPromise = warmLineDirectoryCache(env)
+      .catch(() => null)
+      .finally(() => {
+        lineDirectoryWarmupPromise = null;
+      });
+  }
+  if (ctx && typeof ctx.waitUntil === "function") {
+    ctx.waitUntil(lineDirectoryWarmupPromise.catch(() => null));
+  }
+  return lineDirectoryWarmupPromise;
+}
+
+async function warmLineDirectoryCache(env) {
+  if (!env.GAS_URL) return null;
   try {
     const gasUrl = new URL(env.GAS_URL);
     gasUrl.searchParams.set("action", "getDirectory");
@@ -256,28 +281,45 @@ async function fetchLineDirectory(env) {
     const upstream = await fetchWithTimeout(gasUrl.toString(), {
       method: "GET",
       headers: { "Accept": "application/json" }
-    }, LINE_DIRECTORY_FETCH_TIMEOUT_MS);
+    }, LINE_DIRECTORY_WARMUP_TIMEOUT_MS);
     const text = await upstream.text();
-    if (!upstream.ok || !looksLikeJson(text)) return { ok: false, data: null };
+    if (!upstream.ok || !looksLikeJson(text)) return null;
 
     const parsed = safeParseJson(text);
     const directory = createLineDirectorySnapshot(parsed.data);
-    if (!parsed.ok || !isValidLineDirectory(directory)) return { ok: false, data: null };
+    if (!parsed.ok || !isValidLineDirectory(directory)) return null;
 
-    setLineDirectoryMemoryCache(directory);
-    try {
-      await cache.put(cacheKey, new Response(JSON.stringify(directory), {
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": `public, max-age=${LINE_DIRECTORY_EDGE_TTL_SECONDS}`
-        }
-      }));
-    } catch (err) {}
-
-    return { ok: true, data: directory };
+    await putLineDirectoryCache(directory);
+    return directory;
   } catch (err) {
-    return { ok: false, data: null };
+    return null;
   }
+}
+
+async function resolveLineDirectoryBeforeTimeout(warmupPromise, timeoutMs) {
+  let timeoutId = null;
+  try {
+    return await Promise.race([
+      warmupPromise,
+      new Promise((resolve) => {
+        timeoutId = setTimeout(() => resolve(null), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+async function putLineDirectoryCache(directory) {
+  setLineDirectoryMemoryCache(directory);
+  try {
+    await caches.default.put(new Request(LINE_DIRECTORY_CACHE_KEY), new Response(JSON.stringify(directory), {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": `public, max-age=${LINE_DIRECTORY_EDGE_TTL_SECONDS}`
+      }
+    }));
+  } catch (err) {}
 }
 
 function getLineDirectoryMemoryCache() {
