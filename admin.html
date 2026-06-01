@@ -1243,6 +1243,11 @@
     let draggedEntry = null;
     let dropTargetEntry = null;
     let draggedGroupName = "";
+    let directoryLoadRequestId = 0;
+    let resourceFormDirty = false;
+    let isHydratingResourceForm = false;
+    let resourceFormRevision = 0;
+    let resourceFormBoundResourceId = "";
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1452,8 +1457,10 @@
     }
 
     async function loadDirectoryData(options = {}) {
+      const requestId = ++directoryLoadRequestId;
       try {
         const data = await api("directoryList");
+        if (requestId !== directoryLoadRequestId) return false;
         resources = Array.isArray(data.resources) ? data.resources : [];
         trash = Array.isArray(data.trash) ? data.trash : [];
         shortcuts = data.shortcuts || {};
@@ -1472,13 +1479,16 @@
           ? currentUser.email + "（" + currentUser.role + "）"
           : "已授權使用者";
         if (currentUser) sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-        renderAll();
+        renderAll({ forceEditor: options.forceEditor === true });
         setEnabled(true);
         hideMessage();
+        return true;
       } catch (err) {
+        if (requestId !== directoryLoadRequestId) return false;
         sessionStorage.removeItem(TOKEN_STORAGE_KEY);
         sessionStorage.removeItem(USER_STORAGE_KEY);
         redirectToLogin("expired");
+        return false;
       }
     }
 
@@ -1492,7 +1502,7 @@
       ));
     }
 
-    function renderAll() {
+    function renderAll(options = {}) {
       mode = normalizeMode(mode);
       el.resourcesTab.classList.toggle("is-active", mode === "resources");
       if (el.shortcutsTab) el.shortcutsTab.classList.remove("is-active");
@@ -1513,7 +1523,7 @@
       el.addItemBtn.textContent = "新增資料卡";
       renderList();
       renderBulkState();
-      if (mode === "resources") renderResourceEditor();
+      if (mode === "resources") renderResourceEditor({ force: options.forceEditor === true });
       if (mode === "trash") renderTrashEditor();
     }
 
@@ -1801,49 +1811,104 @@
       return normalizeResourceOffice(value) === normalizeResourceOffice(selectedOffice);
     }
 
-    function renderResourceEditor() {
-      const item = resources.find((resource) => resource.id === activeResourceId);
-      if (!item) {
-        clearResourceEditor();
-        return;
-      }
-      el.resourceEditorLabel.textContent = "正在編輯資料卡";
-      el.resourceTitle.textContent = item.title || "未命名內容";
-      el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
-      el.resourceIdInput.value = item.id || "";
-      el.resourceTitleInput.value = item.title || "";
-      el.resourceUpdatedInput.value = normalizeDate(item.updated);
-      el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "");
-      setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
-      el.resourceSortInput.value = item.sort_order || "";
-      el.resourceNoteInput.value = item.note || "";
-      el.resourceTagsInput.value = (item.tags || []).join(", ");
-      syncCommonPinnedCheckboxFromTags();
-      el.resourceVisibleInput.checked = item.visible !== false;
-      el.resourceFeaturedInput.checked = item.featured === true;
-      renderStaffUnitPicker();
-      renderLinkRows(item.links || []);
+    function markResourceFormDirty() {
+      if (isHydratingResourceForm || mode !== "resources") return;
+      resourceFormDirty = true;
+      resourceFormRevision += 1;
+      resourceFormBoundResourceId = el.resourceIdInput.value.trim() || activeResourceId || "";
     }
 
-    function clearResourceEditor() {
-      el.resourceEditorLabel.textContent = "新增資料卡";
-      el.resourceTitle.textContent = "新增資料卡";
-      el.resourceContext.textContent = "填寫資料卡後按「儲存並更新網站」新增。";
-      el.resourceIdInput.value = "";
-      el.resourceTitleInput.value = "";
-      el.resourceUpdatedInput.value = todayText();
-      el.resourceOfficeInput.value = "全校共用";
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, DEFAULT_RESOURCE_CATEGORY);
-      setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
-      el.resourceSortInput.value = String(resources.length + 1);
-      el.resourceNoteInput.value = "";
-      el.resourceTagsInput.value = "常用";
-      syncCommonPinnedCheckboxFromTags();
-      el.resourceVisibleInput.checked = true;
-      el.resourceFeaturedInput.checked = false;
-      renderStaffUnitPicker();
-      renderLinkRows([]);
+    function clearResourceFormDirty(resourceId = "") {
+      resourceFormDirty = false;
+      resourceFormBoundResourceId = resourceId;
+    }
+
+    function hydrateResourceForm(callback, options = {}) {
+      isHydratingResourceForm = true;
+      try {
+        callback();
+      } finally {
+        isHydratingResourceForm = false;
+      }
+      if (options.resetDirty) {
+        const resourceId = Object.prototype.hasOwnProperty.call(options, "resourceId")
+          ? options.resourceId
+          : el.resourceIdInput.value.trim() || activeResourceId || "";
+        clearResourceFormDirty(resourceId || "");
+      }
+    }
+
+    function shouldPreserveResourceEditor(resourceId, force) {
+      if (force || !resourceFormDirty || mode !== "resources") return false;
+      const currentFormId = el.resourceIdInput.value.trim() || resourceFormBoundResourceId || activeResourceId || "";
+      return currentFormId === String(resourceId || "");
+    }
+
+    function syncResourceEditorIdentity(item) {
+      if (!item || mode !== "resources" || activeResourceId !== item.id) return;
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "正在編輯資料卡";
+        el.resourceTitle.textContent = el.resourceTitleInput.value.trim() || item.title || "未命名內容";
+        el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
+        el.resourceIdInput.value = item.id || "";
+      });
+      resourceFormBoundResourceId = item.id || "";
+    }
+
+    function renderResourceEditor(options = {}) {
+      const force = options.force === true;
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      if (!item) {
+        clearResourceEditor({ force });
+        return;
+      }
+      if (shouldPreserveResourceEditor(item.id, force)) {
+        syncResourceEditorIdentity(item);
+        return;
+      }
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "正在編輯資料卡";
+        el.resourceTitle.textContent = item.title || "未命名內容";
+        el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
+        el.resourceIdInput.value = item.id || "";
+        el.resourceTitleInput.value = item.title || "";
+        el.resourceUpdatedInput.value = normalizeDate(item.updated);
+        el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
+        setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "");
+        setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
+        el.resourceSortInput.value = item.sort_order || "";
+        el.resourceNoteInput.value = item.note || "";
+        el.resourceTagsInput.value = (item.tags || []).join(", ");
+        syncCommonPinnedCheckboxFromTags();
+        el.resourceVisibleInput.checked = item.visible !== false;
+        el.resourceFeaturedInput.checked = item.featured === true;
+        renderStaffUnitPicker();
+        renderLinkRows(item.links || []);
+      }, { resetDirty: true, resourceId: item.id || "" });
+    }
+
+    function clearResourceEditor(options = {}) {
+      const force = options.force === true;
+      if (!force && resourceFormDirty && !activeResourceId && !resourceFormBoundResourceId) return;
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "新增資料卡";
+        el.resourceTitle.textContent = "新增資料卡";
+        el.resourceContext.textContent = "填寫資料卡後按「儲存並更新網站」新增。";
+        el.resourceIdInput.value = "";
+        el.resourceTitleInput.value = "";
+        el.resourceUpdatedInput.value = todayText();
+        el.resourceOfficeInput.value = "全校共用";
+        setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, DEFAULT_RESOURCE_CATEGORY);
+        setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
+        el.resourceSortInput.value = String(resources.length + 1);
+        el.resourceNoteInput.value = "";
+        el.resourceTagsInput.value = "常用";
+        syncCommonPinnedCheckboxFromTags();
+        el.resourceVisibleInput.checked = true;
+        el.resourceFeaturedInput.checked = false;
+        renderStaffUnitPicker();
+        renderLinkRows([]);
+      }, { resetDirty: true, resourceId: "" });
     }
 
     function renderTrashEditor() {
@@ -1979,12 +2044,14 @@
     async function saveResource() {
       const resource = collectResource();
       if (!validateResourceBeforeSave(resource)) return;
+      const saveStartedRevision = resourceFormRevision;
       await runCommand("saveDirectoryResource", { resource }, saveSuccessText, {
         actionButton: el.saveResourceBtn,
         loadingText: "儲存中，請稍候……",
         loadingButtonText: "儲存中……",
         idleButtonText: "儲存資料卡",
-        isSaveAction: true
+        isSaveAction: true,
+        saveStartedRevision
       });
     }
 
@@ -1998,6 +2065,7 @@
       }
       const ok = window.confirm("確定要暫時下架「" + (item.title || "未命名資料卡") + "」？資料會保留在內容管理清單，不會移到回收桶。");
       if (!ok) return;
+      const saveStartedRevision = resourceFormRevision;
       await runCommand("saveDirectoryResource", {
         resource: {
           id: item.id,
@@ -2018,7 +2086,8 @@
         actionButton: el.unpublishResourceBtn,
         loadingText: "暫時下架中，請稍候……",
         loadingButtonText: "下架中……",
-        isSaveAction: true
+        isSaveAction: true,
+        saveStartedRevision
       });
     }
 
@@ -2027,6 +2096,7 @@
       const item = resources.find((resource) => resource.id === activeResourceId);
       if (!item) return;
       activeResourceId = "";
+      hydrateResourceForm(() => {
       el.resourceEditorLabel.textContent = "複製資料卡";
       el.resourceTitle.textContent = "請修改副本後儲存";
       el.resourceContext.textContent = "這是尚未儲存的副本；儲存前不會影響原資料。";
@@ -2044,6 +2114,8 @@
       el.resourceFeaturedInput.checked = false;
       renderStaffUnitPicker();
       renderLinkRows((item.links || []).map((link) => ({ label: link.label || "", url: link.url || "" })));
+      }, { resetDirty: true, resourceId: "" });
+      markResourceFormDirty();
       showMessage("已建立副本，請確認內容後再儲存。這是尚未儲存的副本，不會影響原資料。", false);
       renderList();
       setEnabled(true);
@@ -2233,6 +2305,9 @@
       const originalButtonText = actionButton ? actionButton.textContent : "";
       const idleButtonText = options.idleButtonText || originalButtonText;
       const isSaveAction = options.isSaveAction === true;
+      const saveStartedRevision = Number.isFinite(options.saveStartedRevision)
+        ? options.saveStartedRevision
+        : resourceFormRevision;
       const slowAfterMs = Number(options.slowAfterMs || 20000);
       let slowTimer = null;
       try {
@@ -2260,9 +2335,12 @@
         if (cmd === "batchDeleteDirectoryResources") activeResourceId = "";
         if (cmd === "restoreDirectoryResources") activeTrashId = "";
         if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
-        applyCommandResultLocally(cmd, payload, data);
+        const resourceEditedAfterSubmit = cmd === "saveDirectoryResource" && resourceFormRevision > saveStartedRevision;
+        applyCommandResultLocally(cmd, payload, data, { preserveDirtyEditor: resourceEditedAfterSubmit });
         await loadDirectoryData({ keepCategoryFilter: true });
-        showMessage(resolveSuccessText(successText), false);
+        showMessage(resourceEditedAfterSubmit
+          ? "已儲存上一版；目前畫面仍有新的未儲存變更。"
+          : resolveSuccessText(successText), false);
         return true;
       } catch (err) {
         showMessage(commandErrorText(err, isSaveAction), true);
@@ -2274,7 +2352,7 @@
       }
     }
 
-    function applyCommandResultLocally(cmd, payload, data) {
+    function applyCommandResultLocally(cmd, payload, data, options = {}) {
       if (cmd === "saveDirectoryResource") {
         const resource = { ...(payload.resource || {}) };
         resource.id = data.resource_id || resource.id || activeResourceId;
@@ -2292,7 +2370,8 @@
         renderCategoryFilter({ keepCurrent: true });
         renderSuggestionLists();
         renderList();
-        renderResourceEditor();
+        if (options.preserveDirtyEditor) syncResourceEditorIdentity(resource);
+        else renderResourceEditor({ force: true });
         renderBulkState();
         return;
       }
@@ -2625,6 +2704,8 @@
     el.resourcesTab.addEventListener("click", () => setMode("resources"));
     el.trashTab.addEventListener("click", () => setMode("trash"));
     el.logoutBtn.addEventListener("click", logout);
+    el.resourceForm.addEventListener("input", markResourceFormDirty);
+    el.resourceForm.addEventListener("change", markResourceFormDirty);
     el.listSearchInput.addEventListener("input", refreshListView);
     el.officeFilter.addEventListener("change", () => {
       renderCategoryFilter();
@@ -2701,7 +2782,7 @@
     el.addItemBtn.addEventListener("click", () => {
       if (mode === "resources") {
         activeResourceId = "";
-        clearResourceEditor();
+        clearResourceEditor({ force: true });
       }
       renderList();
       setEnabled(true);
@@ -2724,7 +2805,7 @@
         el.itemList.querySelectorAll(".list-button.is-active").forEach((activeButton) => activeButton.classList.remove("is-active"));
         const selectedButton = entry && entry.querySelector(".list-button");
         if (selectedButton) selectedButton.classList.add("is-active");
-        if (mode === "resources") renderResourceEditor();
+        if (mode === "resources") renderResourceEditor({ force: true });
         if (mode === "trash") renderTrashEditor();
         renderBulkState();
         setEnabled(true);
@@ -2737,7 +2818,7 @@
       } else if (mode === "trash") {
         activeTrashId = button.dataset.id;
       }
-      renderAll();
+      renderAll({ forceEditor: true });
       setEnabled(true);
     });
     el.addResourceLinkBtn.addEventListener("click", () => {
@@ -2754,10 +2835,12 @@
           <button class="secondary remove-link" type="button">移除</button>
         </div>
       `);
+      markResourceFormDirty();
     });
     el.resourceLinksBox.addEventListener("click", (event) => {
       if (event.target.classList.contains("remove-link")) {
         event.target.closest(".link-row").remove();
+        markResourceFormDirty();
       }
     });
     el.saveResourceBtn.addEventListener("click", saveResource);
