@@ -1,5 +1,9 @@
 const DEFAULT_CACHE_SECONDS = 300;
+const CACHE_VERSION_TTL_MS = 30000;
 const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "health"]);
+
+let cachedCacheVersion = "";
+let cachedCacheVersionAt = 0;
 
 export default {
   async fetch(request, env, ctx) {
@@ -21,7 +25,9 @@ export default {
       return corsResponse(JSON.stringify({ ok: false, error: "ACTION_NOT_ALLOWED" }), 400);
     }
 
-    const cacheVersion = await getCacheVersion(env);
+    const cacheVersionResult = await getCacheVersion(env);
+    const cacheVersion = cacheVersionResult.value;
+    const cacheVersionSource = cacheVersionResult.source;
     const gasUrl = new URL(env.GAS_URL);
     gasUrl.searchParams.set("action", action);
     if (cacheVersion) gasUrl.searchParams.set("cache_version", cacheVersion);
@@ -31,7 +37,7 @@ export default {
 
     if (action !== "health" && cacheVersion) {
       const hit = await cache.match(cacheKey);
-      if (hit) return withCors(hit, "HIT");
+      if (hit) return withCors(hit, "HIT", cacheVersionSource);
     }
 
     const upstream = await fetch(gasUrl.toString(), {
@@ -52,7 +58,7 @@ export default {
     });
 
     if (cacheable) ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return withCors(response, cacheable ? "MISS" : "BYPASS");
+    return withCors(response, cacheable ? "MISS" : "BYPASS", cacheVersionSource);
   }
 };
 
@@ -94,15 +100,34 @@ async function proxyPostToGas(request, env) {
 }
 
 async function getCacheVersion(env) {
+  const now = Date.now();
+  if (cachedCacheVersion && now - cachedCacheVersionAt < CACHE_VERSION_TTL_MS) {
+    return { value: cachedCacheVersion, source: "memory-cache" };
+  }
+
   try {
     const configUrl = new URL(env.GAS_URL);
     configUrl.searchParams.set("action", "getConfig");
     const response = await fetch(configUrl.toString(), { headers: { "Accept": "application/json" } });
-    if (!response.ok) return "";
+    if (!response.ok) {
+      return cachedCacheVersion
+        ? { value: cachedCacheVersion, source: "stale-memory-cache" }
+        : { value: "", source: "unavailable" };
+    }
     const data = await response.json();
-    return data && data.ok ? String(data.cache_version || "") : "";
+    const cacheVersion = data && data.ok ? String(data.cache_version || "") : "";
+    if (cacheVersion) {
+      cachedCacheVersion = cacheVersion;
+      cachedCacheVersionAt = Date.now();
+      return { value: cacheVersion, source: "gas" };
+    }
+    return cachedCacheVersion
+      ? { value: cachedCacheVersion, source: "stale-memory-cache" }
+      : { value: "", source: "unavailable" };
   } catch (err) {
-    return "";
+    return cachedCacheVersion
+      ? { value: cachedCacheVersion, source: "stale-memory-cache" }
+      : { value: "", source: "unavailable" };
   }
 }
 
@@ -120,12 +145,13 @@ function hasFalseOk(text) {
   }
 }
 
-function withCors(response, cacheStatus) {
+function withCors(response, cacheStatus, versionSource) {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type");
   headers.set("X-Handbook-Cache", cacheStatus);
+  if (versionSource) headers.set("X-Handbook-Version-Source", versionSource);
   return new Response(response.body, { status: response.status, headers });
 }
 
