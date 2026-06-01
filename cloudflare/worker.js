@@ -1,6 +1,9 @@
 const DEFAULT_CACHE_SECONDS = 300;
 const CACHE_VERSION_TTL_MS = 30000;
 const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "health"]);
+const LINE_REPLY_API_URL = "https://api.line.me/v2/bot/message/reply";
+const HANDBOOK_HOME_URL = "https://smallcannon-arch.github.io/nhps-teacher-handbook/";
+const LINE_QUICK_REPLY_LABELS = ["總務", "教務", "學務", "輔導", "人事", "會計", "系統入口", "線上填報", "表件", "流程", "校內規範"];
 
 let cachedCacheVersion = "";
 let cachedCacheVersionAt = 0;
@@ -10,6 +13,9 @@ export default {
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") return corsResponse(null, 204);
+    if (isLineWebhookRequest(request, url)) {
+      return handleLineWebhook(request, env);
+    }
     if (!env.GAS_URL) {
       return corsResponse(JSON.stringify({ ok: false, error: "MISSING_GAS_URL" }), 500);
     }
@@ -97,6 +103,165 @@ async function proxyPostToGas(request, env) {
     }
   });
   return withCors(response, "BYPASS");
+}
+
+function isLineWebhookRequest(request, url) {
+  return request.method === "POST" && url.pathname === "/line/webhook";
+}
+
+async function handleLineWebhook(request, env) {
+  if (!env.LINE_CHANNEL_SECRET) {
+    return lineJsonResponse({ ok: false, error: "SERVICE_UNAVAILABLE" }, 503);
+  }
+
+  const rawBody = await request.text();
+  const signature = request.headers.get("x-line-signature");
+  if (!signature) {
+    return lineJsonResponse({ ok: false, error: "UNAUTHORIZED" }, 401);
+  }
+
+  const isValid = await verifyLineSignature(rawBody, signature, env.LINE_CHANNEL_SECRET);
+  if (!isValid) {
+    return lineJsonResponse({ ok: false, error: "UNAUTHORIZED" }, 401);
+  }
+
+  const parsed = safeParseJson(rawBody);
+  if (!parsed.ok) {
+    return lineJsonResponse({ ok: false, error: "BAD_REQUEST" }, 400);
+  }
+
+  const events = parsed.data && Array.isArray(parsed.data.events) ? parsed.data.events : [];
+  const replyJobs = events
+    .map((event) => {
+      if (!event || event.type !== "message" || !event.replyToken) return null;
+      const message = event.message && event.message.type === "text"
+        ? createLineTextReplyMessage(event.message.text)
+        : createLineFallbackMessage("目前只支援文字訊息。請輸入關鍵字，或使用下方選單。");
+      return { replyToken: event.replyToken, messages: [message] };
+    })
+    .filter(Boolean);
+
+  if (!replyJobs.length) {
+    return lineJsonResponse({ ok: true }, 200);
+  }
+
+  if (!env.LINE_CHANNEL_ACCESS_TOKEN) {
+    return lineJsonResponse({ ok: false, error: "SERVICE_UNAVAILABLE" }, 503);
+  }
+
+  for (const job of replyJobs) {
+    await replyToLine(job.replyToken, job.messages, env);
+  }
+
+  return lineJsonResponse({ ok: true }, 200);
+}
+
+async function verifyLineSignature(rawBody, signature, channelSecret) {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(channelSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const signatureBytes = Uint8Array.from(atob(signature.trim()), (char) => char.charCodeAt(0));
+    return crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(rawBody));
+  } catch (err) {
+    return false;
+  }
+}
+
+function safeParseJson(rawBody) {
+  try {
+    return { ok: true, data: JSON.parse(rawBody) };
+  } catch (err) {
+    return { ok: false, data: null };
+  }
+}
+
+async function replyToLine(replyToken, messages, env) {
+  if (!replyToken || !env.LINE_CHANNEL_ACCESS_TOKEN) return false;
+  try {
+    const response = await fetch(LINE_REPLY_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`
+      },
+      body: JSON.stringify({
+        replyToken,
+        messages: messages.slice(0, 5)
+      })
+    });
+    return response.ok;
+  } catch (err) {
+    return false;
+  }
+}
+
+function createLineTextReplyMessage(text) {
+  const value = String(text || "").trim();
+  if (value === "選單" || value.toLowerCase() === "menu") {
+    return createLineQuickReplyMessage();
+  }
+  if (!value) {
+    return createLineFallbackMessage("請輸入關鍵字，或使用下方選單快速查詢。");
+  }
+  return createLineFallbackMessage("目前 LINE Bot MVP 查詢功能尚未啟用。請先使用教師手冊首頁，或使用下方選單。");
+}
+
+function createLineQuickReplyMessage() {
+  return {
+    type: "text",
+    text: "請選擇想查詢的教師手冊分類。",
+    quickReply: {
+      items: createLineQuickReplyItems()
+    }
+  };
+}
+
+function createLineFallbackMessage(text) {
+  const fallbackText = text || "目前無法完成查詢。請稍後再試，或先開啟教師手冊首頁。";
+  return {
+    type: "text",
+    text: `${fallbackText}\n${HANDBOOK_HOME_URL}`,
+    quickReply: {
+      items: createLineQuickReplyItems()
+    }
+  };
+}
+
+function createLineQuickReplyItems() {
+  return [
+    ...LINE_QUICK_REPLY_LABELS.map((label) => ({
+      type: "action",
+      action: {
+        type: "message",
+        label,
+        text: label
+      }
+    })),
+    {
+      type: "action",
+      action: {
+        type: "uri",
+        label: "教師手冊首頁",
+        uri: HANDBOOK_HOME_URL
+      }
+    }
+  ];
+}
+
+function lineJsonResponse(body, status) {
+  return new Response(JSON.stringify(body), {
+    status: status || 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    }
+  });
 }
 
 async function getCacheVersion(env) {
