@@ -1522,8 +1522,9 @@
       return parts.join("｜");
     }
 
-    function getResourceListMeta(item) {
-      const parts = [getOfficeCategoryText(item), "組內順序 " + (item.sort_order || "")];
+    function getResourceListMeta(item, listIndex) {
+      const positionText = Number.isInteger(listIndex) ? "本清單第 " + (listIndex + 1) + " 筆" : "";
+      const parts = [getOfficeCategoryText(item), positionText];
       if (item.featured) parts.push("常用資料");
       return parts.filter(Boolean).join("｜");
     }
@@ -1589,7 +1590,7 @@
         el.itemList.innerHTML = renderGroupedList(
           items,
           getListGroupName,
-          (item) => `
+          (item, index) => `
             <div class="list-entry is-draggable ${item.visible === false ? "is-unpublished" : ""} ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
               ${selectionMode ? `<input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>` : ""}
               <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
@@ -1598,7 +1599,7 @@
                   <strong>${escapeHtml(item.title || "未命名內容")}</strong>
                   ${getUnpublishedBadge(item)}
                 </span>
-                <span class="list-meta">${escapeHtml(getResourceListMeta(item))}</span>
+                <span class="list-meta">${escapeHtml(getResourceListMeta(item, index))}</span>
               </button>
             </div>
           `
@@ -1661,13 +1662,13 @@
     function renderGroupedList(items, groupName, renderItem) {
       if (!items.length) return "<p class='list-empty'>沒有符合條件的項目。</p>";
       let currentGroup = "";
-      return items.map((item) => {
+      return items.map((item, index) => {
         const nextGroup = groupName(item);
         const heading = nextGroup !== currentGroup
           ? `<div class="list-group-title">${escapeHtml(nextGroup)}</div>`
           : "";
         currentGroup = nextGroup;
-        return heading + renderItem(item);
+        return heading + renderItem(item, index);
       }).join("");
     }
 
