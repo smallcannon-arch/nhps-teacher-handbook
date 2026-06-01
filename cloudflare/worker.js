@@ -4,6 +4,8 @@ const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "he
 const LINE_REPLY_API_URL = "https://api.line.me/v2/bot/message/reply";
 const HANDBOOK_HOME_URL = "https://smallcannon-arch.github.io/nhps-teacher-handbook/";
 const LINE_QUICK_REPLY_LABELS = ["總務", "教務", "學務", "輔導", "人事", "會計", "系統入口", "線上填報", "表件", "流程", "校內規範"];
+const LINE_SEARCH_RESULT_LIMIT = 5;
+const LINE_SEARCH_TEXT_LIMIT = 4800;
 
 let cachedCacheVersion = "";
 let cachedCacheVersionAt = 0;
@@ -131,15 +133,14 @@ async function handleLineWebhook(request, env) {
   }
 
   const events = parsed.data && Array.isArray(parsed.data.events) ? parsed.data.events : [];
-  const replyJobs = events
-    .map((event) => {
-      if (!event || event.type !== "message" || !event.replyToken) return null;
-      const message = event.message && event.message.type === "text"
-        ? createLineTextReplyMessage(event.message.text)
-        : createLineFallbackMessage("目前只支援文字訊息。請輸入關鍵字，或使用下方選單。");
-      return { replyToken: event.replyToken, messages: [message] };
-    })
-    .filter(Boolean);
+  const replyJobs = [];
+  for (const event of events) {
+    if (!event || event.type !== "message" || !event.replyToken) continue;
+    const message = event.message && event.message.type === "text"
+      ? await handleLineTextMessage(event.message.text, env)
+      : createLineFallbackMessage("目前只支援文字訊息。請輸入關鍵字，或使用下方選單。");
+    replyJobs.push({ replyToken: event.replyToken, messages: [message] });
+  }
 
   if (!replyJobs.length) {
     return lineJsonResponse({ ok: true }, 200);
@@ -201,7 +202,7 @@ async function replyToLine(replyToken, messages, env) {
   }
 }
 
-function createLineTextReplyMessage(text) {
+async function handleLineTextMessage(text, env) {
   const value = String(text || "").trim();
   if (value === "選單" || value.toLowerCase() === "menu") {
     return createLineQuickReplyMessage();
@@ -209,7 +210,208 @@ function createLineTextReplyMessage(text) {
   if (!value) {
     return createLineFallbackMessage("請輸入關鍵字，或使用下方選單快速查詢。");
   }
-  return createLineFallbackMessage("目前 LINE Bot MVP 查詢功能尚未啟用。請先使用教師手冊首頁，或使用下方選單。");
+
+  const directory = await fetchLineDirectory(env);
+  if (!directory.ok) {
+    return createLineDirectoryErrorMessage(value);
+  }
+
+  const results = searchLineDirectory(value, directory.data.resources);
+  if (!results.length) {
+    return createLineNoResultsMessage(value);
+  }
+  return createLineSearchResultsMessage(value, results);
+}
+
+async function fetchLineDirectory(env) {
+  if (!env.GAS_URL) return { ok: false, data: null };
+
+  try {
+    const cacheVersionResult = await getCacheVersion(env);
+    const cacheVersion = cacheVersionResult.value;
+    const cacheKey = cacheVersion
+      ? new Request(`https://line-directory.local/?action=getDirectory&cache_version=${encodeURIComponent(cacheVersion)}`)
+      : null;
+    const cache = cacheKey ? caches.default : null;
+
+    if (cacheKey) {
+      const hit = await cache.match(cacheKey);
+      if (hit) {
+        try {
+          const data = await hit.clone().json();
+          if (data && data.ok !== false && Array.isArray(data.resources)) {
+            return { ok: true, data };
+          }
+        } catch (err) {}
+      }
+    }
+
+    const gasUrl = new URL(env.GAS_URL);
+    gasUrl.searchParams.set("action", "getDirectory");
+    if (cacheVersion) gasUrl.searchParams.set("cache_version", cacheVersion);
+
+    const upstream = await fetch(gasUrl.toString(), {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+    const text = await upstream.text();
+    if (!upstream.ok || !looksLikeJson(text)) return { ok: false, data: null };
+
+    const parsed = safeParseJson(text);
+    if (!parsed.ok || !parsed.data || parsed.data.ok === false || !Array.isArray(parsed.data.resources)) {
+      return { ok: false, data: null };
+    }
+
+    if (cacheKey) {
+      try {
+        await cache.put(cacheKey, new Response(JSON.stringify(parsed.data), {
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": `public, max-age=${DEFAULT_CACHE_SECONDS}`
+          }
+        }));
+      } catch (err) {}
+    }
+
+    return { ok: true, data: parsed.data };
+  } catch (err) {
+    return { ok: false, data: null };
+  }
+}
+
+function searchLineDirectory(query, resources) {
+  const queryTerms = getLineQueryTerms(query);
+  if (!queryTerms.length || !Array.isArray(resources)) return [];
+
+  return resources
+    .filter((resource) => resource && resource.visible !== false)
+    .map((resource) => {
+      const link = getFirstValidLineLink(resource);
+      return {
+        resource,
+        link,
+        score: scoreLineResource(queryTerms, resource, link)
+      };
+    })
+    .filter((item) => item.score > 0 && item.link)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const aOrder = Number.isFinite(Number(a.resource.sort_order)) ? Number(a.resource.sort_order) : Number.MAX_SAFE_INTEGER;
+      const bOrder = Number.isFinite(Number(b.resource.sort_order)) ? Number(b.resource.sort_order) : Number.MAX_SAFE_INTEGER;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return String(b.resource.updated || "").localeCompare(String(a.resource.updated || ""));
+    })
+    .slice(0, LINE_SEARCH_RESULT_LIMIT);
+}
+
+function getLineQueryTerms(query) {
+  const normalized = normalizeLineSearchText(query);
+  if (!normalized) return [];
+
+  const terms = new Set([normalized, ...normalized.split(" ").filter(Boolean)]);
+  const aliases = {
+    "表件": ["表單", "申請", "表單 申請"],
+    "表單": ["表單", "申請", "表單 申請"]
+  };
+
+  for (const [term, values] of Object.entries(aliases)) {
+    if (terms.has(term)) {
+      values.forEach((value) => terms.add(normalizeLineSearchText(value)));
+    }
+  }
+
+  return Array.from(terms).filter(Boolean);
+}
+
+function scoreLineResource(queryTerms, resource, link) {
+  let score = 0;
+  score += scoreLineField(resource.title, queryTerms, 12);
+  score += scoreLineField(resource.tags, queryTerms, 8);
+  score += scoreLineField(resource.category, queryTerms, 8);
+  score += scoreLineField(resource.office, queryTerms, 5);
+  score += scoreLineField(getLineResourceSummary(resource), queryTerms, 4);
+  score += scoreLineField(getLineLinkLabels(resource), queryTerms, 2);
+  if (score > 0 && link) score += 1;
+  if (score > 0 && !link) score -= 4;
+  return score;
+}
+
+function scoreLineField(value, queryTerms, weight) {
+  const normalized = normalizeLineSearchText(value);
+  if (!normalized) return 0;
+
+  return queryTerms.reduce((score, term) => {
+    if (!term || !normalized.includes(term)) return score;
+    if (normalized === term) return score + weight + 3;
+    if (normalized.startsWith(term)) return score + weight + 1;
+    return score + weight;
+  }, 0);
+}
+
+function normalizeLineSearchText(value) {
+  if (Array.isArray(value)) return normalizeLineSearchText(value.join(" "));
+  return String(value || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getLineResourceSummary(resource) {
+  return String(resource && (resource.summary || resource.note) || "").trim();
+}
+
+function getLineLinkLabels(resource) {
+  if (!resource || !Array.isArray(resource.links)) return "";
+  return resource.links.map((link) => link && link.label).filter(Boolean).join(" ");
+}
+
+function getFirstValidLineLink(resource) {
+  if (!resource || !Array.isArray(resource.links)) return null;
+  return resource.links.find((link) => {
+    const url = String(link && link.url || "").trim();
+    return /^https?:\/\//i.test(url);
+  }) || null;
+}
+
+function createLineSearchResultsMessage(query, results) {
+  const safeQuery = truncateLineText(query, 24);
+  const lines = [`找到 ${results.length} 筆「${safeQuery}」相關資源：`, ""];
+
+  results.forEach((item, index) => {
+    const resource = item.resource;
+    const meta = [resource.office, resource.category].filter(Boolean).join("／") || "教師手冊";
+    const summary = truncateLineText(getLineResourceSummary(resource), 72);
+    const linkUrl = String(item.link.url || "").trim();
+    lines.push(`${index + 1}. ${truncateLineText(resource.title || "未命名資源", 48)}`);
+    lines.push(truncateLineText(meta, 36));
+    if (summary) lines.push(summary);
+    lines.push(linkUrl);
+    if (index < results.length - 1) lines.push("");
+  });
+
+  return {
+    type: "text",
+    text: truncateLineText(lines.join("\n"), LINE_SEARCH_TEXT_LIMIT),
+    quickReply: {
+      items: createLineQuickReplyItems()
+    }
+  };
+}
+
+function createLineNoResultsMessage(query) {
+  return createLineFallbackMessage(`找不到「${truncateLineText(query, 24)}」相關資源。可改用「報修、請假、採購、霸凌、性平」等關鍵字，或開啟教師手冊首頁。`);
+}
+
+function createLineDirectoryErrorMessage(query) {
+  return createLineFallbackMessage(`目前無法查詢「${truncateLineText(query, 24)}」。請稍後再試，或先開啟教師手冊首頁。`);
+}
+
+function truncateLineText(text, limit) {
+  const chars = Array.from(String(text || "").trim());
+  if (chars.length <= limit) return chars.join("");
+  return `${chars.slice(0, Math.max(0, limit - 1)).join("")}…`;
 }
 
 function createLineQuickReplyMessage() {
