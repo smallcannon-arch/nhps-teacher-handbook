@@ -4,3 +4,7 @@ compatibility_date = "2026-05-28"
 
 [vars]
 GAS_URL = "https://script.google.com/macros/s/AKfycbwOzdnBN_kl9mQYlma3VBWESFc2DCkDqaRyti-WF4NsLGDUx7NJ_kl2soJewC5ifPnuEw/exec"
+
+[[kv_namespaces]]
+binding = "HANDBOOK_BOT_KV"
+id = "31ec5b84c76d4e3da547f2c5fc2a4e08"

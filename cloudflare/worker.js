@@ -6,17 +6,16 @@ const HANDBOOK_HOME_URL = "https://smallcannon-arch.github.io/nhps-teacher-handb
 const LINE_QUICK_REPLY_LABELS = ["總務", "教務", "學務", "輔導", "人事", "會計", "系統入口", "線上填報", "表件", "流程", "校內規範"];
 const LINE_SEARCH_RESULT_LIMIT = 5;
 const LINE_SEARCH_TEXT_LIMIT = 4800;
-const LINE_DIRECTORY_CACHE_KEY = "https://line-directory.local/latest";
-const LINE_DIRECTORY_MEMORY_TTL_MS = 300000;
-const LINE_DIRECTORY_EDGE_TTL_SECONDS = 600;
-const LINE_DIRECTORY_FETCH_TIMEOUT_MS = 1500;
-const LINE_DIRECTORY_WARMUP_TIMEOUT_MS = 10000;
+const LINE_BOT_INDEX_KEY = "teacher-handbook:bot-search-index";
+const LINE_BOT_INDEX_STALE_MS = 60 * 60 * 1000;
+const LINE_BOT_INDEX_FETCH_TIMEOUT_MS = 1500;
+const LINE_BOT_INDEX_REFRESH_TIMEOUT_MS = 10000;
 
 let cachedCacheVersion = "";
 let cachedCacheVersionAt = 0;
-let lineDirectoryMemoryCache = null;
-let lineDirectoryMemoryCacheAt = 0;
-let lineDirectoryWarmupPromise = null;
+let lineBotIndexMemoryCache = null;
+let lineBotIndexMemoryCacheAt = 0;
+let lineBotIndexRefreshPromise = null;
 
 export default {
   async fetch(request, env, ctx) {
@@ -219,60 +218,74 @@ async function handleLineTextMessage(text, env, ctx) {
     return createLineFallbackMessage("請輸入關鍵字，或使用下方選單快速查詢。");
   }
 
-  const directory = await fetchLineDirectory(env, ctx);
-  if (!directory.ok) {
+  const index = await getLineBotIndex(env, ctx);
+  if (!index.ok) {
     return createLineDirectoryErrorMessage(value);
   }
 
-  const results = searchLineDirectory(value, directory.data.resources);
+  const resources = lineBotIndexItemsToResources(index.data);
+  const results = searchLineDirectory(value, resources);
   if (!results.length) {
     return createLineNoResultsMessage(value);
   }
   return createLineSearchResultsMessage(value, results);
 }
 
-async function fetchLineDirectory(env, ctx) {
-  if (!env.GAS_URL) return { ok: false, data: null };
+async function getLineBotIndex(env, ctx) {
+  const cachedIndex = readLineBotIndexFromMemory();
+  if (cachedIndex) {
+    if (isLineBotIndexStale(cachedIndex)) scheduleLineBotIndexRefresh(env, ctx);
+    return { ok: true, data: cachedIndex };
+  }
 
-  const cachedDirectory = getLineDirectoryMemoryCache();
-  if (cachedDirectory) return { ok: true, data: cachedDirectory };
+  const kvIndex = await readLineBotIndexFromKv(env);
+  if (kvIndex) {
+    setLineBotIndexMemoryCache(kvIndex);
+    if (isLineBotIndexStale(kvIndex)) scheduleLineBotIndexRefresh(env, ctx);
+    return { ok: true, data: kvIndex };
+  }
 
-  const cacheKey = new Request(LINE_DIRECTORY_CACHE_KEY);
-  const cache = caches.default;
-
-  try {
-    const hit = await cache.match(cacheKey);
-    if (hit) {
-      const data = await hit.clone().json();
-      if (isValidLineDirectory(data)) {
-        setLineDirectoryMemoryCache(data);
-        return { ok: true, data };
-      }
-    }
-  } catch (err) {}
-
-  const warmupPromise = scheduleLineDirectoryWarmup(env, ctx);
-  const warmedDirectory = await resolveLineDirectoryBeforeTimeout(warmupPromise, LINE_DIRECTORY_FETCH_TIMEOUT_MS);
-  if (isValidLineDirectory(warmedDirectory)) return { ok: true, data: warmedDirectory };
+  const refreshPromise = scheduleLineBotIndexRefresh(env, ctx);
+  const refreshedIndex = await resolveLineBotIndexBeforeTimeout(refreshPromise, LINE_BOT_INDEX_FETCH_TIMEOUT_MS);
+  if (isValidLineBotIndex(refreshedIndex)) return { ok: true, data: refreshedIndex };
 
   return { ok: false, data: null };
 }
 
-function scheduleLineDirectoryWarmup(env, ctx) {
-  if (!lineDirectoryWarmupPromise) {
-    lineDirectoryWarmupPromise = warmLineDirectoryCache(env)
+function readLineBotIndexFromMemory() {
+  if (!isValidLineBotIndex(lineBotIndexMemoryCache)) {
+    lineBotIndexMemoryCache = null;
+    lineBotIndexMemoryCacheAt = 0;
+    return null;
+  }
+  return lineBotIndexMemoryCache;
+}
+
+async function readLineBotIndexFromKv(env) {
+  if (!env.HANDBOOK_BOT_KV || typeof env.HANDBOOK_BOT_KV.get !== "function") return null;
+  try {
+    const index = await env.HANDBOOK_BOT_KV.get(LINE_BOT_INDEX_KEY, { type: "json" });
+    return isValidLineBotIndex(index) ? index : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function scheduleLineBotIndexRefresh(env, ctx) {
+  if (!lineBotIndexRefreshPromise) {
+    lineBotIndexRefreshPromise = refreshLineBotIndex(env)
       .catch(() => null)
       .finally(() => {
-        lineDirectoryWarmupPromise = null;
+        lineBotIndexRefreshPromise = null;
       });
   }
   if (ctx && typeof ctx.waitUntil === "function") {
-    ctx.waitUntil(lineDirectoryWarmupPromise.catch(() => null));
+    ctx.waitUntil(lineBotIndexRefreshPromise.catch(() => null));
   }
-  return lineDirectoryWarmupPromise;
+  return lineBotIndexRefreshPromise;
 }
 
-async function warmLineDirectoryCache(env) {
+async function refreshLineBotIndex(env) {
   if (!env.GAS_URL) return null;
   try {
     const gasUrl = new URL(env.GAS_URL);
@@ -281,26 +294,76 @@ async function warmLineDirectoryCache(env) {
     const upstream = await fetchWithTimeout(gasUrl.toString(), {
       method: "GET",
       headers: { "Accept": "application/json" }
-    }, LINE_DIRECTORY_WARMUP_TIMEOUT_MS);
+    }, LINE_BOT_INDEX_REFRESH_TIMEOUT_MS);
     const text = await upstream.text();
     if (!upstream.ok || !looksLikeJson(text)) return null;
 
     const parsed = safeParseJson(text);
-    const directory = createLineDirectorySnapshot(parsed.data);
-    if (!parsed.ok || !isValidLineDirectory(directory)) return null;
+    if (!parsed.ok) return null;
+    const index = buildLineBotIndexFromDirectory(parsed.data);
+    if (!isValidLineBotIndex(index)) return null;
 
-    await putLineDirectoryCache(directory);
-    return directory;
+    await writeLineBotIndexToKv(env, index);
+    return index;
   } catch (err) {
     return null;
   }
 }
 
-async function resolveLineDirectoryBeforeTimeout(warmupPromise, timeoutMs) {
+function buildLineBotIndexFromDirectory(directory) {
+  const resources = directory && Array.isArray(directory.resources) ? directory.resources : [];
+  const items = resources
+    .filter((resource) => resource && resource.visible !== false)
+    .map((resource) => {
+      const link = getFirstValidLineLink(resource);
+      if (!link) return null;
+      return {
+        id: String(resource.id || resource.resource_id || "").trim(),
+        title: String(resource.title || "").trim(),
+        office: String(resource.office || "").trim(),
+        category: String(resource.category || "").trim(),
+        tags: Array.isArray(resource.tags) ? resource.tags.map((tag) => String(tag || "").trim()).filter(Boolean) : [],
+        summary: getLineResourceSummary(resource),
+        url: String(link.url || "").trim()
+      };
+    })
+    .filter((item) => item && item.title && /^https?:\/\//i.test(item.url));
+
+  return {
+    version: String(directory && (directory.cache_version || directory.generated_at) || ""),
+    updatedAt: Date.now(),
+    items
+  };
+}
+
+function isLineBotIndexStale(index) {
+  const updatedAt = Number(index && index.updatedAt || 0);
+  return !updatedAt || Date.now() - updatedAt > LINE_BOT_INDEX_STALE_MS;
+}
+
+async function writeLineBotIndexToKv(env, index) {
+  setLineBotIndexMemoryCache(index);
+  if (!env.HANDBOOK_BOT_KV || typeof env.HANDBOOK_BOT_KV.put !== "function") return index;
+  try {
+    await env.HANDBOOK_BOT_KV.put(LINE_BOT_INDEX_KEY, JSON.stringify(index));
+  } catch (err) {}
+  return index;
+}
+
+function setLineBotIndexMemoryCache(index) {
+  lineBotIndexMemoryCache = index;
+  lineBotIndexMemoryCacheAt = Date.now();
+}
+
+function isValidLineBotIndex(index) {
+  return !!(index && Array.isArray(index.items));
+}
+
+async function resolveLineBotIndexBeforeTimeout(refreshPromise, timeoutMs) {
   let timeoutId = null;
   try {
     return await Promise.race([
-      warmupPromise,
+      refreshPromise,
       new Promise((resolve) => {
         timeoutId = setTimeout(() => resolve(null), timeoutMs);
       })
@@ -310,45 +373,19 @@ async function resolveLineDirectoryBeforeTimeout(warmupPromise, timeoutMs) {
   }
 }
 
-async function putLineDirectoryCache(directory) {
-  setLineDirectoryMemoryCache(directory);
-  try {
-    await caches.default.put(new Request(LINE_DIRECTORY_CACHE_KEY), new Response(JSON.stringify(directory), {
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": `public, max-age=${LINE_DIRECTORY_EDGE_TTL_SECONDS}`
-      }
-    }));
-  } catch (err) {}
-}
-
-function getLineDirectoryMemoryCache() {
-  if (!lineDirectoryMemoryCache) return null;
-  if (Date.now() - lineDirectoryMemoryCacheAt > LINE_DIRECTORY_MEMORY_TTL_MS) {
-    lineDirectoryMemoryCache = null;
-    lineDirectoryMemoryCacheAt = 0;
-    return null;
-  }
-  return lineDirectoryMemoryCache;
-}
-
-function setLineDirectoryMemoryCache(data) {
-  lineDirectoryMemoryCache = data;
-  lineDirectoryMemoryCacheAt = Date.now();
-}
-
-function createLineDirectorySnapshot(data) {
-  if (!data || data.ok === false || !Array.isArray(data.resources)) return null;
-  return {
-    ok: true,
-    cache_version: data.cache_version || "",
-    generated_at: data.generated_at || "",
-    resources: data.resources
-  };
-}
-
-function isValidLineDirectory(data) {
-  return !!(data && data.ok !== false && Array.isArray(data.resources));
+function lineBotIndexItemsToResources(index) {
+  if (!isValidLineBotIndex(index)) return [];
+  return index.items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    office: item.office,
+    category: item.category,
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    note: item.summary || "",
+    summary: item.summary || "",
+    links: item.url ? [{ label: "開啟連結", url: item.url }] : [],
+    visible: true
+  }));
 }
 
 async function fetchWithTimeout(url, options, timeoutMs) {
