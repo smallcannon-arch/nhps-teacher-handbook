@@ -3636,6 +3636,7 @@
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         elements.searchInput.value = state.query;
         renderAll();
+        scrollCurrentResultsIntoViewOnMobile();
       });
       return button;
     }
