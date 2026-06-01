@@ -1200,9 +1200,10 @@
       { label: "表件／資料下載", hint: "表單、文件、年度資料", keywords: ["表件", "表單", "資料", "下載", "年度", "檔案"] }
     ];
     const CANNED_TEXT = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
+    const DEFAULT_RESOURCE_CATEGORY = "校務參考";
     const DEFAULT_CATEGORIES = [
-      "一般資料", "表單／申請", "流程說明", "系統入口",
-      "年度資料", "操作說明", "其他"
+      "系統入口", "表單／申請", "流程說明", "校內規範",
+      "校務參考", "年度資料", "操作說明", "其他"
     ];
     const DEFAULT_CATEGORY_SET = new Set(DEFAULT_CATEGORIES);
     const DEFAULT_TYPES = [
@@ -1824,7 +1825,7 @@
       el.resourceTitleInput.value = "";
       el.resourceUpdatedInput.value = todayText();
       el.resourceOfficeInput.value = "全校共用";
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, "一般資料");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, DEFAULT_RESOURCE_CATEGORY);
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = "";
@@ -1914,7 +1915,7 @@
         id: resourceId,
         title: el.resourceTitleInput.value.trim(),
         office: normalizeResourceOffice(el.resourceOfficeInput.value),
-        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || normalizeResourceOffice(el.resourceOfficeInput.value),
+        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || DEFAULT_RESOURCE_CATEGORY,
         type: getComboValue(el.resourceTypeSelect, el.resourceTypeInput),
         status: existing ? existing.status || "" : "",
         note: el.resourceNoteInput.value.trim(),
@@ -1992,7 +1993,7 @@
           id: item.id,
           title: item.title || "",
           office: normalizeResourceOffice(item.office || "全校共用"),
-          category: item.category || "一般資料",
+          category: item.category || DEFAULT_RESOURCE_CATEGORY,
           type: item.type || "連結",
           status: item.status || "",
           note: item.note || "",
@@ -2023,7 +2024,7 @@
       el.resourceTitleInput.value = (item.title || "未命名資料卡") + "（副本）";
       el.resourceUpdatedInput.value = todayText();
       el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
-      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "一般資料");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || DEFAULT_RESOURCE_CATEGORY);
       setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "連結");
       el.resourceSortInput.value = String(resources.length + 1);
       el.resourceNoteInput.value = item.note || "";
@@ -2487,7 +2488,7 @@
     function categoryOptionLabel(value) {
       const text = String(value || "").trim();
       if (text === "常用資料") return "舊分類：高頻參考資料（原值保留）";
-      return DEFAULT_CATEGORY_SET.has(text) ? text : "舊分類：" + text;
+      return DEFAULT_CATEGORY_SET.has(text) ? text : "舊分類：" + text + "（原值保留）";
     }
 
     function mergeOptions(defaults, ...groups) {
