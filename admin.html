@@ -1236,6 +1236,7 @@
     let draggedItemId = "";
     let draggedEntry = null;
     let dropTargetEntry = null;
+    let draggedGroupName = "";
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1590,7 +1591,7 @@
           items,
           getListGroupName,
           (item, index) => `
-            <div class="list-entry is-draggable ${item.visible === false ? "is-unpublished" : ""} ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" draggable="true">
+            <div class="list-entry is-draggable ${item.visible === false ? "is-unpublished" : ""} ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" data-group="${escapeHtml(getListGroupName(item))}" draggable="true">
               ${selectionMode ? `<input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>` : ""}
               <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
@@ -2153,11 +2154,22 @@
       if (dropTargetEntry) dropTargetEntry.classList.add("is-drop-target");
     }
 
+    function isValidDropEntry(entry) {
+      return Boolean(
+        entry &&
+        draggedItemId &&
+        entry.dataset.id !== draggedItemId &&
+        entry.dataset.group &&
+        entry.dataset.group === draggedGroupName
+      );
+    }
+
     function clearDragState() {
       if (draggedEntry) draggedEntry.classList.remove("is-dragging");
       setDropTarget(null);
       draggedItemId = "";
       draggedEntry = null;
+      draggedGroupName = "";
     }
 
     async function reorderListByDrag(sourceId, targetId) {
@@ -2186,11 +2198,24 @@
         .sort((a, b) => a - b);
       const kind = "resource";
       activeResourceId = sourceId;
+      const previousResources = resources.map((item) => ({ ...item }));
+      const reorderedItems = reordered.map((item, index) => ({ id: item.id, sort_order: sortOrders[index] }));
+      const orderMap = new Map(reorderedItems.map((item) => [item.id, item.sort_order]));
+      resources = resources.map((item) => orderMap.has(item.id) ? { ...item, sort_order: orderMap.get(item.id) } : item);
+      renderList();
+      renderResourceEditor();
+      renderBulkState();
 
-      await runCommand("reorderDirectoryItems", {
+      const saved = await runCommand("reorderDirectoryItems", {
         kind,
-        items: reordered.map((item, index) => ({ id: item.id, sort_order: sortOrders[index] }))
+        items: reorderedItems
       }, "已用拖曳調整群組內顯示順序。");
+      if (!saved) {
+        resources = previousResources;
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+      }
     }
 
     async function runCommand(cmd, payload, successText, options = {}) {
@@ -2228,8 +2253,10 @@
         applyCommandResultLocally(cmd, payload, data);
         await loadDirectoryData({ keepCategoryFilter: true });
         showMessage(resolveSuccessText(successText), false);
+        return true;
       } catch (err) {
         showMessage(commandErrorText(err, isSaveAction), true);
+        return false;
       } finally {
         if (slowTimer) window.clearTimeout(slowTimer);
         if (actionButton) actionButton.textContent = idleButtonText;
@@ -2613,6 +2640,7 @@
       if (!entry || !idToken || mode === "trash") return;
       draggedItemId = entry.dataset.id || "";
       draggedEntry = entry;
+      draggedGroupName = entry.dataset.group || "";
       entry.classList.add("is-dragging");
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
@@ -2622,8 +2650,9 @@
     el.itemList.addEventListener("dragover", (event) => {
       if (!draggedItemId || mode === "trash") return;
       const entry = event.target.closest(".list-entry.is-draggable");
-      if (!entry || entry.dataset.id === draggedItemId) {
+      if (!isValidDropEntry(entry)) {
         setDropTarget(null);
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
         return;
       }
       event.preventDefault();
