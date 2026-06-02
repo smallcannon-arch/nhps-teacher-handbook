@@ -3835,7 +3835,8 @@
           elements.searchInput.value = state.query;
           renderAll();
         });
-        const meta = createTextElement("span", "update-meta", item.updated + "｜" + item.office);
+        const updatedText = formatDisplayDate(item.updated) || "未標示日期";
+        const meta = createTextElement("span", "update-meta", updatedText + "｜" + item.office);
         row.append(link, meta);
         return row;
       }));
