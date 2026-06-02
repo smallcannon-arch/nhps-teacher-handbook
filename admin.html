@@ -1241,6 +1241,7 @@
     ];
     const COMMON_CONTENT_TAG = "常用內容";
     const COMMON_CONTENT_PIN_TAG = "常用置頂";
+    const AUTH_EXPIRED_NOTICE = "登入狀態已逾時，這次變更尚未儲存。請重新登入後再操作。";
     const STAFF_UNITS_BY_OFFICE = {
       "教務處": ["教務主任", "教學組", "課研組", "資訊組", "特教組"],
       "學務處": ["學務主任", "生教組", "體育組", "環教組", "護理師"],
@@ -1465,16 +1466,30 @@
     }
 
     async function api(cmd, extra = {}) {
-      if (!idToken) throw new Error("尚未完成 Google 登入。");
+      if (!idToken) throw createAdminApiError("尚未完成 Google 登入。", 401);
       const payload = JSON.stringify({ cmd, idToken, ...extra });
       const response = await fetch(GAS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: "payload=" + encodeURIComponent(payload)
       });
-      const data = await response.json();
-      if (!data.ok) throw new Error(data.error || "操作失敗");
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw createAdminApiError(response.ok ? "伺服器回應格式錯誤。" : "操作失敗", response.status);
+      }
+      if (!response.ok || !data.ok) {
+        throw createAdminApiError(data.error || response.statusText || "操作失敗", response.status, data);
+      }
       return data;
+    }
+
+    function createAdminApiError(message, status, data) {
+      const err = new Error(message || "操作失敗");
+      err.status = Number(status || 0);
+      err.data = data || null;
+      return err;
     }
 
     async function loadDirectoryData(options = {}) {
@@ -2380,7 +2395,8 @@
           : resolveSuccessText(successText), false);
         return true;
       } catch (err) {
-        showMessage(commandErrorText(err, isSaveAction), true);
+        if (isAuthExpiredError(err)) showAuthExpiredNotice();
+        else showMessage(commandErrorText(err, isSaveAction), true);
         return false;
       } finally {
         if (slowTimer) window.clearTimeout(slowTimer);
@@ -2481,6 +2497,25 @@
         return message ? "儲存失敗：" + message : "儲存失敗，請檢查網路或重新登入後再試。";
       }
       return message || "操作失敗，請檢查網路或重新登入後再試。";
+    }
+
+    function isAuthExpiredError(err) {
+      const status = Number(err && err.status || 0);
+      if (status === 401 || status === 403) return true;
+      const message = String(err && err.message || "").toLowerCase();
+      return [
+        "未授權",
+        "登入逾時",
+        "token",
+        "auth",
+        "unauthorized",
+        "forbidden",
+        "login"
+      ].some((keyword) => message.includes(keyword.toLowerCase()));
+    }
+
+    function showAuthExpiredNotice() {
+      showMessage(AUTH_EXPIRED_NOTICE, true);
     }
 
     function setMode(nextMode) {
