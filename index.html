@@ -3452,6 +3452,16 @@
       return list;
     }
 
+    function hasValidResourceLink(resource) {
+      return Array.isArray(resource.links) && resource.links.some((link) => /^https?:\/\//i.test(String(link && link.url || "").trim()));
+    }
+
+    function getDisplayResourceStatus(resource) {
+      const status = String(resource && resource.status || "").trim();
+      if (status === "連結待補" && hasValidResourceLink(resource)) return "";
+      return status;
+    }
+
     function formatDisplayDate(value) {
       const text = String(value || "").trim();
       if (!text) return "";
@@ -3505,7 +3515,8 @@
     function createCommonResourceCard(resource) {
       const card = document.createElement("article");
       card.className = "padlet-card";
-      if (resource.status) card.classList.add("is-pending");
+      const displayStatus = getDisplayResourceStatus(resource);
+      if (displayStatus) card.classList.add("is-pending");
       card.id = resource.id;
 
       const title = createTextElement("h3", "", resource.title);
@@ -3537,7 +3548,7 @@
       const staffUnits = createStaffUnitTags(resource.tags);
       if (staffUnits) card.appendChild(staffUnits);
       if (updatedText) card.appendChild(createTextElement("p", "padlet-meta", "更新：" + updatedText));
-      if (resource.status) card.appendChild(createTextElement("p", "padlet-status", resource.status + "，每學年更換一次檔案或連結。"));
+      if (displayStatus) card.appendChild(createTextElement("p", "padlet-status", displayStatus + "，每學年更換一次檔案或連結。"));
 
       return card;
     }
