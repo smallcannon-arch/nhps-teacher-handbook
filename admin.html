@@ -678,6 +678,28 @@
       color: #79362e;
     }
 
+    .common-pinned-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 20px;
+      padding: 1px 7px;
+      border: 1px solid #d8e4e7;
+      border-radius: 999px;
+      background: #eef6f4;
+      color: #2f6b56;
+      font-size: 0.72rem;
+      font-weight: 900;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .list-button.is-active .common-pinned-badge {
+      border-color: #c9e0d9;
+      background: #f4fbf8;
+      color: #235b48;
+    }
+
     .list-entry.is-selected .list-button {
       border-color: #9db8c9;
       box-shadow: inset 4px 0 0 var(--gold);
@@ -1549,6 +1571,14 @@
       return item.visible === false ? "<span class='status-badge'>已下架</span>" : "";
     }
 
+    function isCommonPinnedResource(item) {
+      return (Array.isArray(item.tags) ? item.tags : []).some((tag) => String(tag || "").trim() === COMMON_CONTENT_PIN_TAG);
+    }
+
+    function getCommonPinnedBadge(item) {
+      return isCommonPinnedResource(item) ? "<span class='common-pinned-badge'>常用置頂</span>" : "";
+    }
+
     function getTrashListMeta(item) {
       return [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].filter(Boolean).join("｜");
     }
@@ -1613,6 +1643,7 @@
               <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
                 <span class="list-title-line">
                   <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                  ${getCommonPinnedBadge(item)}
                   ${getUnpublishedBadge(item)}
                 </span>
                 <span class="list-meta">${escapeHtml(getResourceListMeta(item, index))}</span>
