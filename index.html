@@ -1053,8 +1053,24 @@
     }
 
     @media (max-width: 980px) {
+      main.workbench-shell,
+      .workspace-layout,
+      .workbench-section,
+      .section-heading,
+      .common-content-panel,
+      .common-content-list,
+      .chip-list,
+      .results-column,
+      .resource-results,
+      .padlet-grid {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+
+      main.workbench-shell,
       .workspace-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 18px;
       }
 
