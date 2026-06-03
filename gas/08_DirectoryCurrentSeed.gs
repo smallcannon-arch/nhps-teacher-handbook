@@ -11,7 +11,7 @@ var CURRENT_DIRECTORY_SEED = {
       "links": [
         {
           "label": "開啟Meet",
-          "url": "https://meet.google.com/vvf-djns-hzd?authuser=0"
+          "url": "https://meet.google.com/gjx-nbsg-twb"
         }
       ],
       "updated": "2026-01-22",
