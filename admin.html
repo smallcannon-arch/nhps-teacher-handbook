@@ -1745,15 +1745,15 @@
       if (el.bulkToolsSummary) el.bulkToolsSummary.textContent = mode === "trash" ? "回收桶批次整理" : "批次整理";
       if (el.bulkPanelSummary) el.bulkPanelSummary.textContent = "批次整理（已勾選 " + selectedResourceIds.size + " 筆）";
       const hasVisibleItems = visibleItems.length > 0;
-      const canEdit = userCanEdit();
-      const canArchive = userCanManagePublication();
+      const canEdit = userCanEditContent();
+      const canManageTrash = userCanManageTrash();
       const canUseBulk = Boolean(enabled && idToken && canEdit && isBulkMode && isListSelectionMode());
-      const canMoveToTrash = Boolean(enabled && idToken && canArchive && isBulkMode && selectedCount > 0);
+      const canMoveToTrash = Boolean(enabled && idToken && canManageTrash && isBulkMode && selectedCount > 0);
       el.selectVisibleBtn.disabled = !canUseBulk || !hasVisibleItems;
       el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
       el.batchApplyBtn.disabled = mode !== "resources" || !canUseBulk || selectedResourceIds.size === 0;
       el.batchDeleteBtn.disabled = !canUseBulk || !canMoveToTrash;
-      el.restoreTrashBtn.disabled = !enabled || !idToken || !canArchive || mode !== "trash" || selectedTrashIds.size === 0;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canManageTrash || mode !== "trash" || selectedTrashIds.size === 0;
     }
 
     function isListSelectionMode() {
@@ -2031,7 +2031,7 @@
       const resourceId = el.resourceIdInput.value.trim();
       const existing = resources.find((resource) => resource.id === resourceId);
       const existingStatus = existing ? existing.status || "" : "";
-      const canManagePublication = userCanManagePublication();
+      const canPublishContent = userCanPublishContent();
       return {
         id: resourceId,
         title: el.resourceTitleInput.value.trim(),
@@ -2043,7 +2043,7 @@
         links,
         tags: collectResourceTags(),
         updated: el.resourceUpdatedInput.value || todayText(),
-        visible: canManagePublication ? el.resourceVisibleInput.checked : (existing ? existing.visible !== false : false),
+        visible: canPublishContent ? el.resourceVisibleInput.checked : (existing ? existing.visible !== false : false),
         featured: el.resourceFeaturedInput.checked,
         sort_order: Number(el.resourceSortInput.value || resources.length + 1)
       };
@@ -2219,7 +2219,7 @@
       const batchCategory = getComboValue(el.batchCategorySelect, el.batchCategoryInput);
       if (batchCategory) changes.category = batchCategory;
       if (el.batchFeaturedInput.value) changes.featured = el.batchFeaturedInput.value === "true";
-      if (userCanManagePublication() && el.batchVisibleInput.value) changes.visible = el.batchVisibleInput.value === "true";
+      if (userCanPublishContent() && el.batchVisibleInput.value) changes.visible = el.batchVisibleInput.value === "true";
       if (Object.keys(changes).length === 0) {
         showMessage("請先選擇至少一個要批次變更的欄位。", true);
         return;
@@ -2532,14 +2532,22 @@
       return nextMode === "trash" ? "trash" : "resources";
     }
 
-    function userCanEdit() {
+    function userCanEditContent() {
       const role = currentUser && currentUser.role;
       return ["admin", "editor", "reviewer"].includes(role);
     }
 
-    function userCanManagePublication() {
+    function userCanPublishContent() {
       const role = currentUser && currentUser.role;
-      return ["admin", "reviewer"].includes(role);
+      return ["admin", "editor", "reviewer"].includes(role);
+    }
+
+    function userCanManageTrash() {
+      return currentUser && currentUser.role === "admin";
+    }
+
+    function userCanManageUsers() {
+      return currentUser && currentUser.role === "admin";
     }
 
     function refreshListView() {
@@ -2550,36 +2558,37 @@
 
     function setEnabled(enabled) {
       mode = normalizeMode(mode);
-      const canEdit = userCanEdit();
-      const canManagePublication = userCanManagePublication();
+      const canEditContent = userCanEditContent();
+      const canPublishContent = userCanPublishContent();
+      const canManageTrash = userCanManageTrash();
       const activeResource = resources.find((item) => item.id === activeResourceId);
-      el.addItemBtn.disabled = !enabled || !idToken || !canEdit || mode === "trash";
+      el.addItemBtn.disabled = !enabled || !idToken || !canEditContent || mode === "trash";
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = !enabled || !idToken;
       el.statusFilter.disabled = mode === "trash" || !enabled || !idToken;
-      el.batchOfficeInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
-      setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEdit || mode !== "resources");
-      el.batchFeaturedInput.disabled = !enabled || !idToken || !canEdit || mode !== "resources";
-      el.batchVisibleInput.disabled = !enabled || !idToken || !canManagePublication || mode !== "resources";
+      el.batchOfficeInput.disabled = !enabled || !idToken || !canEditContent || mode !== "resources";
+      setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEditContent || mode !== "resources");
+      el.batchFeaturedInput.disabled = !enabled || !idToken || !canEditContent || mode !== "resources";
+      el.batchVisibleInput.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources";
       const batchVisibleField = el.batchVisibleInput.closest(".field");
-      if (batchVisibleField) batchVisibleField.hidden = !canManagePublication;
-      if (!canManagePublication) el.batchVisibleInput.value = "";
-      el.saveResourceBtn.disabled = !enabled || !idToken || !canEdit;
-      el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEdit || mode !== "resources" || !activeResourceId;
+      if (batchVisibleField) batchVisibleField.hidden = !canPublishContent;
+      if (!canPublishContent) el.batchVisibleInput.value = "";
+      el.saveResourceBtn.disabled = !enabled || !idToken || !canEditContent;
+      el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEditContent || mode !== "resources" || !activeResourceId;
       el.unpublishResourceBtn.textContent = activeResource && activeResource.visible === false ? "目前已下架" : "暫時下架";
-      el.unpublishResourceBtn.hidden = !canManagePublication;
-      el.archiveResourceBtn.hidden = !canManagePublication;
-      el.batchDeleteBtn.hidden = !canManagePublication;
-      el.restoreTrashBtn.hidden = !canManagePublication;
+      el.unpublishResourceBtn.hidden = !canPublishContent;
+      el.archiveResourceBtn.hidden = !canManageTrash;
+      el.batchDeleteBtn.hidden = !canManageTrash;
+      el.restoreTrashBtn.hidden = !canManageTrash;
       const visibleField = el.resourceVisibleInput.closest("label");
-      if (visibleField) visibleField.hidden = !canManagePublication;
-      el.resourceVisibleInput.disabled = !enabled || !idToken || !canManagePublication || mode !== "resources";
-      el.unpublishResourceBtn.disabled = !enabled || !idToken || !canManagePublication || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
+      if (visibleField) visibleField.hidden = !canPublishContent;
+      el.resourceVisibleInput.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources";
+      el.unpublishResourceBtn.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
       el.saveShortcutBtn.disabled = true;
-      el.archiveResourceBtn.disabled = !enabled || !idToken || !canManagePublication || !activeResourceId;
+      el.archiveResourceBtn.disabled = !enabled || !idToken || !canManageTrash || !activeResourceId;
       el.deleteShortcutBtn.disabled = true;
-      el.restoreTrashBtn.disabled = !enabled || !idToken || !canManagePublication || mode !== "trash" || selectedTrashIds.size === 0;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canManageTrash || mode !== "trash" || selectedTrashIds.size === 0;
       renderBulkState();
     }
 

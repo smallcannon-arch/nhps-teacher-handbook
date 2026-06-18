@@ -97,7 +97,7 @@ function submitReview_(payload, user) {
 }
 
 function publishChapter_(payload, user) {
-  requireReviewer_(user);
+  requireEditor_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -129,7 +129,7 @@ function publishChapter_(payload, user) {
 }
 
 function withdrawChapter_(payload, user) {
-  requireReviewer_(user);
+  requireEditor_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -148,7 +148,7 @@ function withdrawChapter_(payload, user) {
 }
 
 function deleteChapter_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -221,6 +221,12 @@ function normalizeDirectoryBoolean_(value, defaultValue) {
   return defaultValue === "FALSE" ? "FALSE" : "TRUE";
 }
 
+function requireAdmin_(user) {
+  if (!user || user.role !== "admin") {
+    throw new Error("權限不足：需要 admin");
+  }
+}
+
 function saveDirectoryResource_(payload, user) {
   requireEditor_(user);
   var input = payload.resource || payload;
@@ -241,9 +247,7 @@ function saveDirectoryResource_(payload, user) {
       ? normalizeDirectoryBoolean_(input.visible, existingVisible)
       : existingVisible;
     var existingArchived = existing && normalizeDirectoryBoolean_(existing.archived, "FALSE") === "TRUE";
-    if (requestedVisible !== existingVisible || existingArchived) {
-      requireReviewer_(user);
-    }
+    if (existingArchived) requireAdmin_(user);
 
     var item = existing || {};
     item.resource_id = resourceId;
@@ -276,7 +280,7 @@ function saveDirectoryResource_(payload, user) {
 }
 
 function deleteDirectoryResource_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceId = String(payload.resource_id || payload.id || "").trim();
   if (!resourceId) throw new Error("缺少 resource_id");
   var lock = LockService.getScriptLock();
@@ -299,7 +303,7 @@ function deleteDirectoryResource_(payload, user) {
 }
 
 function batchDeleteDirectoryResources_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceIds = payload.resource_ids || payload.ids || [];
   if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要移到回收桶的內容");
   var idSet = {};
@@ -331,7 +335,7 @@ function batchDeleteDirectoryResources_(payload, user) {
 }
 
 function restoreDirectoryResources_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceIds = payload.resource_ids || payload.ids || [];
   if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要還原的內容");
   var idSet = {};
@@ -409,7 +413,6 @@ function batchUpdateDirectoryResources_(payload, user) {
   var hasFeatured = Object.prototype.hasOwnProperty.call(changes, "featured");
   var hasVisible = Object.prototype.hasOwnProperty.call(changes, "visible");
   if (!hasOffice && !hasCategory && !hasFeatured && !hasVisible) throw new Error("沒有可套用的批次變更");
-  if (hasVisible) requireReviewer_(user);
 
   var idSet = {};
   resourceIds.forEach(function(id) {
@@ -483,7 +486,7 @@ function saveDirectoryShortcut_(payload, user) {
 }
 
 function deleteDirectoryShortcut_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var shortcutId = String(payload.shortcut_id || payload.id || "").trim();
   if (!shortcutId) throw new Error("缺少 shortcut_id");
   var lock = LockService.getScriptLock();
