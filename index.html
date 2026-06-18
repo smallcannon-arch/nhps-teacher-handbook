@@ -500,14 +500,57 @@
       gap: 9px;
     }
 
-    .padlet-card {
+    .resource-group {
+      grid-column: 1 / -1;
       display: grid;
       gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8faf7;
+    }
+
+    .resource-group-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d7e4ef;
+    }
+
+    .resource-group-header h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.02rem;
+      line-height: 1.35;
+      letter-spacing: 0;
+    }
+
+    .resource-group-header span {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .resource-group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+      gap: 10px;
+    }
+
+    .padlet-card {
+      display: grid;
+      align-content: start;
+      gap: 12px;
       min-height: 0;
       padding: 16px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       background: var(--white);
+      box-shadow: 0 6px 16px rgba(23, 55, 94, 0.06);
     }
 
     .padlet-card.is-pending {
@@ -518,8 +561,8 @@
     .padlet-card h3 {
       margin: 0;
       color: var(--navy);
-      font-size: 0.98rem;
-      line-height: 1.45;
+      font-size: 1.04rem;
+      line-height: 1.5;
       letter-spacing: 0;
     }
 
@@ -567,7 +610,7 @@
       border: 1px solid #d7e4ef;
       border-radius: 999px;
       background: #f3f7fa;
-      color: var(--navy);
+      color: #637286;
       font-size: 0.78rem;
       font-weight: 800;
       line-height: 1.4;
@@ -580,8 +623,8 @@
       padding: 1px 8px;
       border: 1px solid var(--blue-line);
       border-radius: var(--radius);
-      background: var(--blue-soft);
-      color: var(--navy);
+      background: #f3f7fa;
+      color: #637286;
       font-size: 0.78rem;
       font-weight: 800;
     }
@@ -594,9 +637,16 @@
     }
 
     .padlet-status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
       margin: 0;
+      padding: 4px 9px;
+      border: 1px solid #e4d0a9;
+      border-radius: var(--radius);
+      background: #fff5df;
       color: #76581e;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       font-weight: 800;
       line-height: 1.55;
     }
@@ -614,8 +664,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 38px;
-      padding: 5px 13px;
+      min-height: 40px;
+      padding: 6px 14px;
       border: 1px solid var(--navy);
       border-radius: var(--radius);
       background: var(--navy);
@@ -1281,6 +1331,20 @@
       }
 
       .padlet-card {
+        grid-template-columns: 1fr;
+      }
+
+      .resource-group {
+        padding: 12px;
+      }
+
+      .resource-group-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .resource-group-grid {
         grid-template-columns: 1fr;
       }
 
@@ -3390,6 +3454,55 @@
         .slice(0, homeRecentLimit);
     }
 
+    const resourceGroupOrder = [...realOfficeCategories, "其他"];
+
+    function getResourceGroupName(resource) {
+      const officeMatch = officeFromText(resource && resource.office);
+      if (officeMatch) return officeMatch;
+      const categoryMatch = officeFromText(resource && resource.category);
+      if (categoryMatch) return categoryMatch;
+      return normalizeOffice(resource && (resource.office || resource.category)) || "全校共用";
+    }
+
+    function getResourceGroupIndex(name) {
+      const index = resourceGroupOrder.indexOf(name);
+      return index === -1 ? resourceGroupOrder.length : index;
+    }
+
+    function groupCommonResources(items) {
+      const groups = new Map();
+      items.forEach((item) => {
+        const groupName = getResourceGroupName(item);
+        if (!groups.has(groupName)) groups.set(groupName, []);
+        groups.get(groupName).push(item);
+      });
+      return Array.from(groups, ([name, resources]) => ({ name, resources }))
+        .sort((a, b) => {
+          const orderDiff = getResourceGroupIndex(a.name) - getResourceGroupIndex(b.name);
+          if (orderDiff !== 0) return orderDiff;
+          return a.name.localeCompare(b.name, "zh-Hant");
+        });
+    }
+
+    function createResourceGroup(group) {
+      const section = document.createElement("section");
+      section.className = "resource-group";
+
+      const header = document.createElement("div");
+      header.className = "resource-group-header";
+      header.append(
+        createTextElement("h3", "", group.name),
+        createTextElement("span", "", group.resources.length + " 筆")
+      );
+
+      const grid = document.createElement("div");
+      grid.className = "resource-group-grid";
+      grid.append(...group.resources.map(createCommonResourceCard));
+
+      section.append(header, grid);
+      return section;
+    }
+
     function sortDirectoryItems(a, b) {
       const aOrder = Number(a.sort_order || 0);
       const bOrder = Number(b.sort_order || 0);
@@ -3726,7 +3839,12 @@
         ? (state.showAllIdle ? allItems : getHomeRecentItems(directoryItems))
         : directoryItems.filter(directoryItemMatches).sort(sortDirectoryItems);
 
-      elements.padletGrid.replaceChildren(...visible.map(createCommonResourceCard));
+      const shouldGroupResults = state.showAllIdle === true || hasActiveFilters();
+      elements.padletGrid.replaceChildren(
+        ...(shouldGroupResults
+          ? groupCommonResources(visible).map(createResourceGroup)
+          : visible.map(createCommonResourceCard))
+      );
       elements.padletEmpty.hidden = visible.length > 0;
       if (visible.length === 0) {
         elements.padletEmpty.textContent = isIdle ? "目前尚未有可顯示的近期更新。" : "目前沒有符合條件的連結。";
