@@ -650,6 +650,25 @@
       background: var(--blue-soft);
     }
 
+    .link-invalid {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 3px 9px;
+      border: 1px solid #e4d0a9;
+      border-radius: var(--radius);
+      background: #fffaf0;
+      color: #76581e;
+      font-size: 0.9rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .padlet-links .link-invalid {
+      min-height: 38px;
+      padding: 5px 13px;
+    }
+
     .padlet-empty,
     .padlet-warning {
       margin: 0;
@@ -3338,19 +3357,61 @@
       return list;
     }
 
+    function safeResourceUrl(url) {
+      const rawUrl = String(url || "").trim();
+      if (!rawUrl || rawUrl === "#") return null;
+      if (rawUrl.startsWith("//")) return null;
+      if (rawUrl.startsWith("#")) {
+        return rawUrl === "#resourceResults" ? { href: rawUrl, external: false } : null;
+      }
+
+      const compactUrl = rawUrl.replace(/[\u0000-\u001F\u007F\s]+/g, "");
+      const scheme = compactUrl.match(/^([a-z][a-z0-9+.-]*):/i);
+      if (scheme) {
+        const protocol = scheme[1].toLowerCase() + ":";
+        if (protocol === "http:" || protocol === "https:") {
+          return { href: rawUrl, external: true };
+        }
+        if (protocol === "mailto:" || protocol === "tel:") {
+          return { href: rawUrl, external: false };
+        }
+        return null;
+      }
+
+      return { href: rawUrl, external: false };
+    }
+
+    function appendResourceLink(item, link, options = {}) {
+      const label = options.label || (link && link.label) || "未命名連結";
+      const className = options.className || "";
+      const safeUrl = safeResourceUrl(link && link.url);
+
+      if (!safeUrl) {
+        const invalid = document.createElement("span");
+        invalid.className = className ? className + " link-invalid" : "link-invalid";
+        invalid.textContent = label + "（連結異常）";
+        item.appendChild(invalid);
+        return invalid;
+      }
+
+      const anchor = document.createElement("a");
+      anchor.href = safeUrl.href;
+      anchor.textContent = label;
+      if (className) anchor.className = className;
+      if (safeUrl.external) {
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+      }
+      item.appendChild(anchor);
+      return anchor;
+    }
+
     function createLinks(links) {
       const list = document.createElement("ul");
       list.className = "link-list";
       links.forEach((link) => {
         const item = document.createElement("li");
-        const anchor = document.createElement("a");
-        anchor.href = link.url || "#";
-        anchor.textContent = link.label || "未命名連結";
-        if (String(link.url || "").startsWith("http")) {
-          anchor.target = "_blank";
-          anchor.rel = "noopener noreferrer";
-        }
-        item.appendChild(anchor);
+        appendResourceLink(item, link);
         list.appendChild(item);
       });
       return list;
@@ -3437,15 +3498,10 @@
       list.className = "padlet-links";
       resource.links.forEach((link, index) => {
         const item = document.createElement("li");
-        const anchor = document.createElement("a");
-        anchor.href = link.url;
-        anchor.className = index === 0 ? "primary-action" : "secondary-action";
-        anchor.textContent = getLinkActionLabel(resource, link);
-        if (String(link.url || "").startsWith("http")) {
-          anchor.target = "_blank";
-          anchor.rel = "noopener noreferrer";
-        }
-        item.appendChild(anchor);
+        appendResourceLink(item, link, {
+          className: index === 0 ? "primary-action" : "secondary-action",
+          label: getLinkActionLabel(resource, link)
+        });
         list.appendChild(item);
       });
       return list;
