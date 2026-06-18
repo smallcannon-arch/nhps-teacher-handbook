@@ -167,9 +167,9 @@
 
     .clear-button {
       padding: 8px 16px;
-      border-color: rgba(242, 207, 141, 0.72);
-      background: #f2cf8d;
-      color: #17375e;
+      border-color: var(--blue-line);
+      background: transparent;
+      color: var(--navy);
       font-weight: 800;
     }
 
@@ -702,6 +702,36 @@
       margin: 0;
       color: var(--muted);
       font-size: 0.94rem;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .show-all-button {
+      min-height: 36px;
+      padding: 5px 12px;
+      border: 1px solid var(--blue-line);
+      border-radius: var(--radius);
+      background: var(--white);
+      color: var(--navy);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .show-all-button:hover,
+    .show-all-button:focus-visible {
+      border-color: var(--navy-2);
+      outline: none;
+    }
+
+    .show-all-button[hidden] {
+      display: none;
     }
 
     .guide-state {
@@ -1288,7 +1318,8 @@
       }
 
       .clear-button {
-        width: 100%;
+        justify-self: end;
+        width: fit-content;
       }
 
       .field-row {
@@ -1385,10 +1416,13 @@
         <section id="resourceResults" class="workbench-section resource-results" aria-label="目前結果">
           <div class="result-header">
             <div class="current-context" aria-live="polite">
-              <h2 id="currentTitle">目前結果：全部資料</h2>
-              <p id="currentDescription" class="section-note">可直接搜尋，或從左側選擇一個情境任務。</p>
+              <h2 id="currentTitle">目前結果：近期更新</h2>
+              <p id="currentDescription" class="section-note">可直接搜尋，或選擇一個情境任務。</p>
             </div>
-            <p id="padletCount" class="result-count"></p>
+            <div class="result-actions">
+              <p id="padletCount" class="result-count"></p>
+              <button id="showAllResultsBtn" class="show-all-button" type="button" hidden>顯示全部資料</button>
+            </div>
           </div>
           <div id="padletGrid" class="padlet-grid"></div>
           <p id="padletEmpty" class="padlet-empty"></p>
@@ -1487,10 +1521,13 @@
     ]);
     const commonContentPinnedTag = "常用置頂";
     const commonContentTags = new Set(["常用內容", "常用系統", "常用表件", "常用流程", "常用校務資料"]);
-    const commonContentLimit = 20;
+    const commonContentLimit = 12;
     const commonContentCacheKey = "nhps-teacher-handbook-common-content";
     const commonContentCacheVersion = 1;
     const commonContentCacheTtlMs = 12 * 60 * 60 * 1000;
+    const homeRecentLimit = 8;
+    const homeRecentExcludedStatuses = ["年度檔案待整理", "資料待整理", "附件待整理", "連結待補", "連結異常"];
+    const homeRecentExcludedKeywords = ["學生名單", "學生名冊", "名冊", "名單", "個資", "特教生", "性平", "霸凌", "學生事件", "高風險"];
 
     const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
     const defaultOfficeTab = "常用入口";
@@ -1537,7 +1574,7 @@
           {
                 "id": "padlet-002",
                 "category": "內小常用連結",
-                "title": "校內行事曆(google calender)",
+                "title": "校內行事曆(Google Calendar)",
                 "type": "Google 行事曆",
                 "status": "",
                 "note": "",
@@ -2940,6 +2977,7 @@
       padletCategory: "none",
       tag: "",
       resultsMode: "directory",
+      showAllIdle: false,
       activeShortcut: ""
     };
 
@@ -2958,6 +2996,7 @@
       commonContentList: document.getElementById("commonContentList"),
       padletGrid: document.getElementById("padletGrid"),
       padletCount: document.getElementById("padletCount"),
+      showAllResultsBtn: document.getElementById("showAllResultsBtn"),
       padletEmpty: document.getElementById("padletEmpty"),
       recentUpdates: document.getElementById("recentUpdates"),
       emptyState: document.getElementById("emptyState"),
@@ -3155,7 +3194,7 @@
         (resource.tags || []).join(" "),
         (resource.links || []).map((link) => link.label + " " + link.url).join(" ")
       ].join(" "));
-      return /(差勤系統|學校資料|校內行事曆|行事曆|meet|線上週會|教師會議|常用系統|單一入口|校務系統|疾病通報|google\s*(calender|calendar))/.test(text);
+      return /(差勤系統|學校資料|校內行事曆|行事曆|meet|線上週會|教師會議|常用系統|單一入口|校務系統|疾病通報|google\s*calendar)/.test(text);
     }
 
     function taskMatches(resource, selectedTask) {
@@ -3296,6 +3335,59 @@
       const matchCategory = state.padletCategory === "none" || state.padletCategory === "all" || item.category === state.padletCategory;
       const matchTag = !state.tag || (item.tags || []).includes(state.tag);
       return matchQuery && matchTask && matchOffice && matchCategory && matchTag;
+    }
+
+    function hasSafeResourceLink(resource) {
+      return Array.isArray(resource.links) && resource.links.some((link) => safeResourceUrl(link && link.url));
+    }
+
+    function getUpdatedTime(resource) {
+      const text = String(resource && resource.updated || "").trim();
+      if (!text) return Number.NaN;
+      const parsed = new Date(text);
+      if (!Number.isNaN(parsed.getTime())) return parsed.getTime();
+      const looseDate = text.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/);
+      if (!looseDate) return Number.NaN;
+      return new Date(Number(looseDate[1]), Number(looseDate[2]) - 1, Number(looseDate[3])).getTime();
+    }
+
+    function hasExcludedHomeRecentStatus(resource) {
+      const status = String(resource && resource.status || "").trim();
+      return homeRecentExcludedStatuses.some((term) => status.includes(term));
+    }
+
+    function hasExcludedHomeRecentKeyword(resource) {
+      const text = [
+        resource && resource.title,
+        resource && resource.note,
+        resource && resource.category,
+        Array.isArray(resource && resource.tags) ? resource.tags.join(" ") : ""
+      ].join(" ");
+      return homeRecentExcludedKeywords.some((term) => text.includes(term));
+    }
+
+    function isHomeRecentResource(resource) {
+      return Boolean(
+        resource &&
+        resource.visible !== false &&
+        hasSafeResourceLink(resource) &&
+        !hasExcludedHomeRecentStatus(resource) &&
+        !hasExcludedHomeRecentKeyword(resource) &&
+        Number.isFinite(getUpdatedTime(resource))
+      );
+    }
+
+    function sortHomeRecentItems(a, b) {
+      const updatedDiff = getUpdatedTime(b) - getUpdatedTime(a);
+      if (updatedDiff !== 0) return updatedDiff;
+      return String(a.title || "").localeCompare(String(b.title || ""), "zh-Hant");
+    }
+
+    function getHomeRecentItems(items) {
+      return items
+        .filter(isHomeRecentResource)
+        .sort(sortHomeRecentItems)
+        .slice(0, homeRecentLimit);
     }
 
     function sortDirectoryItems(a, b) {
@@ -3629,18 +3721,22 @@
     function renderCommonResources() {
       const isIdle = !hasActiveFilters();
       const directoryItems = getDirectoryItems();
-      const visible = (isIdle
-        ? directoryItems
-        : directoryItems.filter(directoryItemMatches)
-      ).sort(sortDirectoryItems);
+      const allItems = directoryItems.slice().sort(sortDirectoryItems);
+      const visible = isIdle
+        ? (state.showAllIdle ? allItems : getHomeRecentItems(directoryItems))
+        : directoryItems.filter(directoryItemMatches).sort(sortDirectoryItems);
 
       elements.padletGrid.replaceChildren(...visible.map(createCommonResourceCard));
       elements.padletEmpty.hidden = visible.length > 0;
       if (visible.length === 0) {
-        elements.padletEmpty.textContent = isIdle ? "目前尚未建立首頁資料。" : "目前沒有符合條件的連結。";
+        elements.padletEmpty.textContent = isIdle ? "目前尚未有可顯示的近期更新。" : "目前沒有符合條件的連結。";
       }
 
-      elements.padletCount.textContent = (isIdle ? "全部資料" : "符合條件") + " " + visible.length + " 筆";
+      elements.padletCount.textContent = isIdle
+        ? (state.showAllIdle ? "全部資料 " + visible.length + " 筆" : "近期更新 " + visible.length + " 筆")
+        : "符合條件 " + visible.length + " 筆";
+      elements.showAllResultsBtn.hidden = !(isIdle && !state.showAllIdle && allItems.length > visible.length);
+      elements.showAllResultsBtn.textContent = "顯示全部資料 " + allItems.length + " 筆";
     }
 
     function isCommonContentResource(resource) {
@@ -3767,6 +3863,7 @@
         state.padletCategory = resourceCategory || "none";
         state.tag = tag;
         state.activeShortcut = "";
+        state.showAllIdle = false;
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         elements.searchInput.value = state.query;
         renderAll();
@@ -3801,8 +3898,13 @@
         elements.currentDescription.textContent = "以下顯示此承辦處室相關資源。";
         return;
       }
-      elements.currentTitle.textContent = "目前結果：全部資料";
-      elements.currentDescription.textContent = "可直接搜尋，或從左側選擇一個情境任務。";
+      if (state.showAllIdle || state.resultsMode === "all") {
+        elements.currentTitle.textContent = "目前結果：全部資料";
+        elements.currentDescription.textContent = "目前顯示全部資料；可用搜尋、情境或處室篩選縮小範圍。";
+        return;
+      }
+      elements.currentTitle.textContent = "目前結果：近期更新";
+      elements.currentDescription.textContent = "以下顯示最近更新且可直接使用的資料；可用搜尋或篩選縮小範圍。";
     }
 
     function createChip(label, value, type, hint = "") {
@@ -3828,6 +3930,7 @@
           state.padletCategory = "none";
           state.tag = "";
           state.activeShortcut = "";
+          state.showAllIdle = false;
         }
         if (type === "office") {
           state.office = value;
@@ -3836,15 +3939,18 @@
           state.padletCategory = "none";
           state.tag = "";
           state.activeShortcut = "";
+          state.showAllIdle = false;
           elements.searchInput.value = "";
         }
         if (type === "padlet") {
           state.padletCategory = value;
           state.activeShortcut = "";
+          state.showAllIdle = false;
         }
         if (type === "tag") {
           state.tag = value;
           state.activeShortcut = "";
+          state.showAllIdle = false;
         }
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         renderAll();
@@ -3888,10 +3994,7 @@
     }
 
     function renderRecentUpdates() {
-      const recent = getDirectoryItems()
-        .filter((item) => item.updated)
-        .sort((a, b) => b.updated.localeCompare(a.updated))
-        .slice(0, 5);
+      const recent = getHomeRecentItems(getDirectoryItems());
       elements.recentUpdates.replaceChildren(...recent.map((item) => {
         const row = document.createElement("li");
         row.className = "update-item";
@@ -3907,6 +4010,7 @@
           state.padletCategory = "none";
           state.tag = "";
           state.activeShortcut = "";
+          state.showAllIdle = false;
           state.resultsMode = "filtered";
           elements.searchInput.value = state.query;
           renderAll();
@@ -3925,6 +4029,7 @@
       state.padletCategory = "none";
       state.tag = "";
       state.resultsMode = "directory";
+      state.showAllIdle = false;
       state.activeShortcut = "";
       elements.searchInput.value = "";
       renderAll();
@@ -4009,11 +4114,18 @@
       // 搜尋採「共同篩選」：保留已選情境或處室，在目前範圍內縮小結果，避免畫面狀態突然被清掉。
       state.query = event.target.value;
       state.activeShortcut = "";
+      state.showAllIdle = false;
       state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
       renderAll();
     });
 
     elements.clearFiltersBtn.addEventListener("click", resetFilters);
+    elements.showAllResultsBtn.addEventListener("click", () => {
+      state.showAllIdle = true;
+      state.resultsMode = "all";
+      renderAll();
+      scrollCurrentResultsIntoViewOnMobile();
+    });
     elements.backToTopBtn.addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
