@@ -212,6 +212,15 @@ function validatePublish_(chapter, blocks) {
   });
 }
 
+function normalizeDirectoryBoolean_(value, defaultValue) {
+  if (value === true) return "TRUE";
+  if (value === false) return "FALSE";
+  var text = String(value || "").trim().toUpperCase();
+  if (text === "TRUE") return "TRUE";
+  if (text === "FALSE") return "FALSE";
+  return defaultValue === "FALSE" ? "FALSE" : "TRUE";
+}
+
 function saveDirectoryResource_(payload, user) {
   requireEditor_(user);
   var input = payload.resource || payload;
@@ -227,6 +236,15 @@ function saveDirectoryResource_(payload, user) {
     var title = String(input.title || "").trim();
     if (!title) throw new Error("資源標題不可空白");
 
+    var existingVisible = existing ? normalizeDirectoryBoolean_(existing.visible, "TRUE") : "FALSE";
+    var requestedVisible = Object.prototype.hasOwnProperty.call(input, "visible")
+      ? normalizeDirectoryBoolean_(input.visible, existingVisible)
+      : existingVisible;
+    var existingArchived = existing && normalizeDirectoryBoolean_(existing.archived, "FALSE") === "TRUE";
+    if (requestedVisible !== existingVisible || existingArchived) {
+      requireReviewer_(user);
+    }
+
     var item = existing || {};
     item.resource_id = resourceId;
     item.title = title;
@@ -238,7 +256,7 @@ function saveDirectoryResource_(payload, user) {
     item.links_json = stringifyLinks_(input.links || []);
     item.tags_json = stringifyTags_(input.tags || []);
     item.updated = String(input.updated || "").trim() || Utilities.formatDate(new Date(), APP.TIMEZONE, "yyyy-MM-dd");
-    item.visible = input.visible === false ? "FALSE" : "TRUE";
+    item.visible = requestedVisible;
     item.featured = input.featured === true ? "TRUE" : "FALSE";
     item.sort_order = Number(input.sort_order || item.sort_order || resources.length + 1);
     item.archived = "FALSE";
@@ -391,6 +409,7 @@ function batchUpdateDirectoryResources_(payload, user) {
   var hasFeatured = Object.prototype.hasOwnProperty.call(changes, "featured");
   var hasVisible = Object.prototype.hasOwnProperty.call(changes, "visible");
   if (!hasOffice && !hasCategory && !hasFeatured && !hasVisible) throw new Error("沒有可套用的批次變更");
+  if (hasVisible) requireReviewer_(user);
 
   var idSet = {};
   resourceIds.forEach(function(id) {
