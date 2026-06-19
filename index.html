@@ -388,28 +388,47 @@
     }
 
     .common-content-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
     }
 
     .common-content-item {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      min-height: 34px;
-      max-width: min(100%, 280px);
-      padding: 6px 12px;
-      border: 1px solid #c8d9e8;
+      justify-content: center;
+      grid-column: span 3;
+      min-height: 48px;
+      min-width: 0;
+      padding: 10px 16px;
+      border: 1px solid #bcd7f0;
       border-radius: 999px;
-      background: #f8fbfc;
+      background: #ffffff;
       color: var(--navy);
       font: inherit;
-      font-size: 0.9rem;
       font-weight: 800;
-      text-align: left;
+      line-height: 1.35;
+      text-align: center;
       cursor: pointer;
-      box-shadow: 0 8px 18px rgba(23, 55, 94, 0.06);
+      box-shadow: 0 6px 16px rgba(15, 59, 104, 0.06);
       transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .common-content-item[data-size="sm"] {
+      grid-column: span 2;
+    }
+
+    .common-content-item[data-size="md"] {
+      grid-column: span 3;
+    }
+
+    .common-content-item[data-size="lg"] {
+      grid-column: span 4;
+    }
+
+    .common-content-item[data-size="xl"] {
+      grid-column: span 6;
     }
 
     .common-content-item:hover,
@@ -421,9 +440,66 @@
     }
 
     .common-content-item span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1024px) {
+      .common-content-list {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .common-content-item[data-size="sm"] {
+        grid-column: span 2;
+      }
+
+      .common-content-item[data-size="md"] {
+        grid-column: span 3;
+      }
+
+      .common-content-item[data-size="lg"],
+      .common-content-item[data-size="xl"] {
+        grid-column: span 6;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .common-content-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .common-content-item {
+        min-height: 46px;
+        padding: 10px 12px;
+        font-size: 0.95rem;
+      }
+
+      .common-content-item[data-size="sm"],
+      .common-content-item[data-size="md"] {
+        grid-column: span 1;
+      }
+
+      .common-content-item[data-size="lg"],
+      .common-content-item[data-size="xl"] {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .common-content-list {
+        grid-template-columns: 1fr;
+      }
+
+      .common-content-item,
+      .common-content-item[data-size="sm"],
+      .common-content-item[data-size="md"],
+      .common-content-item[data-size="lg"],
+      .common-content-item[data-size="xl"] {
+        grid-column: span 1;
+      }
     }
 
     .shortcut-band {
@@ -1263,13 +1339,6 @@
 
       .clear-button {
         min-height: 40px;
-      }
-
-      .common-content-item {
-        min-height: 40px;
-        padding: 8px 13px;
-        font-size: 0.96rem;
-        line-height: 1.45;
       }
 
       .chip {
@@ -3962,13 +4031,49 @@
         .map(({ item }) => item);
     }
 
+    const commonContentSizeByTitle = new Map([
+      ["校務系統", "sm"],
+      ["研習護照", "sm"],
+      ["校園新聞網", "md"],
+      ["學生事件通報", "md"],
+      ["差勤系統（請假／補休）", "md"],
+      ["新竹市教師認證系統", "md"],
+      ["學扶科技化評量平台", "md"],
+      ["線上週會／教師會議 Meet", "lg"],
+      ["新竹市教育網路中心", "lg"],
+      ["校內行事曆（Google Calendar）", "lg"],
+      ["學務處共享資料匣", "lg"],
+      ["中心德目雙週指導欄（上下學期各一檔）", "xl"]
+    ]);
+
+    function getCommonContentDisplayTitle(title) {
+      return String(title || "")
+        .replace(/google\s*calender/gi, "Google Calendar")
+        .trim();
+    }
+
+    function getCommonContentSize(title) {
+      const displayTitle = getCommonContentDisplayTitle(title);
+      if (commonContentSizeByTitle.has(displayTitle)) return commonContentSizeByTitle.get(displayTitle);
+      if (/中心德目雙週指導欄/.test(displayTitle)) return "xl";
+      if (/(線上週會|教師會議|教育網路中心|校內行事曆|Google Calendar|學務處共享資料匣)/i.test(displayTitle)) return "lg";
+      if (/(校務系統|研習護照)/.test(displayTitle) && displayTitle.length <= 6) return "sm";
+      if (/(校園新聞網|學生事件通報|差勤系統|新竹市教師認證系統|學扶科技化評量平台)/.test(displayTitle)) return "md";
+      if (displayTitle.length <= 5) return "sm";
+      if (displayTitle.length <= 12) return "md";
+      if (displayTitle.length <= 18) return "lg";
+      return "xl";
+    }
+
     function createCommonContentItem(resource) {
       const button = document.createElement("button");
+      const displayTitle = getCommonContentDisplayTitle(resource.title);
       button.type = "button";
       button.className = "common-content-item";
-      button.title = resource.title;
+      button.dataset.size = getCommonContentSize(displayTitle);
+      button.title = displayTitle;
       const label = document.createElement("span");
-      label.textContent = resource.title;
+      label.textContent = displayTitle;
       button.appendChild(label);
       button.addEventListener("click", () => {
         const hasQuery = Object.prototype.hasOwnProperty.call(resource, "query");
