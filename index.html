@@ -389,6 +389,7 @@
 
     .common-content-list {
       display: grid;
+      grid-auto-flow: row;
       grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: 12px;
       margin-top: 20px;
@@ -412,7 +413,7 @@
       text-align: center;
       cursor: pointer;
       box-shadow: 0 6px 16px rgba(15, 59, 104, 0.06);
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, outline-color 0.15s ease;
     }
 
     .common-content-item[data-size="sm"] {
@@ -433,10 +434,15 @@
 
     .common-content-item:hover,
     .common-content-item:focus-visible {
-      transform: translateY(-1px);
-      border-color: var(--navy);
-      background: var(--blue-soft);
-      outline: none;
+      border-color: #8bbce8;
+      background: #f4f9ff;
+      box-shadow: 0 8px 20px rgba(15, 59, 104, 0.1);
+      outline: 2px solid rgba(13, 94, 166, 0.18);
+      outline-offset: 2px;
+    }
+
+    .common-content-item:active {
+      background: #eaf4ff;
     }
 
     .common-content-item span {
