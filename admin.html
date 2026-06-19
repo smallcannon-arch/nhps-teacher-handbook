@@ -1184,7 +1184,7 @@
 
         <details id="quickLinksPreviewPanel" class="bulk-panel quick-links-preview" open>
           <summary>首頁常用入口排序預覽</summary>
-          <p class="meta">首頁常用內容只顯示排序前 12 筆。不是所有「常用置頂」都會出現在首頁；同為常用置頂時，仍會依首頁排序排列。</p>
+          <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區目前為只讀預覽；排序調整功能將另行處理。</p>
           <p id="quickLinksPreviewSummary" class="quick-links-preview-summary">尚未載入常用入口資料。</p>
           <section class="quick-links-preview-section" aria-labelledby="quickLinksTopHeading">
             <h3 id="quickLinksTopHeading">首頁目前顯示</h3>
@@ -1266,7 +1266,7 @@
 
         <section class="form-section" aria-labelledby="resourceManageHeading">
           <h3 id="resourceManageHeading">排序與管理</h3>
-          <p class="meta section-help">排序權重會影響處室清單與首頁常用入口的排序，但這不是首頁排名。首頁排名會依常用置頂、排序權重與更新時間重新計算。數字越小通常越前面。</p>
+          <p class="meta section-help">數字越小通常越前面；首頁實際排名請看「首頁常用入口排序預覽」。</p>
           <div class="field">
             <label for="resourceSortInput">排序權重（進階）</label>
             <input id="resourceSortInput" type="number" min="1" step="1">
@@ -1469,6 +1469,7 @@
     let isHydratingResourceForm = false;
     let resourceFormRevision = 0;
     let resourceFormBoundResourceId = "";
+    let quickLinksPreviewReturnActive = false;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1859,11 +1860,11 @@
     }
 
     function quickLinksPreviewHint(entry) {
-      if (entry.displayed) return "會出現在首頁常用內容第 " + entry.rank + " 名。";
+      if (entry.displayed) return "";
       if (isCommonPinnedResource(entry.item)) {
         return "已置頂，但排序仍在第 " + entry.rank + "，需調整排序才會出現在首頁。";
       }
-      return "已在常用候選中，但首頁只顯示前 12 筆。";
+      return "候補：首頁只顯示前 12 筆。";
     }
 
     function quickLinksEditorSummaryText(item) {
@@ -1886,14 +1887,19 @@
       const statusText = quickLinksStatusText(entry);
       const statusClass = entry.displayed ? "" : " is-candidate";
       const pinned = isCommonPinnedResource(item);
+      const hint = quickLinksPreviewHint(entry);
+      const detailText = [
+        item.office || "未分處室",
+        item.category || "未分類",
+        "權重 " + quickLinksSortWeightText(item)
+      ].join("｜");
       return `
         <article class="quick-links-preview-row">
-          <div class="quick-links-rank">第 ${entry.rank} 名</div>
+          <div class="quick-links-rank">#${entry.rank}</div>
           <div class="quick-links-main">
             <div class="quick-links-title">${escapeHtml(item.title || "未命名內容")}</div>
-            <div class="quick-links-meta">${escapeHtml(getOfficeCategoryText(item))}</div>
-            <div class="quick-links-meta">置頂：${pinned ? "是" : "否"}｜排序權重：${escapeHtml(quickLinksSortWeightText(item))}</div>
-            <div class="quick-links-hint">${escapeHtml(quickLinksPreviewHint(entry))}</div>
+            <div class="quick-links-meta">${escapeHtml(detailText)}</div>
+            ${hint ? `<div class="quick-links-hint">${escapeHtml(hint)}</div>` : ""}
           </div>
           <div class="quick-links-badges">
             <span class="preview-badge${statusClass}">${statusText}</span>
@@ -1935,9 +1941,11 @@
       if (!item || !item.id) {
         el.quickLinksEditorContext.hidden = true;
         el.quickLinksEditorSummary.textContent = "";
+        el.backToQuickLinksPreviewBtn.hidden = true;
         return;
       }
       el.quickLinksEditorSummary.textContent = quickLinksEditorSummaryText(item);
+      el.backToQuickLinksPreviewBtn.hidden = !quickLinksPreviewReturnActive;
       el.quickLinksEditorContext.hidden = false;
     }
 
@@ -1945,6 +1953,9 @@
       if (!el.quickLinksPreviewPanel) return;
       el.quickLinksPreviewPanel.open = true;
       el.quickLinksPreviewPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+      quickLinksPreviewReturnActive = false;
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      renderQuickLinksEditorContext(item || null);
     }
 
     function openResourceFromQuickLinksPreview(resourceId) {
@@ -1957,6 +1968,7 @@
       }
       mode = "resources";
       activeResourceId = id;
+      quickLinksPreviewReturnActive = true;
       renderList();
       renderBulkState();
       renderQuickLinksRankingPreview();
@@ -3198,8 +3210,14 @@
       }[char]));
     }
 
-    el.resourcesTab.addEventListener("click", () => setMode("resources"));
-    el.trashTab.addEventListener("click", () => setMode("trash"));
+    el.resourcesTab.addEventListener("click", () => {
+      quickLinksPreviewReturnActive = false;
+      setMode("resources");
+    });
+    el.trashTab.addEventListener("click", () => {
+      quickLinksPreviewReturnActive = false;
+      setMode("trash");
+    });
     el.logoutBtn.addEventListener("click", logout);
     el.quickLinksPreviewPanel.addEventListener("click", (event) => {
       const button = event.target.closest("[data-quick-link-resource-id]");
@@ -3283,6 +3301,7 @@
     });
     el.itemList.addEventListener("dragend", clearDragState);
     el.addItemBtn.addEventListener("click", () => {
+      quickLinksPreviewReturnActive = false;
       if (mode === "resources") {
         activeResourceId = "";
         clearResourceEditor({ force: true });
@@ -3303,6 +3322,7 @@
         }
         if (mode === "trash") activeTrashId = id;
         if (mode === "resources") activeResourceId = id;
+        quickLinksPreviewReturnActive = false;
         const entry = check.closest(".list-entry");
         if (entry) entry.classList.toggle("is-selected", check.checked);
         el.itemList.querySelectorAll(".list-button.is-active").forEach((activeButton) => activeButton.classList.remove("is-active"));
@@ -3316,6 +3336,7 @@
       }
       const button = event.target.closest(".list-button");
       if (!button) return;
+      quickLinksPreviewReturnActive = false;
       if (mode === "resources") {
         activeResourceId = button.dataset.id;
       } else if (mode === "trash") {
