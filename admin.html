@@ -1,148 +1,3001 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant-TW">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <title>教師手冊維護中</title>
+  <title>內湖國小教師手冊後台</title>
   <style>
     :root {
-      color-scheme: light;
-      --navy: #153a63;
-      --navy-dark: #0d2a49;
-      --cream: #f7f1e5;
+      --ink: #203044;
+      --navy: #17375e;
+      --navy-2: #0d294a;
+      --cream: #f7f1e7;
       --paper: #fffdf8;
-      --ink: #22313f;
-      --muted: #647383;
-      --line: rgba(21, 58, 99, 0.14);
-      --shadow: 0 22px 54px rgba(13, 42, 73, 0.18);
+      --line: #d9e0e3;
+      --muted: #6c7782;
+      --gold: #b28b45;
+      --danger: #8b3a3a;
+      --ok: #3f6f50;
+      --blue-soft: #eef5f8;
+      --radius: 8px;
+      --shadow: 0 14px 34px rgba(32, 48, 68, 0.08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html,
     body {
-      min-height: 100%;
       margin: 0;
-    }
-
-    body {
-      display: grid;
       min-height: 100vh;
-      padding: 28px;
-      place-items: center;
-      background:
-        linear-gradient(135deg, rgba(21, 58, 99, 0.96), rgba(13, 42, 73, 0.94)),
-        var(--navy);
       color: var(--ink);
-      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.75;
+      background: linear-gradient(180deg, rgba(23, 55, 94, 0.06), #fbfaf6 45%), var(--cream);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.65;
     }
 
-    main {
-      width: min(720px, 100%);
+    header {
+      background: var(--navy);
+      color: white;
+      border-bottom: 5px solid var(--gold);
     }
 
-    .maintenance-card {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      background: var(--paper);
-      box-shadow: var(--shadow);
+    .header-inner,
+    .header-tabs-bar,
+    main,
+    footer {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
     }
 
-    .card-header {
-      padding: 30px clamp(24px, 6vw, 48px);
-      background: var(--cream);
-      border-bottom: 1px solid var(--line);
+    .header-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 26px 0;
     }
 
-    .eyebrow {
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
+    .header-copy {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
     }
+
+    .header-inner .meta {
+      color: rgba(255, 255, 255, 0.76);
+      margin-bottom: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    p { margin-top: 0; }
 
     h1 {
-      margin: 0;
-      color: var(--navy-dark);
-      font-size: clamp(2rem, 5vw, 3rem);
-      line-height: 1.22;
+      margin-bottom: 0;
+      font-size: clamp(1.75rem, 3vw, 2.45rem);
+      line-height: 1.25;
       letter-spacing: 0;
     }
 
-    .card-body {
-      padding: clamp(26px, 6vw, 48px);
+    main {
+      display: grid;
+      grid-template-columns: clamp(400px, 30vw, 440px) minmax(0, 1fr);
+      gap: 22px;
+      padding: 26px 0 46px;
     }
 
-    .message {
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .header-tabs-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 0 10px;
+    }
+
+    .header-tabs-bar .tabs {
       margin: 0;
-      color: var(--ink);
-      font-size: clamp(1.05rem, 2.8vw, 1.18rem);
-      font-weight: 650;
+      gap: 6px;
     }
 
-    .message + .message {
-      margin-top: 14px;
+    .header-tabs-bar button.tab-button {
+      min-height: 34px;
+      padding: 4px 12px;
+      border-color: rgba(255, 255, 255, 0.34);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 0.92rem;
     }
 
-    .note {
-      margin: 28px 0 0;
-      padding-top: 22px;
-      border-top: 1px solid var(--line);
+    .header-tabs-bar button.tab-button.is-active {
+      background: white;
+      color: var(--navy);
+      border-color: white;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      min-height: 0;
+      padding: 16px;
+    }
+
+    .content {
+      min-height: 0;
+      padding: 22px;
+    }
+
+    .meta {
       color: var(--muted);
-      font-size: 1rem;
+      font-size: 0.92rem;
+    }
+
+    .tabs,
+    .actions,
+    .filter-row,
+    .checkbox-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .tabs {
+      margin: 4px 0 14px;
+    }
+
+    .sidebar .field {
+      margin-bottom: 10px;
+    }
+
+    .filter-row select {
+      flex: 1 1 140px;
+    }
+
+    .filter-row button {
+      flex: 0 0 auto;
+    }
+
+    .primary-list-actions {
+      margin: 10px 0;
+    }
+
+    .primary-list-actions button {
+      width: 100%;
+    }
+
+    .sidebar-sort-hint {
+      margin: -2px 0 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .sidebar-tools {
+      margin: 5px 0;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f8fbfa;
+    }
+
+    .sidebar-tools summary {
+      padding: 5px 8px;
+      color: var(--navy);
+      font-size: 0.9rem;
+      font-weight: 900;
+      cursor: pointer;
+      list-style-position: inside;
+    }
+
+    .sidebar-tools-body {
+      display: grid;
+      gap: 6px;
+      padding: 0 8px 8px;
+    }
+
+    button {
+      min-height: 42px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: var(--navy);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: white;
+      color: var(--navy);
+      border-color: var(--line);
+    }
+
+    button.warn {
+      background: var(--danger);
+    }
+
+    button.tab-button {
+      background: white;
+      color: var(--navy);
+      border-color: #c7d8e7;
+    }
+
+    button.tab-button.is-active {
+      background: var(--navy);
+      color: white;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    label {
+      color: var(--navy);
+      font-weight: 800;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      padding: 9px 11px;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 13px;
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .form-section {
+      margin: 18px 0;
+      padding-top: 16px;
+      border-top: 1px solid #e4ebe9;
+    }
+
+    .form-section h3 {
+      margin-bottom: 2px;
+    }
+
+    .section-help {
+      margin-bottom: 12px;
+    }
+
+    .combo-field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .staff-unit-field {
+      margin-top: 2px;
+      padding: 12px;
+      border: 1px solid #dbe7e9;
+      border-radius: var(--radius);
+      background: #f7faf8;
+    }
+
+    .staff-unit-title {
+      color: var(--navy);
+      font-weight: 900;
+    }
+
+    .staff-unit-help {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    .staff-unit-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .staff-unit-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 5px 10px;
+      border: 1px solid #cbdbe2;
+      border-radius: 999px;
+      background: white;
+      color: var(--navy);
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .staff-unit-option input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--navy);
+    }
+
+    .staff-unit-option:has(input:checked) {
+      border-color: var(--navy);
+      background: #eaf1f6;
+      box-shadow: inset 0 0 0 1px rgba(22, 61, 101, 0.08);
+    }
+
+    .notice {
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border: 1px solid #d2ddd5;
+      border-radius: var(--radius);
+      background: #edf3ef;
+      color: var(--ok);
       font-weight: 700;
     }
 
-    footer {
-      margin-top: 22px;
-      color: rgba(255, 255, 255, 0.78);
-      font-size: 0.95rem;
-      text-align: center;
+    .notice.error {
+      border-color: #ead0d0;
+      background: #fbefef;
+      color: var(--danger);
     }
 
-    @media (max-width: 560px) {
+    .safety-note {
+      margin-top: 16px;
+      padding: 10px 12px;
+      border: 1px solid #e3d6bc;
+      border-radius: var(--radius);
+      background: #fbf7ee;
+      color: #665335;
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .list {
+      display: grid;
+      gap: 6px;
+      max-height: calc(100vh - 360px);
+      overflow: auto;
+      padding-right: 0;
+    }
+
+    .bulk-panel {
+      margin: 12px 0;
+      padding: 12px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+    }
+
+    .bulk-panel summary {
+      color: var(--navy);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .bulk-panel summary + * {
+      margin-top: 12px;
+    }
+
+    .editor-header {
+      margin-bottom: 16px;
+      padding: 16px 18px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+    }
+
+    .editor-kicker {
+      display: inline-block;
+      margin-bottom: 6px;
+      color: var(--ok);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .editor-header h2 {
+      margin-bottom: 6px;
+    }
+
+    .trash-preview {
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+
+    .entry-overview {
+      display: grid;
+      gap: 12px;
+    }
+
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .entry-card {
+      display: grid;
+      gap: 6px;
+      min-height: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfdfc;
+    }
+
+    .entry-card strong {
+      color: var(--navy);
+      line-height: 1.35;
+    }
+
+    .entry-card .meta {
+      margin-bottom: 0;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .readonly-badge {
+      justify-self: start;
+      padding: 2px 8px;
+      border: 1px solid #d8e4e7;
+      border-radius: 999px;
+      background: #eef6f4;
+      color: #2f6b56;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .legacy-shortcut-panel {
+      margin-top: 18px;
+    }
+
+    .legacy-shortcut-panel summary {
+      color: var(--navy);
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .legacy-shortcut-panel[open] summary {
+      margin-bottom: 12px;
+    }
+
+    .bulk-tools {
+      margin: 5px 0 8px;
+    }
+
+    .bulk-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      align-items: baseline;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding-top: 2px;
+    }
+
+    .bulk-summary strong {
+      color: var(--navy);
+    }
+
+    .compact-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .compact-actions button {
+      width: 100%;
+      min-height: 38px;
+      padding: 7px 10px;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+
+    .list-entry {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 5px;
+      align-items: stretch;
+    }
+
+    .list-entry.is-draggable,
+    .list-entry.is-shortcut {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .list-entry.is-draggable.has-check {
+      grid-template-columns: auto auto minmax(0, 1fr);
+    }
+
+    .list-check {
+      align-self: center;
+    }
+
+    .drag-handle {
+      align-self: center;
+      width: 16px;
+      min-height: 34px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #b5c0c6;
+      cursor: grab;
+      font-size: 0.64rem;
+      font-weight: 900;
+      line-height: 1;
+      opacity: 0.72;
+      user-select: none;
+    }
+
+    .list-entry:hover .drag-handle {
+      color: #78909c;
+      opacity: 0.95;
+    }
+
+    .list-entry.is-dragging {
+      opacity: 0.55;
+    }
+
+    .list-entry.is-drop-target .list-button {
+      border-color: var(--gold);
+      box-shadow: inset 0 0 0 2px rgba(178, 139, 69, 0.28);
+    }
+
+    .list-button {
+      width: 100%;
+      display: grid;
+      gap: 2px;
+      min-height: 0;
+      padding: 7px 9px;
+      background: white;
+      border-color: var(--line);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .list-title-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .list-title-line strong {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .list-button strong {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      color: var(--navy);
+      font-size: 0.92rem;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .list-button .list-meta {
+      display: block;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.45;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 20px;
+      padding: 1px 7px;
+      border: 1px solid #dfbeb7;
+      border-radius: 999px;
+      background: #f7e6e1;
+      color: #8a443a;
+      font-size: 0.72rem;
+      font-weight: 900;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .list-entry.is-unpublished .list-button {
+      border-color: #d9d1c8;
+      border-style: dashed;
+      background: #f7f4ef;
+    }
+
+    .list-entry.is-unpublished .list-button strong {
+      color: #53606b;
+    }
+
+    .list-entry.is-unpublished .list-button .list-meta {
+      color: #7e7268;
+    }
+
+    .list-button.is-active {
+      background: var(--navy);
+      color: white;
+      border-color: var(--navy);
+    }
+
+    .list-button.is-active strong,
+    .list-button.is-active .list-meta {
+      color: white;
+    }
+
+    .list-entry.is-unpublished .list-button.is-active {
+      border-color: #b98578;
+      border-style: solid;
+      background: var(--navy);
+      box-shadow: inset 4px 0 0 #c99a8a;
+    }
+
+    .list-entry.is-unpublished .list-button.is-active strong,
+    .list-entry.is-unpublished .list-button.is-active .list-meta {
+      color: white;
+    }
+
+    .list-button.is-active .status-badge {
+      border-color: #f1cfc6;
+      background: #fff1ed;
+      color: #79362e;
+    }
+
+    .common-pinned-badge {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 20px;
+      padding: 1px 7px;
+      border: 1px solid #d8e4e7;
+      border-radius: 999px;
+      background: #eef6f4;
+      color: #2f6b56;
+      font-size: 0.72rem;
+      font-weight: 900;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .list-button.is-active .common-pinned-badge {
+      border-color: #c9e0d9;
+      background: #f4fbf8;
+      color: #235b48;
+    }
+
+    .list-entry.is-selected .list-button {
+      border-color: #9db8c9;
+      box-shadow: inset 4px 0 0 var(--gold);
+    }
+
+    .list-entry.is-unpublished.is-selected .list-button {
+      border-color: #b98578;
+      box-shadow: inset 4px 0 0 #c99a8a;
+    }
+
+    .user-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+      margin: 0;
+      padding: 6px 8px 6px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .user-box .meta {
+      min-width: 0;
+      margin-bottom: 0;
+      overflow-wrap: anywhere;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    #logoutBtn {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      font-size: 0.88rem;
+    }
+
+    .header-action-link {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-decoration: none;
+    }
+
+    .header-action-link:hover,
+    .header-action-link:focus-visible {
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+    }
+
+    .list-group-title {
+      margin: 10px 0 0;
+      padding: 8px 4px 2px;
+      border-top: 1px solid #e4ebe9;
+      color: var(--navy);
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .list-group-title:first-child {
+      margin-top: 0;
+      border-top: 0;
+    }
+
+    .list-empty {
+      margin: 0;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--muted);
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.75fr) minmax(220px, 1.35fr) auto;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: end;
+    }
+
+    .link-field {
+      display: grid;
+      gap: 4px;
+    }
+
+    .link-field label {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding-bottom: 30px;
+    }
+
+    @media (max-width: 900px) {
+      .header-inner {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        width: min(100% - 20px, 1280px);
+        padding: 18px 0 10px;
+      }
+
+      .header-tabs-bar {
+        width: min(100% - 20px, 1280px);
+        padding-bottom: 8px;
+      }
+
+      .user-box {
+        justify-content: space-between;
+        width: 100%;
+        border-radius: var(--radius);
+        flex-wrap: wrap;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        width: min(100% - 20px, 1280px);
+      }
+
+      .header-tabs-bar .tabs {
+        gap: 8px;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .list {
+        max-height: 320px;
+      }
+
+      .grid-2,
+      .grid-3,
+      .link-row,
+      .entry-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (min-width: 901px) {
       body {
-        padding: 18px;
-        align-items: start;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100vh;
+        overflow: hidden;
       }
 
-      .maintenance-card {
-        border-radius: 18px;
+      .header-inner {
+        gap: 18px;
+        padding: 14px 0 12px;
       }
 
-      .card-header,
-      .card-body {
-        padding-left: 22px;
-        padding-right: 22px;
+      .header-inner h1 {
+        font-size: 1.85rem;
       }
 
-      .message {
-        font-size: 1rem;
+      .header-inner .meta {
+        margin-bottom: 0;
+      }
+
+      main {
+        min-height: 0;
+        padding: 14px 0;
+      }
+
+      .sidebar {
+        position: static;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        height: 100%;
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+
+      .content {
+        overflow: auto;
+      }
+
+      .list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+      }
+
+      footer {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
-  <main aria-labelledby="maintenance-title">
-    <article class="maintenance-card">
-      <header class="card-header">
-        <p class="eyebrow">系統公告</p>
-        <h1 id="maintenance-title">教師手冊維護中</h1>
-      </header>
-      <section class="card-body" aria-label="維護中說明">
-        <p class="message">本系統目前暫停開放使用。</p>
-        <p class="message">校內相關表件、規定與行政資訊，請暫依各處室正式公告、群組通知或既有校務流程辦理。</p>
-        <p class="message">需要查詢資料時，請多利用學校網頁或學務處的教師常用網站連結。</p>
-        <p class="note">造成不便，敬請見諒。</p>
+  <header>
+    <div class="header-inner">
+      <div class="header-copy">
+        <h1>內湖國小教師手冊後台</h1>
+        <p class="meta">維護教師手冊資料卡、連結與回收桶。</p>
+      </div>
+      <div class="user-box">
+        <p class="meta" id="loginState">載入使用者資料...</p>
+        <a class="header-action-link" href="index.html">回前台</a>
+        <button id="logoutBtn" type="button" class="secondary">登出</button>
+      </div>
+    </div>
+    <nav class="header-tabs-bar" aria-label="後台主入口">
+      <div class="tabs" role="tablist" aria-label="後台模式">
+        <button id="resourcesTab" class="tab-button is-active" type="button">內容管理</button>
+        <button id="trashTab" class="tab-button" type="button">回收桶</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <aside class="panel sidebar">
+      <h2 id="listTitle">內容管理清單</h2>
+      <div class="field">
+        <label for="listSearchInput">搜尋</label>
+        <input id="listSearchInput" placeholder="搜尋標題、資料類別、承辦處室、連結">
+      </div>
+      <div class="filter-row">
+        <select id="officeFilter" aria-label="處室篩選">
+          <option value="">全部處室</option>
+        </select>
+        <select id="categoryFilter" aria-label="資料類別篩選">
+          <option value="">全部類別</option>
+        </select>
+        <select id="statusFilter" aria-label="上架狀態篩選">
+          <option value="">全部資料</option>
+          <option value="published">上架中</option>
+          <option value="unpublished">已下架</option>
+        </select>
+      </div>
+      <div class="primary-list-actions">
+        <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
+      </div>
+      <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整同群組內顯示順序。</p>
+      <details id="bulkTools" class="sidebar-tools bulk-tools">
+        <summary id="bulkToolsSummary">批次整理</summary>
+        <div class="sidebar-tools-body">
+          <div class="bulk-summary">
+            <strong id="bulkCountText">已勾選 0 筆</strong>
+            <span id="visibleCountText">目前清單 0 筆</span>
+          </div>
+          <div class="compact-actions">
+            <button id="selectVisibleBtn" type="button" class="secondary" disabled>全選清單</button>
+            <button id="clearSelectionBtn" type="button" class="secondary" disabled>清除勾選</button>
+            <button id="batchDeleteBtn" type="button" class="warn" disabled>移到回收桶</button>
+          </div>
+        </div>
+      </details>
+      <div id="itemList" class="list"></div>
+    </aside>
+
+    <section class="panel content">
+      <div id="message" class="notice" hidden></div>
+
+      <form id="resourceForm">
+        <div class="editor-header">
+          <span id="resourceEditorLabel" class="editor-kicker">正在編輯資料卡</span>
+          <h2 id="resourceTitle">請先登入並選擇資料卡</h2>
+          <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
+        </div>
+        <input id="resourceIdInput" type="hidden">
+
+        <details id="bulkPanel" class="bulk-panel">
+          <summary id="bulkPanelSummary">批次整理（已勾選 0 筆）</summary>
+          <p class="meta">先在左側勾選多筆資料卡，再一次調整處室、資料類別或上架狀態。空白欄位會保持原狀。</p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="batchOfficeInput">批次改處室</label>
+              <select id="batchOfficeInput"></select>
+            </div>
+            <div class="field">
+              <label for="batchCategoryInput">批次改資料類別</label>
+              <div class="combo-field">
+                <select id="batchCategorySelect" aria-label="批次改資料類別"></select>
+                <input id="batchCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
+              </div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field hidden" hidden aria-hidden="true">
+              <label for="batchFeaturedInput">內部整理標記</label>
+              <select id="batchFeaturedInput">
+                <option value="">不變更</option>
+                <option value="true">啟用內部整理標記</option>
+                <option value="false">取消內部整理標記</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="batchVisibleInput">上架狀態</label>
+              <select id="batchVisibleInput">
+                <option value="">不變更</option>
+                <option value="true">上架顯示</option>
+                <option value="false">暫時下架</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="batchApplyBtn" type="button" disabled>套用到已勾選內容</button>
+          </div>
+        </details>
+
+        <section class="form-section" aria-labelledby="resourceBasicHeading">
+          <h3 id="resourceBasicHeading">基本資料</h3>
+          <p class="meta section-help">目前後台只編輯 GAS 與試算表已支援保存的欄位；任務分類、使用情境與行動指引會在下一階段同步資料欄位後再開放。</p>
+          <div class="grid-2">
+            <div class="field">
+              <label for="resourceTitleInput">標題</label>
+              <input id="resourceTitleInput" placeholder="例如：差勤系統（請假／補休）">
+            </div>
+            <div class="field">
+              <label for="resourceUpdatedInput">最後更新日期</label>
+              <input id="resourceUpdatedInput" type="date">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="resourceOfficeInput">承辦處室</label>
+              <select id="resourceOfficeInput"></select>
+            </div>
+            <div class="field">
+              <label for="resourceCategoryInput">資料類別</label>
+              <div class="combo-field">
+                <select id="resourceCategorySelect" aria-label="資料類別"></select>
+                <input id="resourceCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
+              </div>
+            </div>
+            <div class="field hidden" hidden aria-hidden="true">
+              <label for="resourceTypeInput">類型</label>
+              <div class="combo-field">
+                <select id="resourceTypeSelect" aria-label="類型"></select>
+                <input id="resourceTypeInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新類型">
+              </div>
+            </div>
+          </div>
+          <div id="staffUnitField" class="field staff-unit-field" hidden aria-hidden="true">
+            <span class="staff-unit-title">組別</span>
+            <p id="staffUnitHelp" class="staff-unit-help">組別會存入既有標籤欄位，不新增資料欄位。</p>
+            <div id="staffUnitOptions" class="staff-unit-options" aria-label="組別"></div>
+          </div>
+          <div class="field">
+            <label class="checkbox-row"><input id="resourceCommonPinnedInput" type="checkbox"> 置頂於常用內容</label>
+            <p class="meta">勾選後會加入「常用內容」與「常用置頂」標籤；取消只移除「常用置頂」。</p>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="resourceDisplayHeading">
+          <h3 id="resourceDisplayHeading">前台顯示</h3>
+          <p class="meta section-help">這裡控制資料卡在前台是否上架，以及卡片上的補充文字。</p>
+          <div class="field">
+            <label for="resourceNoteInput">補充說明／注意事項</label>
+            <textarea id="resourceNoteInput" placeholder="簡短說明，避免放學生個資或未公告資訊。"></textarea>
+          </div>
+          <div class="field">
+            <label for="resourceTagsInput">標籤／關鍵字</label>
+            <textarea id="resourceTagsInput" rows="2" autocomplete="off" placeholder="可用空白、逗號、頓號或換行分隔；含空白的詞建議用逗號分隔。"></textarea>
+          </div>
+          <div class="checkbox-row">
+            <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 上架顯示</label>
+            <label class="checkbox-row hidden" hidden aria-hidden="true"><input id="resourceFeaturedInput" type="checkbox"> 內部整理標記</label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="resourceLinksHeading">
+          <h3 id="resourceLinksHeading">連結設定</h3>
+          <p class="meta section-help">第一個連結會顯示為前台主要按鈕。請將最常用、最直接辦理的表單或系統入口放在第一個；說明文件、流程圖或參考資料放後面。</p>
+          <div id="resourceLinksBox"></div>
+          <button id="addResourceLinkBtn" class="secondary" type="button">新增連結</button>
+        </section>
+
+        <section class="form-section" aria-labelledby="resourceManageHeading">
+          <h3 id="resourceManageHeading">排序與管理</h3>
+          <p class="meta section-help">數字越小越前面；排序只在相同承辦處室與資料類別內比較。回收桶操作會讓資料卡離開內容管理清單。</p>
+          <div class="field">
+            <label for="resourceSortInput">群組內顯示順序</label>
+            <input id="resourceSortInput" type="number" min="1" step="1">
+          </div>
+        </section>
+
+        <div class="safety-note">
+          高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
+        </div>
+        <div class="actions">
+          <button id="saveResourceBtn" type="button" disabled>儲存資料卡</button>
+          <button id="duplicateResourceBtn" type="button" class="secondary" disabled>複製這筆</button>
+          <button id="unpublishResourceBtn" type="button" class="secondary" disabled>暫時下架</button>
+          <button id="archiveResourceBtn" type="button" class="warn" disabled>移到回收桶</button>
+        </div>
+      </form>
+
+      <section id="trashForm" class="hidden">
+        <div class="editor-header">
+          <span class="editor-kicker">回收桶</span>
+          <h2 id="trashTitle">回收桶</h2>
+          <p id="trashContext" class="meta">刪除的資料卡會先移到這裡，可勾選後還原。</p>
+        </div>
+        <div id="trashPreview" class="trash-preview">
+          <p class="meta">從左側回收桶清單點選一筆內容，可查看基本資料。</p>
+        </div>
+        <div class="actions">
+          <button id="restoreTrashBtn" type="button" disabled>還原已勾選內容</button>
+        </div>
       </section>
-    </article>
-    <footer>內湖國小</footer>
+
+      <form id="shortcutForm" class="hidden" hidden aria-hidden="true">
+        <div class="editor-header">
+          <span class="editor-kicker">入口設定</span>
+          <h2>前台入口對照</h2>
+          <p class="meta">新版前台主要依「處室」與「需求」顯示資料；此頁先以唯讀方式對照目前前台入口。</p>
+        </div>
+
+        <section class="form-section entry-overview" aria-labelledby="officeEntryHeading">
+          <div>
+            <h3 id="officeEntryHeading">依處室快速查找</h3>
+            <p class="meta section-help">管理前台上方的處室入口。老師可依承辦處室快速篩選資料卡。</p>
+          </div>
+          <div id="officeEntryOverview" class="entry-grid"></div>
+        </section>
+
+        <section class="form-section entry-overview" aria-labelledby="needEntryHeading">
+          <div>
+            <h3 id="needEntryHeading">我需要……</h3>
+            <p class="meta section-help">管理前台左側的需求入口。老師可依目前需求查看相關表單、流程與連結。</p>
+          </div>
+          <div id="needEntryOverview" class="entry-grid"></div>
+        </section>
+
+        <details id="legacyShortcutPanel" class="form-section legacy-shortcut-panel">
+          <summary>舊版入口按鈕（相容保留）</summary>
+          <p class="meta section-help">此區保留舊資料相容。新版前台主要依「處室」與「需求」顯示資料。</p>
+          <div class="editor-header">
+            <span id="shortcutEditorLabel" class="editor-kicker">正在編輯舊版入口按鈕</span>
+            <h2 id="shortcutTitle">請先選擇舊版入口按鈕</h2>
+            <p id="shortcutContext" class="meta">從左側清單點選一個舊版入口按鈕後，就能在這裡修改。</p>
+          </div>
+          <input id="shortcutIdInput" type="hidden">
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shortcutParentInput">舊版分組</label>
+              <select id="shortcutParentInput"></select>
+            </div>
+            <div class="field">
+              <label for="shortcutLabelInput">按鈕名稱</label>
+              <input id="shortcutLabelInput" placeholder="例如：內湖雲端">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="shortcutHintInput">簡短提示</label>
+              <input id="shortcutHintInput" placeholder="例如：N114、N113、N112">
+            </div>
+            <div class="field">
+              <label for="shortcutSortInput">舊版入口順序</label>
+              <input id="shortcutSortInput" type="number" min="1" step="1">
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="field">
+              <label for="shortcutQueryInput">關鍵字搜尋</label>
+              <input id="shortcutQueryInput" placeholder="例如：校安">
+            </div>
+            <div class="field">
+              <label for="shortcutCategoryInput">指定資料類別</label>
+              <div class="combo-field">
+                <select id="shortcutCategorySelect" aria-label="指定資料類別"></select>
+                <input id="shortcutCategoryInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新資料類別名稱">
+              </div>
+            </div>
+            <div class="field">
+              <label for="shortcutTagInput">指定標籤</label>
+              <div class="combo-field">
+                <select id="shortcutTagSelect" aria-label="指定標籤"></select>
+                <input id="shortcutTagInput" class="combo-custom hidden" autocomplete="off" placeholder="輸入新標籤">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="shortcutTargetInput">指定內容 ID</label>
+            <input id="shortcutTargetInput" placeholder="可留空">
+          </div>
+
+          <label class="checkbox-row"><input id="shortcutEnabledInput" type="checkbox"> 啟用此舊版入口按鈕</label>
+
+          <div class="actions">
+            <button id="saveShortcutBtn" type="button" disabled>儲存舊版入口按鈕</button>
+            <button id="deleteShortcutBtn" type="button" class="warn" disabled>停用舊版入口按鈕</button>
+          </div>
+        </details>
+      </form>
+    </section>
   </main>
+
+  <footer>
+    <p>COPYRIGHT © 2026 HSINCHU NEI HU PRIMARY SCHOOL. All rights reserved.</p>
+    <p>本後台不應放入學生個資、個案內容、成績、通報細節、採購工程細節或未經確認的高風險資訊。</p>
+  </footer>
+
+  <script>
+    const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
+    const LOGIN_PAGE = "login.html";
+    const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
+    const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
+    const CUSTOM_OPTION_VALUE = "__custom__";
+    const OFFICES = ["常用入口", "校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事室", "會計室", "全校共用"];
+    const RESOURCE_OFFICES = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事室", "會計室", "全校共用"];
+    const LEGACY_RESOURCE_OFFICES = ["人事", "會計", "其他"];
+    const OFFICE_ALIASES = {
+      "人事": "人事室",
+      "會計": "會計室",
+      "其他": "全校共用",
+      "共同": "全校共用",
+      "常用入口": "全校共用"
+    };
+    const FRONTEND_NEED_ENTRIES = [
+      { label: "請假／補休", hint: "差勤、課務安排", keywords: ["請假", "補休", "差勤", "調課", "代課"] },
+      { label: "處理學生事件", hint: "受傷、通報、輔導", keywords: ["學生事件", "受傷", "校安", "通報", "霸凌", "性平", "輔導"] },
+      { label: "報修／借用", hint: "設備、場地、平板", keywords: ["報修", "設備", "冷氣", "資訊", "電腦", "網路", "場地", "借用", "平板"] },
+      { label: "帶學生外出", hint: "校外教學、安全準備", keywords: ["校外教學", "戶外教育", "外出", "保險", "安全"] },
+      { label: "課務／教學支援", hint: "調課、代課、教學資料", keywords: ["課務", "教學", "評量", "研習", "調課", "代課"] },
+      { label: "常用系統", hint: "差勤、行事曆、Meet", keywords: ["系統", "差勤", "行事曆", "Meet", "校務", "Google"] },
+      { label: "新進教師", hint: "報到、系統、校園生活", keywords: ["新進", "報到", "校園生活", "帳號", "系統"] },
+      { label: "表件／資料下載", hint: "表單、文件、年度資料", keywords: ["表件", "表單", "資料", "下載", "年度", "檔案"] }
+    ];
+    const CANNED_TEXT = "先確認項目是否符合目前需求，再點選主要連結辦理或查閱。";
+    const DEFAULT_RESOURCE_CATEGORY = "校務參考";
+    const DEFAULT_CATEGORIES = [
+      "系統入口", "線上填報", "表單／申請", "流程說明", "校內規範",
+      "校務參考", "年度資料", "操作說明", "其他"
+    ];
+    const DEFAULT_TYPES = [
+      "連結", "常用系統", "校網", "Google 表單", "Google 文件", "Google 試算表",
+      "Drive 資料夾", "PDF", "年度文件", "操作與申請", "資訊分享", "公告頁", "外部系統"
+    ];
+    const DEFAULT_TAGS = [
+      "常用", "重要", "高風險", "表件", "流程", "新進教師必讀", "教務處", "學務處", "總務處",
+      "輔導室", "人事室", "會計室", "資訊設備", "硬體設備", "場地借用", "平板借用", "校安", "性平", "霸凌"
+    ];
+    const COMMON_CONTENT_TAG = "常用內容";
+    const COMMON_CONTENT_PIN_TAG = "常用置頂";
+    const AUTH_EXPIRED_NOTICE = "登入狀態已逾時，這次變更尚未儲存。請重新登入後再操作。";
+    const STAFF_UNITS_BY_OFFICE = {
+      "教務處": ["教務主任", "教學組", "課研組", "資訊組", "特教組"],
+      "學務處": ["學務主任", "生教組", "體育組", "環教組", "護理師"],
+      "總務處": ["總務主任", "事務組", "出納組", "文書組"],
+      "輔導室": ["輔導主任", "輔導組", "親職組", "專輔教師"]
+    };
+    const STAFF_UNIT_TAGS = Object.values(STAFF_UNITS_BY_OFFICE).flat();
+
+    let idToken = "";
+    let currentUser = null;
+    let resources = [];
+    let trash = [];
+    let shortcuts = {};
+    let mode = "resources";
+    let activeResourceId = "";
+    let activeTrashId = "";
+    let activeShortcutId = "";
+    let selectedResourceIds = new Set();
+    let selectedTrashIds = new Set();
+    let draggedItemId = "";
+    let draggedEntry = null;
+    let dropTargetEntry = null;
+    let draggedGroupName = "";
+    let directoryLoadRequestId = 0;
+    let resourceFormDirty = false;
+    let isHydratingResourceForm = false;
+    let resourceFormRevision = 0;
+    let resourceFormBoundResourceId = "";
+
+    const el = {
+      loginState: document.getElementById("loginState"),
+      message: document.getElementById("message"),
+      logoutBtn: document.getElementById("logoutBtn"),
+      listTitle: document.getElementById("listTitle"),
+      itemList: document.getElementById("itemList"),
+      listSearchInput: document.getElementById("listSearchInput"),
+      officeFilter: document.getElementById("officeFilter"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      statusFilter: document.getElementById("statusFilter"),
+      addItemBtn: document.getElementById("addItemBtn"),
+      bulkTools: document.getElementById("bulkTools"),
+      bulkToolsSummary: document.getElementById("bulkToolsSummary"),
+      bulkCountText: document.getElementById("bulkCountText"),
+      visibleCountText: document.getElementById("visibleCountText"),
+      selectVisibleBtn: document.getElementById("selectVisibleBtn"),
+      clearSelectionBtn: document.getElementById("clearSelectionBtn"),
+      batchDeleteBtn: document.getElementById("batchDeleteBtn"),
+      resourcesTab: document.getElementById("resourcesTab"),
+      shortcutsTab: document.getElementById("shortcutsTab"),
+      trashTab: document.getElementById("trashTab"),
+      resourceForm: document.getElementById("resourceForm"),
+      bulkPanel: document.getElementById("bulkPanel"),
+      bulkPanelSummary: document.getElementById("bulkPanelSummary"),
+      batchOfficeInput: document.getElementById("batchOfficeInput"),
+      batchCategorySelect: document.getElementById("batchCategorySelect"),
+      batchCategoryInput: document.getElementById("batchCategoryInput"),
+      batchFeaturedInput: document.getElementById("batchFeaturedInput"),
+      batchVisibleInput: document.getElementById("batchVisibleInput"),
+      batchApplyBtn: document.getElementById("batchApplyBtn"),
+      trashForm: document.getElementById("trashForm"),
+      trashTitle: document.getElementById("trashTitle"),
+      trashContext: document.getElementById("trashContext"),
+      trashPreview: document.getElementById("trashPreview"),
+      restoreTrashBtn: document.getElementById("restoreTrashBtn"),
+      shortcutForm: document.getElementById("shortcutForm"),
+      sortHint: document.getElementById("sortHint"),
+      officeEntryOverview: document.getElementById("officeEntryOverview"),
+      needEntryOverview: document.getElementById("needEntryOverview"),
+      legacyShortcutPanel: document.getElementById("legacyShortcutPanel"),
+      resourceEditorLabel: document.getElementById("resourceEditorLabel"),
+      resourceTitle: document.getElementById("resourceTitle"),
+      resourceContext: document.getElementById("resourceContext"),
+      resourceIdInput: document.getElementById("resourceIdInput"),
+      resourceTitleInput: document.getElementById("resourceTitleInput"),
+      resourceUpdatedInput: document.getElementById("resourceUpdatedInput"),
+      resourceOfficeInput: document.getElementById("resourceOfficeInput"),
+      resourceCategorySelect: document.getElementById("resourceCategorySelect"),
+      resourceCategoryInput: document.getElementById("resourceCategoryInput"),
+      resourceTypeSelect: document.getElementById("resourceTypeSelect"),
+      resourceTypeInput: document.getElementById("resourceTypeInput"),
+      staffUnitField: document.getElementById("staffUnitField"),
+      staffUnitOptions: document.getElementById("staffUnitOptions"),
+      staffUnitHelp: document.getElementById("staffUnitHelp"),
+      resourceSortInput: document.getElementById("resourceSortInput"),
+      resourceNoteInput: document.getElementById("resourceNoteInput"),
+      resourceTagsInput: document.getElementById("resourceTagsInput"),
+      resourceCommonPinnedInput: document.getElementById("resourceCommonPinnedInput"),
+      resourceVisibleInput: document.getElementById("resourceVisibleInput"),
+      resourceFeaturedInput: document.getElementById("resourceFeaturedInput"),
+      resourceLinksBox: document.getElementById("resourceLinksBox"),
+      addResourceLinkBtn: document.getElementById("addResourceLinkBtn"),
+      saveResourceBtn: document.getElementById("saveResourceBtn"),
+      duplicateResourceBtn: document.getElementById("duplicateResourceBtn"),
+      unpublishResourceBtn: document.getElementById("unpublishResourceBtn"),
+      archiveResourceBtn: document.getElementById("archiveResourceBtn"),
+      shortcutEditorLabel: document.getElementById("shortcutEditorLabel"),
+      shortcutTitle: document.getElementById("shortcutTitle"),
+      shortcutContext: document.getElementById("shortcutContext"),
+      shortcutIdInput: document.getElementById("shortcutIdInput"),
+      shortcutParentInput: document.getElementById("shortcutParentInput"),
+      shortcutLabelInput: document.getElementById("shortcutLabelInput"),
+      shortcutHintInput: document.getElementById("shortcutHintInput"),
+      shortcutSortInput: document.getElementById("shortcutSortInput"),
+      shortcutQueryInput: document.getElementById("shortcutQueryInput"),
+      shortcutCategorySelect: document.getElementById("shortcutCategorySelect"),
+      shortcutCategoryInput: document.getElementById("shortcutCategoryInput"),
+      shortcutTagSelect: document.getElementById("shortcutTagSelect"),
+      shortcutTagInput: document.getElementById("shortcutTagInput"),
+      shortcutTargetInput: document.getElementById("shortcutTargetInput"),
+      shortcutEnabledInput: document.getElementById("shortcutEnabledInput"),
+      saveShortcutBtn: document.getElementById("saveShortcutBtn"),
+      deleteShortcutBtn: document.getElementById("deleteShortcutBtn")
+    };
+
+    window.onload = async () => {
+      setupSelects();
+      await initializeAdminSession();
+    };
+
+    async function initializeAdminSession() {
+      idToken = sessionStorage.getItem(TOKEN_STORAGE_KEY) || "";
+      if (!idToken) {
+        redirectToLogin();
+        return;
+      }
+      try {
+        const cachedUser = JSON.parse(sessionStorage.getItem(USER_STORAGE_KEY) || "null");
+        if (cachedUser && cachedUser.email) {
+          currentUser = cachedUser;
+          el.loginState.textContent = cachedUser.email + "（" + (cachedUser.role || "使用者") + "）";
+        }
+      } catch (err) {
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+      }
+      showMessage("正在載入後台資料...", false, true);
+      setEnabled(false);
+      await loadDirectoryData();
+    }
+
+    function redirectToLogin(reason = "") {
+      const next = encodeURIComponent("admin.html");
+      const suffix = reason ? "&reason=" + encodeURIComponent(reason) : "";
+      window.location.replace(LOGIN_PAGE + "?next=" + next + suffix);
+    }
+
+    function logout() {
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+      sessionStorage.removeItem(USER_STORAGE_KEY);
+      redirectToLogin("logout");
+    }
+
+    function setupSelects() {
+      renderOfficeFilter();
+      renderCategoryFilter();
+      renderOfficeSelects();
+      renderSuggestionLists();
+    }
+
+    function renderOfficeFilter() {
+      const current = normalizeResourceOffice(el.officeFilter.value);
+      const offices = getResourceOfficeOptions();
+      const emptyLabel = "全部處室";
+      el.officeFilter.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" + offices.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.officeFilter.value = offices.includes(current) ? current : "";
+    }
+
+    function renderOfficeSelects() {
+      const resourceOffice = normalizeResourceOffice(el.resourceOfficeInput.value || "全校共用");
+      const batchOffice = normalizeResourceOffice(el.batchOfficeInput.value);
+      const shortcutParent = el.shortcutParentInput.value || "常用入口";
+      const resourceOptions = getResourceOfficeOptions();
+      const shortcutOptions = getShortcutOfficeOptions();
+      el.resourceOfficeInput.innerHTML = resourceOptions.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.resourceOfficeInput.value = resourceOptions.includes(resourceOffice) ? resourceOffice : "全校共用";
+      el.batchOfficeInput.innerHTML = "<option value=''>不變更處室</option>" + resourceOptions.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(office) + "</option>"
+      )).join("");
+      el.batchOfficeInput.value = resourceOptions.includes(batchOffice) ? batchOffice : "";
+      el.shortcutParentInput.innerHTML = shortcutOptions.map((office) => (
+        "<option value='" + escapeHtml(office) + "'>" + escapeHtml(shortcutParentLabel(office)) + "</option>"
+      )).join("");
+      el.shortcutParentInput.value = shortcutOptions.includes(shortcutParent) ? shortcutParent : "常用入口";
+    }
+
+    function getResourceOfficeOptions() {
+      return RESOURCE_OFFICES.slice();
+    }
+
+    function getShortcutOfficeOptions() {
+      return mergeOptions(
+        OFFICES,
+        LEGACY_RESOURCE_OFFICES,
+        flattenShortcuts().map((item) => item.parentOffice)
+      );
+    }
+
+    function shortcutParentLabel(value) {
+      return String(value || "") === "常用入口" ? "舊版預設分組" : String(value || "舊版分組");
+    }
+
+    function renderCategoryFilter(options = {}) {
+      const current = el.categoryFilter.value;
+      const source = mode === "trash" ? trash : resources;
+      const office = el.officeFilter.value;
+      const categories = [...new Set(source
+        .filter((item) => !office || adminOfficeMatches(item.office, office))
+        .map((item) => item.category)
+        .filter(Boolean))]
+        .sort((a, b) => String(a).localeCompare(String(b), "zh-Hant"));
+      const keepCurrent = options.keepCurrent === true && current && current !== "__featured" && !categories.includes(current);
+      const currentOption = keepCurrent
+        ? "<option value='" + escapeHtml(current) + "'>" + escapeHtml(categoryOptionLabel(current)) + "</option>"
+        : "";
+      el.categoryFilter.innerHTML = "<option value=''>全部類別</option>" + currentOption + categories.map((category) => (
+        "<option value='" + escapeHtml(category) + "'>" + escapeHtml(categoryOptionLabel(category)) + "</option>"
+      )).join("");
+      el.categoryFilter.value = categories.includes(current) || keepCurrent ? current : "";
+    }
+
+    async function api(cmd, extra = {}) {
+      if (!idToken) throw createAdminApiError("尚未完成 Google 登入。", 401);
+      const payload = JSON.stringify({ cmd, idToken, ...extra });
+      const response = await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: "payload=" + encodeURIComponent(payload)
+      });
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (err) {
+        throw createAdminApiError(response.ok ? "伺服器回應格式錯誤。" : "操作失敗", response.status);
+      }
+      if (!response.ok || !data.ok) {
+        throw createAdminApiError(data.error || response.statusText || "操作失敗", response.status, data);
+      }
+      return data;
+    }
+
+    function createAdminApiError(message, status, data) {
+      const err = new Error(message || "操作失敗");
+      err.status = Number(status || 0);
+      err.data = data || null;
+      return err;
+    }
+
+    async function loadDirectoryData(options = {}) {
+      const requestId = ++directoryLoadRequestId;
+      try {
+        const data = await api("directoryList");
+        if (requestId !== directoryLoadRequestId) return false;
+        resources = Array.isArray(data.resources) ? data.resources : [];
+        trash = Array.isArray(data.trash) ? data.trash : [];
+        shortcuts = data.shortcuts || {};
+        currentUser = data.user || null;
+        pruneSelectedItems();
+        if (activeResourceId && !resources.some((item) => item.id === activeResourceId)) activeResourceId = "";
+        if (activeTrashId && !trash.some((item) => item.id === activeTrashId)) activeTrashId = "";
+        if (!activeResourceId && resources.length) activeResourceId = resources[0].id;
+        if (!activeTrashId && trash.length) activeTrashId = trash[0].id;
+        if (!activeShortcutId) activeShortcutId = firstShortcutId();
+        renderOfficeSelects();
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: options.keepCategoryFilter === true });
+        renderSuggestionLists();
+        el.loginState.textContent = currentUser
+          ? currentUser.email + "（" + currentUser.role + "）"
+          : "已授權使用者";
+        if (currentUser) sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+        renderAll({ forceEditor: options.forceEditor === true });
+        setEnabled(true);
+        hideMessage();
+        return true;
+      } catch (err) {
+        if (requestId !== directoryLoadRequestId) return false;
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+        redirectToLogin("expired");
+        return false;
+      }
+    }
+
+    function firstShortcutId() {
+      return flattenShortcuts()[0]?.id || "";
+    }
+
+    function flattenShortcuts() {
+      return Object.entries(shortcuts).flatMap(([parent, items]) => (
+        (items || []).map((item) => ({ ...item, parentOffice: parent }))
+      ));
+    }
+
+    function renderAll(options = {}) {
+      mode = normalizeMode(mode);
+      el.resourcesTab.classList.toggle("is-active", mode === "resources");
+      if (el.shortcutsTab) el.shortcutsTab.classList.remove("is-active");
+      el.trashTab.classList.toggle("is-active", mode === "trash");
+      el.resourceForm.classList.toggle("hidden", mode !== "resources");
+      el.shortcutForm.classList.add("hidden");
+      el.shortcutForm.hidden = true;
+      el.shortcutForm.setAttribute("aria-hidden", "true");
+      el.trashForm.classList.toggle("hidden", mode !== "trash");
+      el.bulkTools.classList.remove("hidden");
+      el.bulkPanel.classList.toggle("hidden", mode !== "resources");
+      el.sortHint.classList.toggle("hidden", mode === "trash");
+      el.categoryFilter.classList.remove("hidden");
+      el.statusFilter.classList.toggle("hidden", mode === "trash");
+      el.categoryFilter.disabled = false;
+      el.officeFilter.setAttribute("aria-label", "處室篩選");
+      el.listTitle.textContent = mode === "trash" ? "回收桶清單" : "內容管理清單";
+      el.addItemBtn.textContent = "新增資料卡";
+      renderList();
+      renderBulkState();
+      if (mode === "resources") renderResourceEditor({ force: options.forceEditor === true });
+      if (mode === "trash") renderTrashEditor();
+    }
+
+    function getDisplayResourceCategory(item) {
+      const office = normalizeResourceOffice(item.office || "全校共用");
+      const category = String(item.category || "").trim();
+      return category && normalizeResourceOffice(category) !== office ? category : "";
+    }
+
+    function getOfficeCategoryText(item) {
+      const parts = [normalizeResourceOffice(item.office || "全校共用")];
+      const category = getDisplayResourceCategory(item);
+      if (category) parts.push(category);
+      return parts.join("｜");
+    }
+
+    function getResourceListMeta(item, listIndex) {
+      const positionText = Number.isInteger(listIndex) ? "本清單第 " + (listIndex + 1) + " 筆" : "";
+      const parts = [getOfficeCategoryText(item), positionText];
+      return parts.filter(Boolean).join("｜");
+    }
+
+    function getUnpublishedBadge(item) {
+      return item.visible === false ? "<span class='status-badge'>已下架</span>" : "";
+    }
+
+    function isCommonPinnedResource(item) {
+      return (Array.isArray(item.tags) ? item.tags : []).some((tag) => String(tag || "").trim() === COMMON_CONTENT_PIN_TAG);
+    }
+
+    function getCommonPinnedBadge(item) {
+      return isCommonPinnedResource(item) ? "<span class='common-pinned-badge'>常用置頂</span>" : "";
+    }
+
+    function getTrashListMeta(item) {
+      return [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].filter(Boolean).join("｜");
+    }
+
+    function renderFrontendEntryOverviews() {
+      if (el.officeEntryOverview) {
+        const officeCards = RESOURCE_OFFICES.map((office, index) => {
+          const count = resources.filter((item) => item.visible !== false && adminOfficeMatches(item.office, office)).length;
+          return renderStaticEntryCard({
+            title: office,
+            lines: ["入口順序 " + (index + 1), "目前 " + count + " 筆上架資料"],
+            badge: "固定入口"
+          });
+        }).join("");
+        el.officeEntryOverview.innerHTML = officeCards;
+      }
+
+      if (el.needEntryOverview) {
+        const needCards = FRONTEND_NEED_ENTRIES.map((entry, index) => {
+          const count = resources.filter((item) => item.visible !== false && needEntryMatchesResource(entry, item)).length;
+          return renderStaticEntryCard({
+            title: entry.label,
+            lines: [
+              entry.hint,
+              "推論關鍵字：" + entry.keywords.join("、"),
+              "入口順序 " + (index + 1) + "｜目前 " + count + " 筆可能相關資料"
+            ],
+            badge: "固定入口"
+          });
+        }).join("");
+        el.needEntryOverview.innerHTML = needCards;
+      }
+    }
+
+    function renderStaticEntryCard({ title, lines, badge }) {
+      return `
+        <article class="entry-card">
+          <strong>${escapeHtml(title)}</strong>
+          ${(lines || []).map((line) => `<p class="meta">${escapeHtml(line)}</p>`).join("")}
+          <span class="readonly-badge">${escapeHtml(badge)}</span>
+        </article>
+      `;
+    }
+
+    function needEntryMatchesResource(entry, item) {
+      const text = normalizeAdminText(resourceAdminSearchText(item));
+      return entry.keywords.some((keyword) => text.includes(normalizeAdminText(keyword)));
+    }
+
+    function renderList() {
+      mode = normalizeMode(mode);
+      if (mode === "resources") {
+        const items = getVisibleListItems();
+        const selectionMode = isListSelectionMode();
+        el.itemList.innerHTML = renderGroupedList(
+          items,
+          getListGroupName,
+          (item, index) => `
+            <div class="list-entry is-draggable ${item.visible === false ? "is-unpublished" : ""} ${selectionMode ? "has-check" : ""} ${selectionMode && selectedResourceIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}" data-group="${escapeHtml(getListGroupName(item))}" draggable="true">
+              ${selectionMode ? `<input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedResourceIds.has(item.id) ? "checked" : ""}>` : ""}
+              <span class="drag-handle" title="拖曳調整順序" aria-hidden="true">::</span>
+              <button class="list-button ${item.id === activeResourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+                <span class="list-title-line">
+                  <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                  ${getCommonPinnedBadge(item)}
+                  ${getUnpublishedBadge(item)}
+                </span>
+                <span class="list-meta">${escapeHtml(getResourceListMeta(item, index))}</span>
+              </button>
+            </div>
+          `
+        );
+        return;
+      }
+
+      if (mode === "trash") {
+        const items = getVisibleListItems();
+        el.itemList.innerHTML = renderGroupedList(
+          items,
+          getListGroupName,
+          (item) => `
+            <div class="list-entry ${selectedTrashIds.has(item.id) ? "is-selected" : ""}" data-id="${escapeHtml(item.id)}">
+              <input class="list-check" type="checkbox" data-select-id="${escapeHtml(item.id)}" aria-label="勾選 ${escapeHtml(item.title || "未命名內容")}" ${selectedTrashIds.has(item.id) ? "checked" : ""}>
+              <button class="list-button ${item.id === activeTrashId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+                <span class="list-title-line">
+                  <strong>${escapeHtml(item.title || "未命名內容")}</strong>
+                </span>
+                <span class="list-meta">${escapeHtml(getTrashListMeta(item))}</span>
+              </button>
+            </div>
+          `
+        );
+        return;
+      }
+    }
+
+    function getListGroupName(item) {
+      return getOfficeCategoryText(item);
+    }
+
+    function getVisibleListItems() {
+      mode = normalizeMode(mode);
+      const office = el.officeFilter.value;
+      const query = normalizeAdminText(el.listSearchInput.value);
+      if (mode === "resources") {
+        const category = el.categoryFilter.value;
+        const status = el.statusFilter.value;
+        return resources
+          .filter((item) => !office || adminOfficeMatches(item.office, office))
+          .filter((item) => !category || item.category === category)
+          .filter((item) => resourceStatusMatches(item, status))
+          .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
+          .slice()
+          .sort(compareResourceListOrder);
+      }
+      if (mode === "trash") {
+        const category = el.categoryFilter.value;
+        return trash
+          .filter((item) => !office || adminOfficeMatches(item.office, office))
+          .filter((item) => !category || item.category === category)
+          .filter((item) => matchesAdminQuery(resourceAdminSearchText(item), query))
+          .slice()
+          .sort(compareResourceListOrder);
+      }
+      return [];
+    }
+
+    function renderGroupedList(items, groupName, renderItem) {
+      if (!items.length) return "<p class='list-empty'>沒有符合條件的項目。</p>";
+      let currentGroup = "";
+      return items.map((item, index) => {
+        const nextGroup = groupName(item);
+        const heading = nextGroup !== currentGroup
+          ? `<div class="list-group-title">${escapeHtml(nextGroup)}</div>`
+          : "";
+        currentGroup = nextGroup;
+        return heading + renderItem(item, index);
+      }).join("");
+    }
+
+    function renderBulkState(enabled = true) {
+      mode = normalizeMode(mode);
+      const isBulkMode = mode === "resources" || mode === "trash";
+      const visibleItems = isBulkMode ? getVisibleListItems() : [];
+      const selectedCount = mode === "trash" ? selectedTrashIds.size : selectedResourceIds.size;
+      el.bulkCountText.textContent = "已勾選 " + selectedCount + " 筆";
+      el.visibleCountText.textContent = listCountText(visibleItems.length);
+      el.batchDeleteBtn.textContent = mode === "trash" ? "還原已勾選" : "移到回收桶";
+      if (el.bulkToolsSummary) el.bulkToolsSummary.textContent = mode === "trash" ? "回收桶批次整理" : "批次整理";
+      if (el.bulkPanelSummary) el.bulkPanelSummary.textContent = "批次整理（已勾選 " + selectedResourceIds.size + " 筆）";
+      const hasVisibleItems = visibleItems.length > 0;
+      const canEdit = userCanEditContent();
+      const canManageTrash = userCanManageTrash();
+      const canUseBulk = Boolean(enabled && idToken && canEdit && isBulkMode && isListSelectionMode());
+      const canMoveToTrash = Boolean(enabled && idToken && canManageTrash && isBulkMode && selectedCount > 0);
+      el.selectVisibleBtn.disabled = !canUseBulk || !hasVisibleItems;
+      el.clearSelectionBtn.disabled = !canUseBulk || selectedCount === 0;
+      el.batchApplyBtn.disabled = mode !== "resources" || !canUseBulk || selectedResourceIds.size === 0;
+      el.batchDeleteBtn.disabled = !canUseBulk || !canMoveToTrash;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canManageTrash || mode !== "trash" || selectedTrashIds.size === 0;
+    }
+
+    function isListSelectionMode() {
+      if (mode === "trash") return true;
+      return mode === "resources" && el.bulkTools.open;
+    }
+
+    function resourceStatusMatches(item, status) {
+      if (status === "published") return item.visible !== false;
+      if (status === "unpublished") return item.visible === false;
+      return true;
+    }
+
+    function listCountText(count) {
+      if (mode !== "resources") return "目前清單 " + count + " 筆";
+      if (el.statusFilter.value === "published") return "上架中 " + count + " 筆";
+      if (el.statusFilter.value === "unpublished") return "已下架 " + count + " 筆";
+      return "目前清單 " + count + " 筆";
+    }
+
+    function pruneSelectedItems() {
+      const validResourceIds = new Set(resources.map((item) => item.id));
+      const validTrashIds = new Set(trash.map((item) => item.id));
+      selectedResourceIds = new Set([...selectedResourceIds].filter((id) => validResourceIds.has(id)));
+      selectedTrashIds = new Set([...selectedTrashIds].filter((id) => validTrashIds.has(id)));
+    }
+
+    function compareResourceListOrder(a, b) {
+      const officeDiff = officeRank(a.office, RESOURCE_OFFICES) - officeRank(b.office, RESOURCE_OFFICES);
+      if (officeDiff !== 0) return officeDiff;
+      const categoryDiff = String(a.category || "").localeCompare(String(b.category || ""), "zh-Hant");
+      if (categoryDiff !== 0) return categoryDiff;
+      return compareSortOrder(a, b);
+    }
+
+    function compareShortcutListOrder(a, b) {
+      const parentDiff = officeRank(a.parentOffice, OFFICES) - officeRank(b.parentOffice, OFFICES);
+      if (parentDiff !== 0) return parentDiff;
+      return compareSortOrder(a, b);
+    }
+
+    function officeRank(value, list) {
+      const index = list.indexOf(normalizeResourceOffice(value));
+      return index >= 0 ? index : list.length;
+    }
+
+    function compareSortOrder(a, b) {
+      const aOrder = Number(a.sort_order || 999999);
+      const bOrder = Number(b.sort_order || 999999);
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return String(a.title || a.label || "").localeCompare(String(b.title || b.label || ""), "zh-Hant");
+    }
+
+    function resourceAdminSearchText(item) {
+      const links = (item.links || []).map((link) => [link.label, link.url].join(" ")).join(" ");
+      return [
+        item.title,
+        item.office,
+        normalizeResourceOffice(item.office),
+        item.category,
+        item.type,
+        item.status,
+        item.note,
+        (item.tags || []).join(" "),
+        links
+      ].join(" ");
+    }
+
+    function shortcutAdminSearchText(item) {
+      return [
+        item.label,
+        item.hint,
+        item.parentOffice,
+        item.query,
+        item.resourceCategory,
+        item.tag,
+        item.targetId
+      ].join(" ");
+    }
+
+    function matchesAdminQuery(text, query) {
+      if (!query) return true;
+      const haystack = normalizeAdminText(text);
+      return query.split(" ").every((word) => haystack.includes(word));
+    }
+
+    function normalizeAdminText(value) {
+      return String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+    }
+
+    function normalizeResourceOffice(value) {
+      const office = String(value || "").trim();
+      if (!office) return "";
+      return OFFICE_ALIASES[office] || office;
+    }
+
+    function adminOfficeMatches(value, selectedOffice) {
+      if (!selectedOffice) return true;
+      return normalizeResourceOffice(value) === normalizeResourceOffice(selectedOffice);
+    }
+
+    function markResourceFormDirty() {
+      if (isHydratingResourceForm || mode !== "resources") return;
+      resourceFormDirty = true;
+      resourceFormRevision += 1;
+      resourceFormBoundResourceId = el.resourceIdInput.value.trim() || activeResourceId || "";
+    }
+
+    function clearResourceFormDirty(resourceId = "") {
+      resourceFormDirty = false;
+      resourceFormBoundResourceId = resourceId;
+    }
+
+    function hydrateResourceForm(callback, options = {}) {
+      isHydratingResourceForm = true;
+      try {
+        callback();
+      } finally {
+        isHydratingResourceForm = false;
+      }
+      if (options.resetDirty) {
+        const resourceId = Object.prototype.hasOwnProperty.call(options, "resourceId")
+          ? options.resourceId
+          : el.resourceIdInput.value.trim() || activeResourceId || "";
+        clearResourceFormDirty(resourceId || "");
+      }
+    }
+
+    function shouldPreserveResourceEditor(resourceId, force) {
+      if (force || !resourceFormDirty || mode !== "resources") return false;
+      const currentFormId = el.resourceIdInput.value.trim() || resourceFormBoundResourceId || activeResourceId || "";
+      return currentFormId === String(resourceId || "");
+    }
+
+    function syncResourceEditorIdentity(item) {
+      if (!item || mode !== "resources" || activeResourceId !== item.id) return;
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "正在編輯資料卡";
+        el.resourceTitle.textContent = el.resourceTitleInput.value.trim() || item.title || "未命名內容";
+        el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
+        el.resourceIdInput.value = item.id || "";
+      });
+      resourceFormBoundResourceId = item.id || "";
+    }
+
+    function renderResourceEditor(options = {}) {
+      const force = options.force === true;
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      if (!item) {
+        clearResourceEditor({ force });
+        return;
+      }
+      if (shouldPreserveResourceEditor(item.id, force)) {
+        syncResourceEditorIdentity(item);
+        return;
+      }
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "正在編輯資料卡";
+        el.resourceTitle.textContent = item.title || "未命名內容";
+        el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
+        el.resourceIdInput.value = item.id || "";
+        el.resourceTitleInput.value = item.title || "";
+        el.resourceUpdatedInput.value = normalizeDate(item.updated);
+        el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
+        setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || "");
+        setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "");
+        el.resourceSortInput.value = item.sort_order || "";
+        el.resourceNoteInput.value = item.note || "";
+        el.resourceTagsInput.value = (item.tags || []).join(", ");
+        syncCommonPinnedCheckboxFromTags();
+        el.resourceVisibleInput.checked = item.visible !== false;
+        el.resourceFeaturedInput.checked = item.featured === true;
+        renderStaffUnitPicker();
+        renderLinkRows(item.links || []);
+      }, { resetDirty: true, resourceId: item.id || "" });
+    }
+
+    function clearResourceEditor(options = {}) {
+      const force = options.force === true;
+      if (!force && resourceFormDirty && !activeResourceId && !resourceFormBoundResourceId) return;
+      hydrateResourceForm(() => {
+        el.resourceEditorLabel.textContent = "新增資料卡";
+        el.resourceTitle.textContent = "新增資料卡";
+        el.resourceContext.textContent = "填寫資料卡後按「儲存並更新網站」新增。";
+        el.resourceIdInput.value = "";
+        el.resourceTitleInput.value = "";
+        el.resourceUpdatedInput.value = todayText();
+        el.resourceOfficeInput.value = "全校共用";
+        setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, DEFAULT_RESOURCE_CATEGORY);
+        setComboValue(el.resourceTypeSelect, el.resourceTypeInput, "連結");
+        el.resourceSortInput.value = String(resources.length + 1);
+        el.resourceNoteInput.value = "";
+        el.resourceTagsInput.value = "常用";
+        syncCommonPinnedCheckboxFromTags();
+        el.resourceVisibleInput.checked = true;
+        el.resourceFeaturedInput.checked = false;
+        renderStaffUnitPicker();
+        renderLinkRows([]);
+      }, { resetDirty: true, resourceId: "" });
+    }
+
+    function renderTrashEditor() {
+      const item = trash.find((resource) => resource.id === activeTrashId);
+      el.trashTitle.textContent = item ? item.title || "未命名內容" : "回收桶";
+      el.trashContext.textContent = item
+        ? [getOfficeCategoryText(item), "刪除時間 " + (item.deleted_at || "")].join("｜")
+        : "刪除的資料卡會先移到這裡，可勾選後還原。";
+      el.trashPreview.innerHTML = item ? `
+        <p><strong>標題：</strong>${escapeHtml(item.title || "未命名內容")}</p>
+        <p><strong>處室／資料類別：</strong>${escapeHtml(getOfficeCategoryText(item))}</p>
+        <p><strong>類型：</strong>${escapeHtml(item.type || "連結")}｜<strong>最後更新：</strong>${escapeHtml(item.updated || "")}</p>
+        <p class="meta">${escapeHtml(item.note || "沒有備註。")}</p>
+      ` : "<p class='meta'>從左側回收桶清單點選一筆內容，可查看基本資料。</p>";
+    }
+
+    function renderLinkRows(links) {
+      const rows = links.length ? links : [{ label: "", url: "" }];
+      el.resourceLinksBox.innerHTML = rows.map((link) => `
+        <div class="link-row">
+          <div class="link-field">
+            <label>連結名稱</label>
+            <input data-link="label" placeholder="例如：前往借用系統" value="${escapeHtml(link.label || "")}">
+          </div>
+          <div class="link-field">
+            <label>網址</label>
+            <input data-link="url" placeholder="https://..." value="${escapeHtml(link.url || "")}">
+          </div>
+          <button class="secondary remove-link" type="button">移除</button>
+        </div>
+      `).join("");
+    }
+
+    function renderShortcutEditor() {
+      const item = flattenShortcuts().find((shortcut) => shortcut.id === activeShortcutId);
+      if (!item) {
+        clearShortcutEditor();
+        return;
+      }
+      el.shortcutEditorLabel.textContent = "正在編輯舊版入口按鈕";
+      el.shortcutTitle.textContent = item.label || "未命名按鈕";
+      el.shortcutContext.textContent = [shortcutParentLabel(item.parentOffice), item.resourceCategory || item.query || "未指定條件", "ID " + (item.id || "")].join("｜");
+      el.shortcutIdInput.value = item.id || "";
+      el.shortcutParentInput.value = item.parentOffice || "常用入口";
+      el.shortcutLabelInput.value = item.label || "";
+      el.shortcutHintInput.value = item.hint || "";
+      el.shortcutSortInput.value = item.sort_order || "";
+      el.shortcutQueryInput.value = item.query || "";
+      setComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput, item.resourceCategory || "");
+      setComboValue(el.shortcutTagSelect, el.shortcutTagInput, item.tag || "");
+      el.shortcutTargetInput.value = item.targetId || "";
+      el.shortcutEnabledInput.checked = item.enabled !== false;
+    }
+
+    function clearShortcutEditor() {
+      el.shortcutEditorLabel.textContent = "新增舊版入口按鈕";
+      el.shortcutTitle.textContent = "新增舊版入口按鈕";
+      el.shortcutContext.textContent = "此區只維護舊版入口資料；新版前台主要依處室與需求顯示。";
+      el.shortcutIdInput.value = "";
+      el.shortcutParentInput.value = "常用入口";
+      el.shortcutLabelInput.value = "";
+      el.shortcutHintInput.value = "";
+      el.shortcutSortInput.value = String(flattenShortcuts().length + 1);
+      el.shortcutQueryInput.value = "";
+      setComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput, "");
+      setComboValue(el.shortcutTagSelect, el.shortcutTagInput, "");
+      el.shortcutTargetInput.value = "";
+      el.shortcutEnabledInput.checked = true;
+    }
+
+    function collectResource() {
+      const links = [...el.resourceLinksBox.querySelectorAll(".link-row")].map((row) => ({
+        label: row.querySelector("[data-link='label']").value.trim(),
+        url: row.querySelector("[data-link='url']").value.trim()
+      })).filter((link) => link.label || link.url);
+      const resourceId = el.resourceIdInput.value.trim();
+      const existing = resources.find((resource) => resource.id === resourceId);
+      const existingStatus = existing ? existing.status || "" : "";
+      const canPublishContent = userCanPublishContent();
+      return {
+        id: resourceId,
+        title: el.resourceTitleInput.value.trim(),
+        office: normalizeResourceOffice(el.resourceOfficeInput.value),
+        category: getComboValue(el.resourceCategorySelect, el.resourceCategoryInput) || DEFAULT_RESOURCE_CATEGORY,
+        type: getComboValue(el.resourceTypeSelect, el.resourceTypeInput),
+        status: normalizeResourceStatusForLinks(existingStatus, links),
+        note: el.resourceNoteInput.value.trim(),
+        links,
+        tags: collectResourceTags(),
+        updated: el.resourceUpdatedInput.value || todayText(),
+        visible: canPublishContent ? el.resourceVisibleInput.checked : (existing ? existing.visible !== false : false),
+        featured: el.resourceFeaturedInput.checked,
+        sort_order: Number(el.resourceSortInput.value || resources.length + 1)
+      };
+    }
+
+    function normalizeResourceStatusForLinks(status, links) {
+      const text = String(status || "").trim();
+      const hasValidLink = (links || []).some((link) => Boolean(safeAdminUrl(link.url)));
+      return text === "連結待補" && hasValidLink ? "" : text;
+    }
+
+    function validateResourceBeforeSave(resource) {
+      if (!resource.title) {
+        showMessage("標題不可空白。", true);
+        el.resourceTitleInput.focus();
+        return false;
+      }
+
+      const warnings = [];
+      const invalidLinks = resource.links.filter((link) => !safeAdminUrl(link.url));
+      if (invalidLinks.length) {
+        showMessage("連結 URL 格式不安全，請改用 http(s)、mailto、tel 或站內相對路徑。", true);
+        focusFirstUnsafeLinkInput();
+        return false;
+      }
+      if ((resource.tags || []).some((tag) => tag.includes("高風險"))) {
+        warnings.push("請勿放入學生個資、個案細節、通報細節或未公告資訊。");
+      }
+      const noteAndTags = [resource.note, (resource.tags || []).join(" ")].join(" ");
+      if (noteAndTags.includes(CANNED_TEXT)) {
+        warnings.push("請避免使用「" + CANNED_TEXT + "」這類無實質內容的通用文案。");
+      }
+      if (!warnings.length) return true;
+      return window.confirm("儲存前提醒：\n\n" + warnings.join("\n") + "\n\n仍要繼續儲存嗎？");
+    }
+
+    function collectShortcut() {
+      return {
+        id: el.shortcutIdInput.value.trim(),
+        parentOffice: el.shortcutParentInput.value,
+        label: el.shortcutLabelInput.value.trim(),
+        hint: el.shortcutHintInput.value.trim(),
+        query: el.shortcutQueryInput.value.trim(),
+        resourceCategory: getComboValue(el.shortcutCategorySelect, el.shortcutCategoryInput),
+        tag: getComboValue(el.shortcutTagSelect, el.shortcutTagInput),
+        targetId: el.shortcutTargetInput.value.trim(),
+        enabled: el.shortcutEnabledInput.checked,
+        sort_order: Number(el.shortcutSortInput.value || flattenShortcuts().length + 1)
+      };
+    }
+
+    async function saveResource() {
+      const resource = collectResource();
+      if (!validateResourceBeforeSave(resource)) return;
+      const saveStartedRevision = resourceFormRevision;
+      await runCommand("saveDirectoryResource", { resource }, saveSuccessText, {
+        actionButton: el.saveResourceBtn,
+        loadingText: "儲存中，請稍候……",
+        loadingButtonText: "儲存中……",
+        idleButtonText: "儲存資料卡",
+        isSaveAction: true,
+        saveStartedRevision
+      });
+    }
+
+    async function unpublishResource() {
+      if (!activeResourceId) return;
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      if (!item) return;
+      if (item.visible === false) {
+        showMessage("這筆資料卡已經暫時下架。", false);
+        return;
+      }
+      const ok = window.confirm("確定要暫時下架「" + (item.title || "未命名資料卡") + "」？資料會保留在內容管理清單，不會移到回收桶。");
+      if (!ok) return;
+      const saveStartedRevision = resourceFormRevision;
+      await runCommand("saveDirectoryResource", {
+        resource: {
+          id: item.id,
+          title: item.title || "",
+          office: normalizeResourceOffice(item.office || "全校共用"),
+          category: item.category || DEFAULT_RESOURCE_CATEGORY,
+          type: item.type || "連結",
+          status: item.status || "",
+          note: item.note || "",
+          links: item.links || [],
+          tags: item.tags || [],
+          updated: item.updated || todayText(),
+          visible: false,
+          featured: item.featured === true,
+          sort_order: Number(item.sort_order || resources.length + 1)
+        }
+      }, "已暫時下架，前台將不再顯示此資料。若前台仍顯示舊資料，請稍候 30 秒後重新整理，或按 Ctrl + F5 強制重新整理。", {
+        actionButton: el.unpublishResourceBtn,
+        loadingText: "暫時下架中，請稍候……",
+        loadingButtonText: "下架中……",
+        isSaveAction: true,
+        saveStartedRevision
+      });
+    }
+
+    function duplicateResource() {
+      if (!activeResourceId) return;
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      if (!item) return;
+      activeResourceId = "";
+      hydrateResourceForm(() => {
+      el.resourceEditorLabel.textContent = "複製資料卡";
+      el.resourceTitle.textContent = "請修改副本後儲存";
+      el.resourceContext.textContent = "這是尚未儲存的副本；儲存前不會影響原資料。";
+      el.resourceIdInput.value = "";
+      el.resourceTitleInput.value = (item.title || "未命名資料卡") + "（副本）";
+      el.resourceUpdatedInput.value = todayText();
+      el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
+      setComboValue(el.resourceCategorySelect, el.resourceCategoryInput, item.category || DEFAULT_RESOURCE_CATEGORY);
+      setComboValue(el.resourceTypeSelect, el.resourceTypeInput, item.type || "連結");
+      el.resourceSortInput.value = String(resources.length + 1);
+      el.resourceNoteInput.value = item.note || "";
+      el.resourceTagsInput.value = (item.tags || []).join(", ");
+      syncCommonPinnedCheckboxFromTags();
+      el.resourceVisibleInput.checked = false;
+      el.resourceFeaturedInput.checked = false;
+      renderStaffUnitPicker();
+      renderLinkRows((item.links || []).map((link) => ({ label: link.label || "", url: link.url || "" })));
+      }, { resetDirty: true, resourceId: "" });
+      markResourceFormDirty();
+      showMessage("已建立副本，請確認內容後再儲存。這是尚未儲存的副本，不會影響原資料。", false);
+      renderList();
+      setEnabled(true);
+    }
+
+    async function archiveResource() {
+      if (!activeResourceId) return;
+      const ok = window.confirm("確定要將這筆資料卡移到回收桶？建議先使用「暫時下架」；移到回收桶後，網站與內容管理清單將不再顯示，可從回收桶還原。");
+      if (!ok) return;
+      await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已移到回收桶。", {
+        actionButton: el.archiveResourceBtn,
+        loadingText: "移到回收桶中，請稍候……",
+        loadingButtonText: "移動中……"
+      });
+      activeResourceId = "";
+    }
+
+    async function saveShortcut() {
+      await runCommand("saveDirectoryShortcut", { shortcut: collectShortcut() }, () => "已儲存於 " + currentTimeText() + "。舊版入口按鈕已更新。", {
+        actionButton: el.saveShortcutBtn,
+        loadingText: "儲存中，請稍候……",
+        loadingButtonText: "儲存中……",
+        isSaveAction: true
+      });
+    }
+
+    async function deleteShortcut() {
+      if (!activeShortcutId) return;
+      const ok = window.confirm("確定要停用這個舊版入口按鈕？");
+      if (!ok) return;
+      await runCommand("deleteDirectoryShortcut", { shortcut_id: activeShortcutId }, "已停用舊版入口按鈕。", {
+        actionButton: el.deleteShortcutBtn,
+        loadingText: "停用中，請稍候……",
+        loadingButtonText: "停用中……"
+      });
+      activeShortcutId = "";
+    }
+
+    async function applyBatchResources() {
+      const resourceIds = [...selectedResourceIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要整理的資料卡。", true);
+        return;
+      }
+      const changes = {};
+      if (el.batchOfficeInput.value) changes.office = el.batchOfficeInput.value;
+      const batchCategory = getComboValue(el.batchCategorySelect, el.batchCategoryInput);
+      if (batchCategory) changes.category = batchCategory;
+      if (el.batchFeaturedInput.value) changes.featured = el.batchFeaturedInput.value === "true";
+      if (userCanPublishContent() && el.batchVisibleInput.value) changes.visible = el.batchVisibleInput.value === "true";
+      if (Object.keys(changes).length === 0) {
+        showMessage("請先選擇至少一個要批次變更的欄位。", true);
+        return;
+      }
+      const ok = window.confirm("確定要套用到已勾選的 " + resourceIds.length + " 筆資料卡？");
+      if (!ok) return;
+      await runCommand("batchUpdateDirectoryResources", { resource_ids: resourceIds, changes }, "已批次更新 " + resourceIds.length + " 筆資料卡。");
+      selectedResourceIds.clear();
+      el.batchOfficeInput.value = "";
+      setComboValue(el.batchCategorySelect, el.batchCategoryInput, "");
+      el.batchFeaturedInput.value = "";
+      el.batchVisibleInput.value = "";
+      renderAll();
+      setEnabled(true);
+    }
+
+    async function batchTrashSelectedItems() {
+      if (mode === "trash") {
+        await restoreSelectedTrash();
+        return;
+      }
+      const resourceIds = [...selectedResourceIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要移到回收桶的資料卡。", true);
+        return;
+      }
+      const ok = window.confirm("確定要將已勾選的 " + resourceIds.length + " 筆資料卡移到回收桶？建議優先使用批次整理中的「暫時下架」。");
+      if (!ok) return;
+      await runCommand("batchDeleteDirectoryResources", { resource_ids: resourceIds }, "已將 " + resourceIds.length + " 筆內容移到回收桶。");
+      selectedResourceIds.clear();
+      activeResourceId = "";
+    }
+
+    async function restoreSelectedTrash() {
+      const resourceIds = [...selectedTrashIds];
+      if (!resourceIds.length) {
+        showMessage("請先在左側勾選要還原的內容。", true);
+        return;
+      }
+      const ok = window.confirm("確定要還原已勾選的 " + resourceIds.length + " 筆內容？還原後會回到內容管理清單並上架顯示。");
+      if (!ok) return;
+      await runCommand("restoreDirectoryResources", { resource_ids: resourceIds }, "已還原 " + resourceIds.length + " 筆內容。");
+      selectedTrashIds.clear();
+      activeTrashId = "";
+    }
+
+    function selectVisibleItems() {
+      if (mode !== "resources" && mode !== "trash") return;
+      getVisibleListItems().forEach((item) => {
+        if (mode === "trash") selectedTrashIds.add(item.id);
+        if (mode === "resources") selectedResourceIds.add(item.id);
+      });
+      renderList();
+      renderBulkState();
+    }
+
+    function clearSelectedItems() {
+      if (mode === "trash") selectedTrashIds.clear();
+      if (mode === "resources") selectedResourceIds.clear();
+      renderList();
+      renderBulkState();
+    }
+
+    function setDropTarget(entry) {
+      if (dropTargetEntry === entry) return;
+      if (dropTargetEntry) dropTargetEntry.classList.remove("is-drop-target");
+      dropTargetEntry = entry;
+      if (dropTargetEntry) dropTargetEntry.classList.add("is-drop-target");
+    }
+
+    function isValidDropEntry(entry) {
+      return Boolean(
+        entry &&
+        draggedItemId &&
+        entry.dataset.id !== draggedItemId &&
+        entry.dataset.group &&
+        entry.dataset.group === draggedGroupName
+      );
+    }
+
+    function clearDragState() {
+      if (draggedEntry) draggedEntry.classList.remove("is-dragging");
+      setDropTarget(null);
+      draggedItemId = "";
+      draggedEntry = null;
+      draggedGroupName = "";
+    }
+
+    async function reorderListByDrag(sourceId, targetId) {
+      if (mode !== "resources" || !sourceId || !targetId || sourceId === targetId) return;
+      const items = getVisibleListItems();
+      const source = items.find((item) => item.id === sourceId);
+      const target = items.find((item) => item.id === targetId);
+      if (!source || !target) return;
+      const sourceGroup = getListGroupName(source);
+      const targetGroup = getListGroupName(target);
+      if (sourceGroup !== targetGroup) {
+        showMessage("拖曳排序只能在同一個承辦處室與資料類別群組內調整。", true);
+        return;
+      }
+
+      const groupItems = items.filter((item) => getListGroupName(item) === sourceGroup);
+      const fromIndex = groupItems.findIndex((item) => item.id === sourceId);
+      const toIndex = groupItems.findIndex((item) => item.id === targetId);
+      if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return;
+
+      const reordered = groupItems.slice();
+      const [moved] = reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, moved);
+      const sortOrders = groupItems
+        .map((item, index) => Number(item.sort_order || index + 1))
+        .sort((a, b) => a - b);
+      const kind = "resource";
+      activeResourceId = sourceId;
+      const previousResources = resources.map((item) => ({ ...item }));
+      const reorderedItems = reordered.map((item, index) => ({ id: item.id, sort_order: sortOrders[index] }));
+      const orderMap = new Map(reorderedItems.map((item) => [item.id, item.sort_order]));
+      resources = resources.map((item) => orderMap.has(item.id) ? { ...item, sort_order: orderMap.get(item.id) } : item);
+      renderList();
+      renderResourceEditor();
+      renderBulkState();
+
+      const saved = await runCommand("reorderDirectoryItems", {
+        kind,
+        items: reorderedItems
+      }, "已用拖曳調整群組內顯示順序。");
+      if (!saved) {
+        resources = previousResources;
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+      }
+    }
+
+    async function runCommand(cmd, payload, successText, options = {}) {
+      const actionButton = options.actionButton || null;
+      const originalButtonText = actionButton ? actionButton.textContent : "";
+      const idleButtonText = options.idleButtonText || originalButtonText;
+      const isSaveAction = options.isSaveAction === true;
+      const saveStartedRevision = Number.isFinite(options.saveStartedRevision)
+        ? options.saveStartedRevision
+        : resourceFormRevision;
+      const slowAfterMs = Number(options.slowAfterMs || 20000);
+      let slowTimer = null;
+      try {
+        setEnabled(false);
+        if (actionButton) {
+          actionButton.disabled = true;
+          actionButton.textContent = options.loadingButtonText || "處理中……";
+        }
+        showMessage(options.loadingText || "處理中，請稍候……", false, true);
+        if (slowAfterMs > 0) {
+          slowTimer = window.setTimeout(() => {
+            showMessage(
+              options.slowMessage || (isSaveAction
+                ? "儲存時間較久，仍在等待伺服器回應，請勿重複點擊。"
+                : "處理時間較久，仍在等待伺服器回應，請勿重複點擊。"),
+              false,
+              true
+            );
+          }, slowAfterMs);
+        }
+        const data = await api(cmd, payload);
+        if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
+        if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
+        if (cmd === "deleteDirectoryResource") activeResourceId = "";
+        if (cmd === "batchDeleteDirectoryResources") activeResourceId = "";
+        if (cmd === "restoreDirectoryResources") activeTrashId = "";
+        if (cmd === "deleteDirectoryShortcut") activeShortcutId = "";
+        const resourceEditedAfterSubmit = cmd === "saveDirectoryResource" && resourceFormRevision > saveStartedRevision;
+        applyCommandResultLocally(cmd, payload, data, { preserveDirtyEditor: resourceEditedAfterSubmit });
+        await loadDirectoryData({ keepCategoryFilter: true });
+        showMessage(resourceEditedAfterSubmit
+          ? "已儲存上一版；目前畫面仍有新的未儲存變更。"
+          : resolveSuccessText(successText), false);
+        return true;
+      } catch (err) {
+        if (isAuthExpiredError(err)) showAuthExpiredNotice();
+        else showMessage(commandErrorText(err, isSaveAction), true);
+        return false;
+      } finally {
+        if (slowTimer) window.clearTimeout(slowTimer);
+        if (actionButton) actionButton.textContent = idleButtonText;
+        setEnabled(true);
+      }
+    }
+
+    function applyCommandResultLocally(cmd, payload, data, options = {}) {
+      if (cmd === "saveDirectoryResource") {
+        const resource = { ...(payload.resource || {}) };
+        resource.id = data.resource_id || resource.id || activeResourceId;
+        if (!resource.id) return;
+        resource.office = normalizeResourceOffice(resource.office || "全校共用");
+        resource.links = Array.isArray(resource.links) ? resource.links : [];
+        resource.tags = Array.isArray(resource.tags) ? resource.tags : [];
+        resource.visible = resource.visible !== false;
+        resource.featured = resource.featured === true;
+        const index = resources.findIndex((item) => item.id === resource.id);
+        if (index >= 0) resources[index] = { ...resources[index], ...resource };
+        else resources.push(resource);
+        activeResourceId = resource.id;
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderSuggestionLists();
+        renderList();
+        if (options.preserveDirtyEditor) syncResourceEditorIdentity(resource);
+        else renderResourceEditor({ force: true });
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "deleteDirectoryResource") {
+        const resourceId = payload.resource_id || activeResourceId;
+        resources = resources.filter((item) => item.id !== resourceId);
+        activeResourceId = resources[0]?.id || "";
+        pruneSelectedItems();
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "batchUpdateDirectoryResources") {
+        const resourceIds = new Set(payload.resource_ids || []);
+        const changes = payload.changes || {};
+        resources = resources.map((item) => resourceIds.has(item.id) ? { ...item, ...changes } : item);
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "batchDeleteDirectoryResources") {
+        const resourceIds = new Set(payload.resource_ids || []);
+        resources = resources.filter((item) => !resourceIds.has(item.id));
+        activeResourceId = resources[0]?.id || "";
+        selectedResourceIds.clear();
+        renderOfficeFilter();
+        renderCategoryFilter({ keepCurrent: true });
+        renderList();
+        renderResourceEditor();
+        renderBulkState();
+        return;
+      }
+
+      if (cmd === "reorderDirectoryItems" && payload.kind === "resource") {
+        const orderMap = new Map((payload.items || []).map((item) => [item.id, item.sort_order]));
+        resources = resources.map((item) => orderMap.has(item.id) ? { ...item, sort_order: orderMap.get(item.id) } : item);
+        renderList();
+        renderBulkState();
+      }
+    }
+
+    function resolveSuccessText(successText) {
+      return typeof successText === "function" ? successText() : successText;
+    }
+
+    function saveSuccessText() {
+      return "已儲存於 " + currentTimeText() + "。若前台尚未更新，請稍候 30 秒後重新整理；若前台仍顯示舊資料，可按 Ctrl + F5 強制重新整理。";
+    }
+
+    function currentTimeText() {
+      return new Date().toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      });
+    }
+
+    function commandErrorText(err, isSaveAction) {
+      const message = err && err.message ? err.message : "";
+      if (isSaveAction) {
+        return message ? "儲存失敗：" + message : "儲存失敗，請檢查網路或重新登入後再試。";
+      }
+      return message || "操作失敗，請檢查網路或重新登入後再試。";
+    }
+
+    function isAuthExpiredError(err) {
+      const status = Number(err && err.status || 0);
+      if (status === 401 || status === 403) return true;
+      const message = String(err && err.message || "").toLowerCase();
+      return [
+        "未授權",
+        "登入逾時",
+        "token",
+        "auth",
+        "unauthorized",
+        "forbidden",
+        "login"
+      ].some((keyword) => message.includes(keyword.toLowerCase()));
+    }
+
+    function showAuthExpiredNotice() {
+      showMessage(AUTH_EXPIRED_NOTICE, true);
+    }
+
+    function setMode(nextMode) {
+      mode = normalizeMode(nextMode);
+      renderOfficeFilter();
+      renderCategoryFilter();
+      renderAll();
+      setEnabled(true);
+    }
+
+    function normalizeMode(nextMode) {
+      return nextMode === "trash" ? "trash" : "resources";
+    }
+
+    function userCanEditContent() {
+      const role = currentUser && currentUser.role;
+      return ["admin", "editor", "reviewer"].includes(role);
+    }
+
+    function userCanPublishContent() {
+      const role = currentUser && currentUser.role;
+      return ["admin", "editor", "reviewer"].includes(role);
+    }
+
+    function userCanManageTrash() {
+      return currentUser && currentUser.role === "admin";
+    }
+
+    function userCanManageUsers() {
+      return currentUser && currentUser.role === "admin";
+    }
+
+    function refreshListView() {
+      mode = normalizeMode(mode);
+      renderList();
+      setEnabled(true);
+    }
+
+    function setEnabled(enabled) {
+      mode = normalizeMode(mode);
+      const canEditContent = userCanEditContent();
+      const canPublishContent = userCanPublishContent();
+      const canManageTrash = userCanManageTrash();
+      const activeResource = resources.find((item) => item.id === activeResourceId);
+      el.addItemBtn.disabled = !enabled || !idToken || !canEditContent || mode === "trash";
+      el.listSearchInput.disabled = !enabled || !idToken;
+      el.officeFilter.disabled = !enabled || !idToken;
+      el.categoryFilter.disabled = !enabled || !idToken;
+      el.statusFilter.disabled = mode === "trash" || !enabled || !idToken;
+      el.batchOfficeInput.disabled = !enabled || !idToken || !canEditContent || mode !== "resources";
+      setComboDisabled(el.batchCategorySelect, el.batchCategoryInput, !enabled || !idToken || !canEditContent || mode !== "resources");
+      el.batchFeaturedInput.disabled = !enabled || !idToken || !canEditContent || mode !== "resources";
+      el.batchVisibleInput.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources";
+      const batchVisibleField = el.batchVisibleInput.closest(".field");
+      if (batchVisibleField) batchVisibleField.hidden = !canPublishContent;
+      if (!canPublishContent) el.batchVisibleInput.value = "";
+      el.saveResourceBtn.disabled = !enabled || !idToken || !canEditContent;
+      el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEditContent || mode !== "resources" || !activeResourceId;
+      el.unpublishResourceBtn.textContent = activeResource && activeResource.visible === false ? "目前已下架" : "暫時下架";
+      el.unpublishResourceBtn.hidden = !canPublishContent;
+      el.archiveResourceBtn.hidden = !canManageTrash;
+      el.batchDeleteBtn.hidden = !canManageTrash;
+      el.restoreTrashBtn.hidden = !canManageTrash;
+      const visibleField = el.resourceVisibleInput.closest("label");
+      if (visibleField) visibleField.hidden = !canPublishContent;
+      el.resourceVisibleInput.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources";
+      el.unpublishResourceBtn.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
+      el.saveShortcutBtn.disabled = true;
+      el.archiveResourceBtn.disabled = !enabled || !idToken || !canManageTrash || !activeResourceId;
+      el.deleteShortcutBtn.disabled = true;
+      el.restoreTrashBtn.disabled = !enabled || !idToken || !canManageTrash || mode !== "trash" || selectedTrashIds.size === 0;
+      renderBulkState();
+    }
+
+    function showMessage(text, isError, isLoading = false) {
+      el.message.hidden = false;
+      el.message.textContent = text;
+      el.message.classList.toggle("error", Boolean(isError));
+      el.message.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+
+    function hideMessage() {
+      el.message.hidden = true;
+      el.message.textContent = "";
+      el.message.classList.remove("error");
+      el.message.removeAttribute("aria-busy");
+    }
+
+    function splitTags(value) {
+      const text = String(value || "").trim();
+      if (!text) return [];
+      const hasExplicitSeparator = /[,，、\r\n]/.test(text);
+      const pieces = hasExplicitSeparator ? text.split(/[,，、\r\n]+/) : text.split(/\s+/);
+      const seen = new Set();
+      const output = [];
+      pieces.forEach((tag) => {
+        const item = String(tag || "").trim();
+        if (!item || seen.has(item)) return;
+        seen.add(item);
+        output.push(item);
+      });
+      return output;
+    }
+
+    function mergeTagList(tags, extraTags = []) {
+      const seen = new Set();
+      const output = [];
+      [...tags, ...extraTags].forEach((tag) => {
+        const text = String(tag || "").trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        output.push(text);
+      });
+      return output;
+    }
+
+    function getVisibleStaffUnits() {
+      return STAFF_UNITS_BY_OFFICE[el.resourceOfficeInput.value] || [];
+    }
+
+    function getCheckedStaffUnits() {
+      return [...el.staffUnitOptions.querySelectorAll("[data-staff-unit]:checked")]
+        .map((input) => input.value);
+    }
+
+    function renderStaffUnitPicker() {
+      const units = getVisibleStaffUnits();
+      if (!units.length) {
+        el.staffUnitField.hidden = true;
+        el.staffUnitField.setAttribute("aria-hidden", "true");
+        el.staffUnitOptions.replaceChildren();
+        return;
+      }
+
+      const selectedTags = new Set(splitTags(el.resourceTagsInput.value));
+      el.staffUnitField.hidden = false;
+      el.staffUnitField.setAttribute("aria-hidden", "false");
+      el.staffUnitHelp.textContent = "組別會存入既有標籤欄位，不新增資料欄位；未勾選的本處室組別會從標籤中移除。";
+      el.staffUnitOptions.innerHTML = units.map((unit) => (
+        "<label class='staff-unit-option'>" +
+          "<input type='checkbox' data-staff-unit value='" + escapeHtml(unit) + "'" + (selectedTags.has(unit) ? " checked" : "") + ">" +
+          "<span>" + escapeHtml(unit) + "</span>" +
+        "</label>"
+      )).join("");
+    }
+
+    function collectResourceTags() {
+      const visibleUnits = new Set(getVisibleStaffUnits());
+      const tagsWithoutVisibleUnits = splitTags(el.resourceTagsInput.value).filter((tag) => !visibleUnits.has(tag));
+      return applyCommonContentPinTags(mergeTagList(tagsWithoutVisibleUnits, getCheckedStaffUnits()));
+    }
+
+    function syncStaffUnitSelectionToTags() {
+      el.resourceTagsInput.value = collectResourceTags().join(", ");
+      renderStaffUnitPicker();
+    }
+
+    function applyCommonContentPinTags(tags) {
+      const withoutPin = tags.filter((tag) => tag !== COMMON_CONTENT_PIN_TAG);
+      if (!el.resourceCommonPinnedInput.checked) return withoutPin;
+      return mergeTagList(withoutPin, [COMMON_CONTENT_TAG, COMMON_CONTENT_PIN_TAG]);
+    }
+
+    function syncCommonPinnedCheckboxFromTags() {
+      el.resourceCommonPinnedInput.checked = splitTags(el.resourceTagsInput.value).includes(COMMON_CONTENT_PIN_TAG);
+    }
+
+    function syncCommonPinnedSelectionToTags() {
+      el.resourceTagsInput.value = applyCommonContentPinTags(splitTags(el.resourceTagsInput.value)).join(", ");
+      renderStaffUnitPicker();
+    }
+
+    function renderSuggestionLists() {
+      const resourceItems = [...resources, ...trash];
+      const shortcutItems = flattenShortcuts();
+      const categoryOptions = buildCategoryOptions(resourceItems, shortcutItems);
+      const typeOptions = mergeOptions(
+        DEFAULT_TYPES,
+        resourceItems.map((item) => item.type)
+      );
+      const tagOptions = mergeOptions(
+        DEFAULT_TAGS,
+        resourceItems.flatMap((item) => item.tags || []),
+        shortcutItems.map((item) => item.tag)
+      );
+      renderComboOptions(el.batchCategorySelect, el.batchCategoryInput, categoryOptions, "不變更資料類別", "新增資料類別...", categoryOptionLabel);
+      renderComboOptions(el.resourceCategorySelect, el.resourceCategoryInput, categoryOptions, "請選擇資料類別", "新增資料類別...", categoryOptionLabel);
+      renderComboOptions(el.resourceTypeSelect, el.resourceTypeInput, typeOptions, "請選擇類型", "新增類型...");
+      renderComboOptions(el.shortcutCategorySelect, el.shortcutCategoryInput, categoryOptions, "不指定資料類別", "新增資料類別...", categoryOptionLabel);
+      renderComboOptions(el.shortcutTagSelect, el.shortcutTagInput, tagOptions, "不指定標籤", "新增標籤...");
+    }
+
+    function buildCategoryOptions() {
+      return DEFAULT_CATEGORIES.slice();
+    }
+
+    function categoryOptionLabel(value) {
+      return String(value || "").trim();
+    }
+
+    function mergeOptions(defaults, ...groups) {
+      const seen = new Set();
+      const output = [];
+      defaults.forEach(addOption);
+      groups
+        .flatMap((group) => group || [])
+        .filter(Boolean)
+        .map((value) => String(value).trim())
+        .sort((a, b) => a.localeCompare(b, "zh-Hant"))
+        .forEach(addOption);
+      return output;
+
+      function addOption(value) {
+        const text = String(value || "").trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        output.push(text);
+      }
+    }
+
+    function renderComboOptions(select, input, options, emptyLabel, customLabel, optionLabel = (value) => value) {
+      const current = getComboValue(select, input);
+      select.innerHTML = "<option value=''>" + escapeHtml(emptyLabel) + "</option>" +
+        options.map((value) => "<option value='" + escapeHtml(value) + "'>" + escapeHtml(optionLabel(value)) + "</option>").join("") +
+        "<option value='" + CUSTOM_OPTION_VALUE + "'>" + escapeHtml(customLabel) + "</option>";
+      setComboValue(select, input, current);
+    }
+
+    function safeAdminUrl(value) {
+      const raw = String(value || "").trim();
+      if (!raw || raw === "#") return "";
+
+      const compact = raw.replace(/[\u0000-\u001f\u007f\s]+/g, "");
+      if (!compact || compact === "#" || compact.startsWith("//")) return "";
+
+      const schemeMatch = compact.match(/^([a-z][a-z0-9+.-]*):/i);
+      if (schemeMatch) {
+        const scheme = schemeMatch[1].toLowerCase() + ":";
+        return ["http:", "https:", "mailto:", "tel:"].includes(scheme) ? raw : "";
+      }
+
+      return raw;
+    }
+
+    function focusFirstUnsafeLinkInput() {
+      const rows = [...el.resourceLinksBox.querySelectorAll(".link-row")];
+      const invalidRow = rows.find((row) => {
+        const label = row.querySelector("[data-link='label']").value.trim();
+        const urlInput = row.querySelector("[data-link='url']");
+        const url = urlInput.value.trim();
+        return (label || url) && !safeAdminUrl(url);
+      });
+      if (invalidRow) invalidRow.querySelector("[data-link='url']").focus();
+    }
+
+    function setComboValue(select, input, value) {
+      const text = String(value || "").trim();
+      const hasOption = [...select.options].some((option) => option.value === text);
+      if (!text) {
+        select.value = "";
+        input.value = "";
+      } else if (hasOption) {
+        select.value = text;
+        input.value = "";
+      } else {
+        select.value = CUSTOM_OPTION_VALUE;
+        input.value = text;
+      }
+      syncComboCustomInput(select, input);
+    }
+
+    function getComboValue(select, input) {
+      return select.value === CUSTOM_OPTION_VALUE ? input.value.trim() : select.value.trim();
+    }
+
+    function syncComboCustomInput(select, input) {
+      const isCustom = select.value === CUSTOM_OPTION_VALUE;
+      input.classList.toggle("hidden", !isCustom);
+      input.disabled = select.disabled || !isCustom;
+      if (!isCustom) input.value = "";
+    }
+
+    function setComboDisabled(select, input, disabled) {
+      select.disabled = disabled;
+      syncComboCustomInput(select, input);
+    }
+
+    function todayText() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function normalizeDate(value) {
+      const text = String(value || "").trim();
+      return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : todayText();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    el.resourcesTab.addEventListener("click", () => setMode("resources"));
+    el.trashTab.addEventListener("click", () => setMode("trash"));
+    el.logoutBtn.addEventListener("click", logout);
+    el.resourceForm.addEventListener("input", markResourceFormDirty);
+    el.resourceForm.addEventListener("change", markResourceFormDirty);
+    el.listSearchInput.addEventListener("input", refreshListView);
+    el.officeFilter.addEventListener("change", () => {
+      renderCategoryFilter();
+      refreshListView();
+    });
+    el.categoryFilter.addEventListener("change", refreshListView);
+    el.statusFilter.addEventListener("change", refreshListView);
+    el.resourceOfficeInput.addEventListener("change", renderStaffUnitPicker);
+    el.resourceTagsInput.addEventListener("change", () => {
+      renderStaffUnitPicker();
+      syncCommonPinnedCheckboxFromTags();
+    });
+    el.resourceCommonPinnedInput.addEventListener("change", syncCommonPinnedSelectionToTags);
+    el.staffUnitOptions.addEventListener("change", (event) => {
+      if (event.target.matches("[data-staff-unit]")) syncStaffUnitSelectionToTags();
+    });
+    [
+      [el.batchCategorySelect, el.batchCategoryInput],
+      [el.resourceCategorySelect, el.resourceCategoryInput],
+      [el.resourceTypeSelect, el.resourceTypeInput],
+      [el.shortcutCategorySelect, el.shortcutCategoryInput],
+      [el.shortcutTagSelect, el.shortcutTagInput]
+    ].forEach(([select, input]) => {
+      select.addEventListener("change", () => {
+        syncComboCustomInput(select, input);
+        if (select.value === CUSTOM_OPTION_VALUE) input.focus();
+      });
+    });
+    el.selectVisibleBtn.addEventListener("click", selectVisibleItems);
+    el.clearSelectionBtn.addEventListener("click", clearSelectedItems);
+    el.batchDeleteBtn.addEventListener("click", batchTrashSelectedItems);
+    el.batchApplyBtn.addEventListener("click", applyBatchResources);
+    el.restoreTrashBtn.addEventListener("click", restoreSelectedTrash);
+    el.bulkTools.addEventListener("toggle", () => {
+      if (mode === "resources" && !el.bulkTools.open) selectedResourceIds.clear();
+      renderList();
+      renderBulkState();
+      setEnabled(true);
+    });
+    el.itemList.addEventListener("dragstart", (event) => {
+      const entry = event.target.closest(".list-entry.is-draggable");
+      if (!entry || !idToken || mode === "trash") return;
+      draggedItemId = entry.dataset.id || "";
+      draggedEntry = entry;
+      draggedGroupName = entry.dataset.group || "";
+      entry.classList.add("is-dragging");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", draggedItemId);
+      }
+    });
+    el.itemList.addEventListener("dragover", (event) => {
+      if (!draggedItemId || mode === "trash") return;
+      const entry = event.target.closest(".list-entry.is-draggable");
+      if (!isValidDropEntry(entry)) {
+        setDropTarget(null);
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
+        return;
+      }
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      setDropTarget(entry);
+    });
+    el.itemList.addEventListener("drop", async (event) => {
+      if (!draggedItemId || mode === "trash") return;
+      const entry = event.target.closest(".list-entry.is-draggable");
+      const sourceId = draggedItemId;
+      const targetId = entry && entry.dataset.id;
+      event.preventDefault();
+      clearDragState();
+      if (targetId) await reorderListByDrag(sourceId, targetId);
+    });
+    el.itemList.addEventListener("dragend", clearDragState);
+    el.addItemBtn.addEventListener("click", () => {
+      if (mode === "resources") {
+        activeResourceId = "";
+        clearResourceEditor({ force: true });
+      }
+      renderList();
+      setEnabled(true);
+    });
+    el.itemList.addEventListener("click", (event) => {
+      const check = event.target.closest(".list-check");
+      if (check) {
+        const id = check.dataset.selectId;
+        if (check.checked) {
+          if (mode === "trash") selectedTrashIds.add(id);
+          if (mode === "resources") selectedResourceIds.add(id);
+        } else {
+          if (mode === "trash") selectedTrashIds.delete(id);
+          if (mode === "resources") selectedResourceIds.delete(id);
+        }
+        if (mode === "trash") activeTrashId = id;
+        if (mode === "resources") activeResourceId = id;
+        const entry = check.closest(".list-entry");
+        if (entry) entry.classList.toggle("is-selected", check.checked);
+        el.itemList.querySelectorAll(".list-button.is-active").forEach((activeButton) => activeButton.classList.remove("is-active"));
+        const selectedButton = entry && entry.querySelector(".list-button");
+        if (selectedButton) selectedButton.classList.add("is-active");
+        if (mode === "resources") renderResourceEditor({ force: true });
+        if (mode === "trash") renderTrashEditor();
+        renderBulkState();
+        setEnabled(true);
+        return;
+      }
+      const button = event.target.closest(".list-button");
+      if (!button) return;
+      if (mode === "resources") {
+        activeResourceId = button.dataset.id;
+      } else if (mode === "trash") {
+        activeTrashId = button.dataset.id;
+      }
+      renderAll({ forceEditor: true });
+      setEnabled(true);
+    });
+    el.addResourceLinkBtn.addEventListener("click", () => {
+      el.resourceLinksBox.insertAdjacentHTML("beforeend", `
+        <div class="link-row">
+          <div class="link-field">
+            <label>連結名稱</label>
+            <input data-link="label" placeholder="例如：前往借用系統">
+          </div>
+          <div class="link-field">
+            <label>網址</label>
+            <input data-link="url" placeholder="https://...">
+          </div>
+          <button class="secondary remove-link" type="button">移除</button>
+        </div>
+      `);
+      markResourceFormDirty();
+    });
+    el.resourceLinksBox.addEventListener("click", (event) => {
+      if (event.target.classList.contains("remove-link")) {
+        event.target.closest(".link-row").remove();
+        markResourceFormDirty();
+      }
+    });
+    el.saveResourceBtn.addEventListener("click", saveResource);
+    el.duplicateResourceBtn.addEventListener("click", duplicateResource);
+    el.unpublishResourceBtn.addEventListener("click", unpublishResource);
+    el.archiveResourceBtn.addEventListener("click", archiveResource);
+    el.saveShortcutBtn.addEventListener("click", saveShortcut);
+    el.deleteShortcutBtn.addEventListener("click", deleteShortcut);
+  </script>
 </body>
 </html>

@@ -97,7 +97,7 @@ function submitReview_(payload, user) {
 }
 
 function publishChapter_(payload, user) {
-  requireReviewer_(user);
+  requireEditor_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -129,7 +129,7 @@ function publishChapter_(payload, user) {
 }
 
 function withdrawChapter_(payload, user) {
-  requireReviewer_(user);
+  requireEditor_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -148,7 +148,7 @@ function withdrawChapter_(payload, user) {
 }
 
 function deleteChapter_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var chapterId = payload.chapter_id;
   if (!chapterId) throw new Error("缺少 chapter_id");
   var lock = LockService.getScriptLock();
@@ -212,6 +212,21 @@ function validatePublish_(chapter, blocks) {
   });
 }
 
+function normalizeDirectoryBoolean_(value, defaultValue) {
+  if (value === true) return "TRUE";
+  if (value === false) return "FALSE";
+  var text = String(value || "").trim().toUpperCase();
+  if (text === "TRUE") return "TRUE";
+  if (text === "FALSE") return "FALSE";
+  return defaultValue === "FALSE" ? "FALSE" : "TRUE";
+}
+
+function requireAdmin_(user) {
+  if (!user || user.role !== "admin") {
+    throw new Error("權限不足：需要 admin");
+  }
+}
+
 function saveDirectoryResource_(payload, user) {
   requireEditor_(user);
   var input = payload.resource || payload;
@@ -227,6 +242,13 @@ function saveDirectoryResource_(payload, user) {
     var title = String(input.title || "").trim();
     if (!title) throw new Error("資源標題不可空白");
 
+    var existingVisible = existing ? normalizeDirectoryBoolean_(existing.visible, "TRUE") : "FALSE";
+    var requestedVisible = Object.prototype.hasOwnProperty.call(input, "visible")
+      ? normalizeDirectoryBoolean_(input.visible, existingVisible)
+      : existingVisible;
+    var existingArchived = existing && normalizeDirectoryBoolean_(existing.archived, "FALSE") === "TRUE";
+    if (existingArchived) requireAdmin_(user);
+
     var item = existing || {};
     item.resource_id = resourceId;
     item.title = title;
@@ -238,7 +260,7 @@ function saveDirectoryResource_(payload, user) {
     item.links_json = stringifyLinks_(input.links || []);
     item.tags_json = stringifyTags_(input.tags || []);
     item.updated = String(input.updated || "").trim() || Utilities.formatDate(new Date(), APP.TIMEZONE, "yyyy-MM-dd");
-    item.visible = input.visible === false ? "FALSE" : "TRUE";
+    item.visible = requestedVisible;
     item.featured = input.featured === true ? "TRUE" : "FALSE";
     item.sort_order = Number(input.sort_order || item.sort_order || resources.length + 1);
     item.archived = "FALSE";
@@ -258,7 +280,7 @@ function saveDirectoryResource_(payload, user) {
 }
 
 function deleteDirectoryResource_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceId = String(payload.resource_id || payload.id || "").trim();
   if (!resourceId) throw new Error("缺少 resource_id");
   var lock = LockService.getScriptLock();
@@ -281,7 +303,7 @@ function deleteDirectoryResource_(payload, user) {
 }
 
 function batchDeleteDirectoryResources_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceIds = payload.resource_ids || payload.ids || [];
   if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要移到回收桶的內容");
   var idSet = {};
@@ -313,7 +335,7 @@ function batchDeleteDirectoryResources_(payload, user) {
 }
 
 function restoreDirectoryResources_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var resourceIds = payload.resource_ids || payload.ids || [];
   if (!Array.isArray(resourceIds) || resourceIds.length === 0) throw new Error("缺少要還原的內容");
   var idSet = {};
@@ -464,7 +486,7 @@ function saveDirectoryShortcut_(payload, user) {
 }
 
 function deleteDirectoryShortcut_(payload, user) {
-  requireReviewer_(user);
+  requireAdmin_(user);
   var shortcutId = String(payload.shortcut_id || payload.id || "").trim();
   if (!shortcutId) throw new Error("缺少 shortcut_id");
   var lock = LockService.getScriptLock();

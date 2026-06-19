@@ -1,148 +1,262 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant-TW">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex, nofollow">
-  <title>教師手冊維護中</title>
+  <title>內湖國小教師手冊後台登入</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
-      color-scheme: light;
-      --navy: #153a63;
-      --navy-dark: #0d2a49;
-      --cream: #f7f1e5;
+      --ink: #203044;
+      --navy: #17375e;
+      --cream: #f7f1e7;
       --paper: #fffdf8;
-      --ink: #22313f;
-      --muted: #647383;
-      --line: rgba(21, 58, 99, 0.14);
-      --shadow: 0 22px 54px rgba(13, 42, 73, 0.18);
+      --line: #d9e0e3;
+      --muted: #6c7782;
+      --gold: #b28b45;
+      --danger: #8b3a3a;
+      --ok: #3f6f50;
+      --radius: 8px;
+      --shadow: 0 18px 42px rgba(32, 48, 68, 0.12);
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      min-height: 100%;
-      margin: 0;
-    }
+    * { box-sizing: border-box; }
 
     body {
-      display: grid;
       min-height: 100vh;
-      padding: 28px;
-      place-items: center;
-      background:
-        linear-gradient(135deg, rgba(21, 58, 99, 0.96), rgba(13, 42, 73, 0.94)),
-        var(--navy);
+      margin: 0;
       color: var(--ink);
-      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.75;
+      background: linear-gradient(180deg, rgba(23, 55, 94, 0.08), #fbfaf6 52%), var(--cream);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      line-height: 1.65;
     }
 
     main {
-      width: min(720px, 100%);
+      width: min(960px, calc(100% - 32px));
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      padding: 40px 0;
     }
 
-    .maintenance-card {
-      overflow: hidden;
+    .login-card {
+      width: min(100%, 520px);
       border: 1px solid var(--line);
-      border-radius: 24px;
+      border-radius: var(--radius);
       background: var(--paper);
       box-shadow: var(--shadow);
+      overflow: hidden;
     }
 
-    .card-header {
-      padding: 30px clamp(24px, 6vw, 48px);
-      background: var(--cream);
-      border-bottom: 1px solid var(--line);
+    .login-head {
+      padding: 30px 30px 24px;
+      background: var(--navy);
+      color: white;
+      border-bottom: 5px solid var(--gold);
     }
 
-    .eyebrow {
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-    }
+    h1,
+    p { margin-top: 0; }
 
     h1 {
-      margin: 0;
-      color: var(--navy-dark);
-      font-size: clamp(2rem, 5vw, 3rem);
-      line-height: 1.22;
+      margin-bottom: 10px;
+      font-size: clamp(1.8rem, 5vw, 2.45rem);
+      line-height: 1.25;
       letter-spacing: 0;
     }
 
-    .card-body {
-      padding: clamp(26px, 6vw, 48px);
-    }
-
-    .message {
-      margin: 0;
-      color: var(--ink);
-      font-size: clamp(1.05rem, 2.8vw, 1.18rem);
-      font-weight: 650;
-    }
-
-    .message + .message {
-      margin-top: 14px;
-    }
-
-    .note {
-      margin: 28px 0 0;
-      padding-top: 22px;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
+    .meta {
+      margin-bottom: 0;
+      color: rgba(255, 255, 255, 0.78);
       font-size: 1rem;
+    }
+
+    .login-body {
+      display: grid;
+      gap: 18px;
+      padding: 28px 30px 30px;
+    }
+
+    .login-body p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border: 1px solid #d2ddd5;
+      border-radius: var(--radius);
+      background: #edf3ef;
+      color: var(--ok);
       font-weight: 700;
     }
 
-    footer {
-      margin-top: 22px;
-      color: rgba(255, 255, 255, 0.78);
-      font-size: 0.95rem;
-      text-align: center;
+    .notice.error {
+      border-color: #ead0d0;
+      background: #fbefef;
+      color: var(--danger);
+    }
+
+    .login-actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    .login-hint {
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+      font-size: 0.92rem;
+    }
+
+    .login-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-height: 42px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fffdf8;
+      color: var(--navy);
+      font-size: 0.94rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .login-link:hover,
+    .login-link:focus-visible {
+      background: var(--cream);
+      outline: none;
     }
 
     @media (max-width: 560px) {
-      body {
-        padding: 18px;
-        align-items: start;
+      main {
+        width: min(100% - 20px, 960px);
       }
 
-      .maintenance-card {
-        border-radius: 18px;
-      }
-
-      .card-header,
-      .card-body {
-        padding-left: 22px;
-        padding-right: 22px;
-      }
-
-      .message {
-        font-size: 1rem;
+      .login-head,
+      .login-body {
+        padding-left: 20px;
+        padding-right: 20px;
       }
     }
   </style>
 </head>
 <body>
-  <main aria-labelledby="maintenance-title">
-    <article class="maintenance-card">
-      <header class="card-header">
-        <p class="eyebrow">系統公告</p>
-        <h1 id="maintenance-title">教師手冊維護中</h1>
-      </header>
-      <section class="card-body" aria-label="維護中說明">
-        <p class="message">本系統目前暫停開放使用。</p>
-        <p class="message">校內相關表件、規定與行政資訊，請暫依各處室正式公告、群組通知或既有校務流程辦理。</p>
-        <p class="message">需要查詢資料時，請多利用學校網頁或學務處的教師常用網站連結。</p>
-        <p class="note">造成不便，敬請見諒。</p>
-      </section>
-    </article>
-    <footer>內湖國小</footer>
+  <main>
+    <section class="login-card" aria-labelledby="pageTitle">
+      <div class="login-head">
+        <h1 id="pageTitle">內湖國小教師手冊後台</h1>
+        <p class="meta">請使用 nhps.hc.edu.tw 帳號登入。</p>
+      </div>
+      <div class="login-body">
+        <div id="message" class="notice" hidden></div>
+        <div class="login-actions">
+          <div id="gsiButton"></div>
+          <a class="login-link" href="index.html">回前台教師手冊</a>
+          <p class="login-hint">登入後會進入後台工作頁。若使用私人 Google 帳號，系統會拒絕進入。</p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <script>
+    const GAS_ENDPOINT = "https://nhps-teacher-handbook-api.smallcannon.workers.dev";
+    const GOOGLE_CLIENT_ID = "179214705510-kasellaj6et3bm507ia539fd7sacujth.apps.googleusercontent.com";
+    const ALLOWED_EMAIL_DOMAIN = "nhps.hc.edu.tw";
+    const TOKEN_STORAGE_KEY = "nhpsTeacherHandbookIdToken";
+    const USER_STORAGE_KEY = "nhpsTeacherHandbookUser";
+
+    const el = {
+      message: document.getElementById("message")
+    };
+
+    window.onload = () => {
+      const reason = new URLSearchParams(window.location.search).get("reason") || "";
+      if (sessionStorage.getItem(TOKEN_STORAGE_KEY) && reason !== "logout" && reason !== "expired") {
+        window.location.replace(nextPath());
+        return;
+      }
+      if (reason === "expired") showMessage("登入狀態已失效，請重新登入。", true);
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        showMessage("Google 登入元件尚未載入完成，請重新整理頁面後再試。", true);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredential
+      });
+      google.accounts.id.renderButton(document.getElementById("gsiButton"), {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular"
+      });
+    };
+
+    async function handleCredential(response) {
+      try {
+        if (!response || !response.credential) throw new Error("尚未取得 Google 登入憑證。");
+        const profile = decodeJwtPayload(response.credential);
+        const email = String(profile.email || "").toLowerCase();
+        const emailDomain = email.split("@").pop();
+        const hostedDomain = String(profile.hd || "").toLowerCase();
+        if (emailDomain !== ALLOWED_EMAIL_DOMAIN && hostedDomain !== ALLOWED_EMAIL_DOMAIN) {
+          throw new Error("僅限 " + ALLOWED_EMAIL_DOMAIN + " 網域帳號登入。");
+        }
+
+        showMessage("正在確認後台權限...", false, true);
+        const data = await api("directoryList", response.credential);
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, response.credential);
+        sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user || { email }));
+        window.location.replace(nextPath());
+      } catch (err) {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(USER_STORAGE_KEY);
+        showMessage(err.message || "登入失敗，請稍後再試。", true);
+      }
+    }
+
+    async function api(cmd, idToken) {
+      const payload = JSON.stringify({ cmd, idToken });
+      const response = await fetch(GAS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: "payload=" + encodeURIComponent(payload)
+      });
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "權限檢查失敗");
+      return data;
+    }
+
+    function nextPath() {
+      const next = new URLSearchParams(window.location.search).get("next") || "admin.html";
+      return next === "admin.html" ? "admin.html" : "admin.html";
+    }
+
+    function showMessage(text, isError, isLoading = false) {
+      el.message.hidden = false;
+      el.message.textContent = text;
+      el.message.classList.toggle("error", Boolean(isError));
+      el.message.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+
+    function decodeJwtPayload(token) {
+      const parts = String(token || "").split(".");
+      if (parts.length < 2) return {};
+      try {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+        const json = decodeURIComponent(Array.from(atob(padded)).map((char) => {
+          return "%" + char.charCodeAt(0).toString(16).padStart(2, "0");
+        }).join(""));
+        return JSON.parse(json);
+      } catch (err) {
+        return {};
+      }
+    }
+  </script>
 </body>
 </html>
