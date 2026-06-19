@@ -738,6 +738,29 @@
       font-size: 0.88rem;
     }
 
+    .header-action-link {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.2;
+      text-decoration: none;
+    }
+
+    .header-action-link:hover,
+    .header-action-link:focus-visible {
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+    }
+
     .list-group-title {
       margin: 10px 0 0;
       padding: 8px 4px 2px;
@@ -898,6 +921,7 @@
       </div>
       <div class="user-box">
         <p class="meta" id="loginState">載入使用者資料...</p>
+        <a class="header-action-link" href="index.html">回前台</a>
         <button id="logoutBtn" type="button" class="secondary">登出</button>
       </div>
     </div>
