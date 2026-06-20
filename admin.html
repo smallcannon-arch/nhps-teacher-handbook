@@ -589,8 +589,38 @@
       line-height: 1.45;
     }
 
+    .quick-links-save-status {
+      margin: 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #f6f8fb;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+      border: 1px solid var(--line);
+    }
+
+    .quick-links-save-status.is-saving {
+      background: #eef6ff;
+      color: #0b4f82;
+      border-color: #c7e1f8;
+    }
+
+    .quick-links-save-status.is-success {
+      background: #eefaf2;
+      color: #176a3a;
+      border-color: #bfe6cd;
+    }
+
+    .quick-links-save-status.is-error {
+      background: #fff2f0;
+      color: #9f1d1d;
+      border-color: #f0c3bd;
+    }
+
     .quick-links-draft-notice[hidden],
-    .quick-links-draft-summary[hidden] {
+    .quick-links-draft-summary[hidden],
+    .quick-links-save-status[hidden] {
       display: none;
     }
 
@@ -1228,8 +1258,9 @@
             <div id="quickLinksCandidateList" class="quick-links-preview-list"></div>
           </section>
           <div class="quick-links-ranking-controls" aria-label="首頁常用入口排序操作">
-            <p id="quickLinksDraftNotice" class="quick-links-draft-notice" hidden>目前有未儲存的排序變更。</p>
+            <p id="quickLinksDraftNotice" class="quick-links-draft-notice" hidden></p>
             <p id="quickLinksDraftSummary" class="quick-links-draft-summary" hidden></p>
+            <p id="quickLinksSaveStatus" class="quick-links-save-status" hidden></p>
             <div class="quick-links-ranking-actions">
               <button id="saveQuickLinksRankingBtn" type="button" disabled>儲存排序</button>
               <button id="cancelQuickLinksRankingBtn" class="secondary" type="button" disabled>取消變更</button>
@@ -1481,6 +1512,33 @@
     const COMMON_CONTENT_TAGS = new Set(["常用內容", "常用系統", "常用表件", "常用流程", "常用校務資料"]);
     const COMMON_CONTENT_LIMIT = 12;
     const COMMON_CONTENT_CANDIDATE_PREVIEW_LIMIT = 10;
+    const QUICK_LINKS_RANKING_MESSAGES = {
+      clean: "",
+      unsaved: "目前有未儲存的排序變更。",
+      saving: "正在儲存排序，請勿重複操作。",
+      saved: "排序已儲存，資料已重新載入。",
+      savedReloading: "排序已儲存，正在重新載入資料。",
+      saveFailed: "排序未儲存，草稿已保留，請檢查錯誤後重試。",
+      loadFailed: "排序已儲存，但重新載入資料時發生問題，請重新整理後確認。",
+      cancelRestored: "已取消未儲存的排序變更。",
+      updateCount: (count) => "將更新 " + count + " 筆常用入口排序。",
+      enteredTop: (names) => "進入前 12：" + names + "。",
+      exitedTop: (names) => "退出前 12：" + names + "。",
+      topUnchanged: "前 12 內容不變，只調整常用候選內的相對順序。",
+      confirmTitle: "將更新首頁常用入口排序。",
+      confirmScope: "此操作只會更新排序值，不會修改標題、連結、標籤或上架狀態。",
+      confirmCount: (count) => "將送出 " + count + " 筆常用入口排序。",
+      confirmContinue: "是否繼續？",
+      commandSuccess: "已儲存首頁常用入口排序。",
+      commandLoading: "儲存首頁常用入口排序中，請稍候……",
+      commandLoadingButton: "儲存中……",
+      errorHttp: (status) => "HTTP " + status,
+      errorUnknownCmd: "UNKNOWN_CMD",
+      errorAuth: "權限或登入狀態可能失效",
+      errorJson: "response 不是 JSON",
+      errorApiFalse: "API 回傳 ok=false",
+      errorNetwork: "網路錯誤"
+    };
     const AUTH_EXPIRED_NOTICE = "登入狀態已逾時，這次變更尚未儲存。請重新登入後再操作。";
     const STAFF_UNITS_BY_OFFICE = {
       "教務處": ["教務主任", "教學組", "課研組", "資訊組", "特教組"],
@@ -1513,6 +1571,7 @@
     let quickLinksPreviewReturnActive = false;
     let quickLinksRankingDraftIds = null;
     let quickLinksRankingSaving = false;
+    let quickLinksRankingStatus = null;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1550,6 +1609,7 @@
       quickLinksCandidateList: document.getElementById("quickLinksCandidateList"),
       quickLinksDraftNotice: document.getElementById("quickLinksDraftNotice"),
       quickLinksDraftSummary: document.getElementById("quickLinksDraftSummary"),
+      quickLinksSaveStatus: document.getElementById("quickLinksSaveStatus"),
       saveQuickLinksRankingBtn: document.getElementById("saveQuickLinksRankingBtn"),
       cancelQuickLinksRankingBtn: document.getElementById("cancelQuickLinksRankingBtn"),
       trashForm: document.getElementById("trashForm"),
@@ -1940,6 +2000,7 @@
     function setQuickLinksRankingDraftIds(ids) {
       const normalized = normalizeQuickLinksDraftIds(ids);
       quickLinksRankingDraftIds = arraysEqual(normalized, getQuickLinksBaseOrderIds()) ? null : normalized;
+      if (!quickLinksRankingSaving) setQuickLinksRankingStatus("clean");
       renderQuickLinksRankingPreview();
       const item = resources.find((resource) => resource.id === activeResourceId);
       renderQuickLinksEditorContext(item || null);
@@ -1992,27 +2053,88 @@
     function quickLinksDraftSummaryText() {
       if (!hasQuickLinksRankingDraftChanges()) return "";
       const transition = getQuickLinksRankingTransition();
-      const parts = ["將更新 " + transition.draftIds.length + " 筆常用入口排序。"];
+      const messages = QUICK_LINKS_RANKING_MESSAGES;
+      const parts = [messages.updateCount(transition.draftIds.length)];
       if (transition.enteredTop.length) {
-        parts.push("進入前 12：" + transition.enteredTop.map(quickLinksResourceTitle).join("、") + "。");
+        parts.push(messages.enteredTop(transition.enteredTop.map(quickLinksResourceTitle).join("、")));
       }
       if (transition.exitedTop.length) {
-        parts.push("退出前 12：" + transition.exitedTop.map(quickLinksResourceTitle).join("、") + "。");
+        parts.push(messages.exitedTop(transition.exitedTop.map(quickLinksResourceTitle).join("、")));
       }
       if (!transition.enteredTop.length && !transition.exitedTop.length) {
-        parts.push("前 12 內容不變，只調整常用候選內的相對順序。");
+        parts.push(messages.topUnchanged);
       }
       return parts.join(" ");
+    }
+
+    function quickLinksRankingStatusType(key) {
+      if (key === "saving") return "saving";
+      if (key === "saved" || key === "savedReloading") return "success";
+      if (key === "saveFailed" || key === "loadFailed") return "error";
+      return "info";
+    }
+
+    function quickLinksRankingStatusMessage(key, detail = "") {
+      const base = QUICK_LINKS_RANKING_MESSAGES[key] || "";
+      if (!base) return "";
+      return detail ? base + "原因：" + detail : base;
+    }
+
+    function setQuickLinksRankingStatus(key, detail = "") {
+      const message = quickLinksRankingStatusMessage(key, detail);
+      quickLinksRankingStatus = message ? {
+        key,
+        type: quickLinksRankingStatusType(key),
+        message
+      } : null;
+      renderQuickLinksRankingStatus();
+    }
+
+    function renderQuickLinksRankingStatus() {
+      if (!el.quickLinksSaveStatus) return;
+      if (!quickLinksRankingStatus) {
+        el.quickLinksSaveStatus.hidden = true;
+        el.quickLinksSaveStatus.textContent = "";
+        el.quickLinksSaveStatus.className = "quick-links-save-status";
+        return;
+      }
+      const type = quickLinksRankingStatus.type || "info";
+      el.quickLinksSaveStatus.hidden = false;
+      el.quickLinksSaveStatus.textContent = quickLinksRankingStatus.message;
+      el.quickLinksSaveStatus.className = "quick-links-save-status is-" + type;
+    }
+
+    function quickLinksSafeErrorSummary(err) {
+      const status = Number(err && err.status || 0);
+      const dataError = err && err.data && err.data.error ? String(err.data.error) : "";
+      const message = String(dataError || (err && err.message) || "");
+      const upperMessage = message.toUpperCase();
+      const messages = QUICK_LINKS_RANKING_MESSAGES;
+      const parts = [];
+      if (status) parts.push(messages.errorHttp(status));
+      if (upperMessage.includes("UNKNOWN_CMD")) parts.push(messages.errorUnknownCmd);
+      else if (status === 401 || status === 403 || /AUTH|TOKEN|LOGIN|EXPIRED|PERMISSION|FORBIDDEN/i.test(message)) {
+        parts.push(messages.errorAuth);
+      } else if (/JSON|RESPONSE/i.test(message)) {
+        parts.push(messages.errorJson);
+      } else if (message) {
+        parts.push(messages.errorApiFalse);
+      } else {
+        parts.push(messages.errorNetwork);
+      }
+      return Array.from(new Set(parts)).join("；");
     }
 
     function renderQuickLinksDraftControls() {
       const hasChanges = hasQuickLinksRankingDraftChanges();
       const canSave = Boolean(idToken && userCanEditContent() && hasChanges && !quickLinksRankingSaving);
       el.quickLinksDraftNotice.hidden = !hasChanges;
+      el.quickLinksDraftNotice.textContent = hasChanges ? QUICK_LINKS_RANKING_MESSAGES.unsaved : "";
       el.quickLinksDraftSummary.hidden = !hasChanges;
       el.quickLinksDraftSummary.textContent = hasChanges ? quickLinksDraftSummaryText() : "";
       el.saveQuickLinksRankingBtn.disabled = !canSave;
       el.cancelQuickLinksRankingBtn.disabled = !hasChanges || quickLinksRankingSaving;
+      renderQuickLinksRankingStatus();
     }
 
     function moveQuickLinksDraftItem(resourceId, offset) {
@@ -2040,6 +2162,7 @@
     function cancelQuickLinksRankingDraft() {
       if (quickLinksRankingSaving) return;
       quickLinksRankingDraftIds = null;
+      setQuickLinksRankingStatus("cancelRestored");
       renderQuickLinksRankingPreview();
       const item = resources.find((resource) => resource.id === activeResourceId);
       renderQuickLinksEditorContext(item || null);
@@ -2053,33 +2176,41 @@
 
     function quickLinksSaveConfirmText(items) {
       const summary = quickLinksDraftSummaryText();
+      const messages = QUICK_LINKS_RANKING_MESSAGES;
       return [
-        "將更新首頁常用入口排序。",
-        "此操作只會更新排序值，不會修改標題、連結、標籤或上架狀態。",
-        "將寫入 " + items.length + " 筆常用入口排序。",
+        messages.confirmTitle,
+        messages.confirmScope,
+        messages.confirmCount(items.length),
         summary,
-        "是否繼續？"
+        messages.confirmContinue
       ].filter(Boolean).join("\n");
     }
 
     async function saveQuickLinksRankingDraft() {
       if (quickLinksRankingSaving || !hasQuickLinksRankingDraftChanges()) return;
+      const messages = QUICK_LINKS_RANKING_MESSAGES;
       const items = getQuickLinksRankingPayloadItems();
       if (!items.length) return;
       if (!window.confirm(quickLinksSaveConfirmText(items))) return;
       quickLinksRankingSaving = true;
+      setQuickLinksRankingStatus("saving");
       renderQuickLinksRankingPreview();
       const saved = await runCommand("reorderDirectoryItems", {
         kind: "resource",
         items
-      }, "已儲存首頁常用入口排序。", {
+      }, messages.commandSuccess, {
         actionButton: el.saveQuickLinksRankingBtn,
-        loadingText: "儲存首頁常用入口排序中，請稍候……",
-        loadingButtonText: "儲存中……"
+        loadingText: messages.commandLoading,
+        loadingButtonText: messages.commandLoadingButton,
+        onApiSuccess: () => setQuickLinksRankingStatus("savedReloading"),
+        onError: (err) => setQuickLinksRankingStatus("saveFailed", quickLinksSafeErrorSummary(err))
       });
       quickLinksRankingSaving = false;
       if (saved) {
         quickLinksRankingDraftIds = null;
+        setQuickLinksRankingStatus("saved");
+      } else if (!quickLinksRankingStatus || quickLinksRankingStatus.type !== "error") {
+        setQuickLinksRankingStatus("saveFailed", QUICK_LINKS_RANKING_MESSAGES.errorNetwork);
       }
       renderQuickLinksRankingPreview();
       const item = resources.find((resource) => resource.id === activeResourceId);
@@ -2999,6 +3130,7 @@
           }, slowAfterMs);
         }
         const data = await api(cmd, payload);
+        if (typeof options.onApiSuccess === "function") options.onApiSuccess(data);
         if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
         if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
         if (cmd === "deleteDirectoryResource") activeResourceId = "";
@@ -3013,6 +3145,7 @@
           : resolveSuccessText(successText), false);
         return true;
       } catch (err) {
+        if (typeof options.onError === "function") options.onError(err);
         if (isAuthExpiredError(err)) showAuthExpiredNotice();
         else showMessage(commandErrorText(err, isSaveAction), true);
         return false;
