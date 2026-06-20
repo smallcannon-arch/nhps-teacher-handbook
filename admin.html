@@ -561,6 +561,39 @@
       font-size: 0.86rem;
     }
 
+    .quick-links-ranking-controls {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .quick-links-ranking-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .quick-links-draft-notice {
+      margin: 0;
+      color: #7c5b00;
+      font-weight: 800;
+    }
+
+    .quick-links-draft-summary {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .quick-links-draft-notice[hidden],
+    .quick-links-draft-summary[hidden] {
+      display: none;
+    }
+
     .quick-links-editor-context {
       display: grid;
       gap: 8px;
@@ -1184,7 +1217,7 @@
 
         <details id="quickLinksPreviewPanel" class="bulk-panel quick-links-preview" open>
           <summary>首頁常用入口排序預覽</summary>
-          <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區目前僅供檢視，尚不能調整排序。</p>
+          <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區可調整首頁常用入口的顯示順序。調整會先暫存在畫面中，按「儲存排序」後才會寫入。</p>
           <p id="quickLinksPreviewSummary" class="quick-links-preview-summary">尚未載入常用入口資料。</p>
           <section class="quick-links-preview-section" aria-labelledby="quickLinksTopHeading">
             <h3 id="quickLinksTopHeading">首頁目前顯示</h3>
@@ -1194,6 +1227,14 @@
             <h3 id="quickLinksCandidateHeading">候補常用內容</h3>
             <div id="quickLinksCandidateList" class="quick-links-preview-list"></div>
           </section>
+          <div class="quick-links-ranking-controls" aria-label="首頁常用入口排序操作">
+            <p id="quickLinksDraftNotice" class="quick-links-draft-notice" hidden>目前有未儲存的排序變更。</p>
+            <p id="quickLinksDraftSummary" class="quick-links-draft-summary" hidden></p>
+            <div class="quick-links-ranking-actions">
+              <button id="saveQuickLinksRankingBtn" type="button" disabled>儲存排序</button>
+              <button id="cancelQuickLinksRankingBtn" class="secondary" type="button" disabled>取消變更</button>
+            </div>
+          </div>
         </details>
 
         <section class="form-section" aria-labelledby="resourceBasicHeading">
@@ -1470,6 +1511,8 @@
     let resourceFormRevision = 0;
     let resourceFormBoundResourceId = "";
     let quickLinksPreviewReturnActive = false;
+    let quickLinksRankingDraftIds = null;
+    let quickLinksRankingSaving = false;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -1505,6 +1548,10 @@
       quickLinksPreviewSummary: document.getElementById("quickLinksPreviewSummary"),
       quickLinksTopList: document.getElementById("quickLinksTopList"),
       quickLinksCandidateList: document.getElementById("quickLinksCandidateList"),
+      quickLinksDraftNotice: document.getElementById("quickLinksDraftNotice"),
+      quickLinksDraftSummary: document.getElementById("quickLinksDraftSummary"),
+      saveQuickLinksRankingBtn: document.getElementById("saveQuickLinksRankingBtn"),
+      cancelQuickLinksRankingBtn: document.getElementById("cancelQuickLinksRankingBtn"),
       trashForm: document.getElementById("trashForm"),
       trashTitle: document.getElementById("trashTitle"),
       trashContext: document.getElementById("trashContext"),
@@ -1830,17 +1877,76 @@
       return updatedDiff || a.index - b.index;
     }
 
-    function getQuickLinksRankingItems() {
+    function getQuickLinksBaseRankingEntries() {
       return resources
         .map((item, index) => ({ item, index }))
         .filter(({ item }) => isCommonContentCandidate(item))
-        .sort(compareCommonContentRanking)
+        .sort(compareCommonContentRanking);
+    }
+
+    function arraysEqual(a, b) {
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+      return a.every((value, index) => value === b[index]);
+    }
+
+    function getQuickLinksBaseOrderIds() {
+      return getQuickLinksBaseRankingEntries().map(({ item }) => item.id).filter(Boolean);
+    }
+
+    function normalizeQuickLinksDraftIds(ids, baseEntries = getQuickLinksBaseRankingEntries()) {
+      const baseIds = baseEntries.map(({ item }) => item.id).filter(Boolean);
+      const baseIdSet = new Set(baseIds);
+      const normalized = [];
+      (Array.isArray(ids) ? ids : []).forEach((id) => {
+        const text = String(id || "").trim();
+        if (text && baseIdSet.has(text) && !normalized.includes(text)) normalized.push(text);
+      });
+      baseIds.forEach((id) => {
+        if (!normalized.includes(id)) normalized.push(id);
+      });
+      return normalized;
+    }
+
+    function getQuickLinksEffectiveRankingEntries() {
+      const baseEntries = getQuickLinksBaseRankingEntries();
+      if (!quickLinksRankingDraftIds) return baseEntries;
+      const entryMap = new Map(baseEntries.map((entry) => [entry.item.id, entry]));
+      return normalizeQuickLinksDraftIds(quickLinksRankingDraftIds, baseEntries)
+        .map((id) => entryMap.get(id))
+        .filter(Boolean);
+    }
+
+    function getQuickLinksRankingItems() {
+      return getQuickLinksEffectiveRankingEntries()
         .map(({ item, index }, rankIndex) => ({
           item,
           index,
           rank: rankIndex + 1,
           displayed: rankIndex < COMMON_CONTENT_LIMIT
         }));
+    }
+
+    function getQuickLinksCurrentOrderIds() {
+      return getQuickLinksRankingItems().map(({ item }) => item.id).filter(Boolean);
+    }
+
+    function hasQuickLinksRankingDraftChanges() {
+      return Boolean(quickLinksRankingDraftIds) && !arraysEqual(
+        normalizeQuickLinksDraftIds(quickLinksRankingDraftIds),
+        getQuickLinksBaseOrderIds()
+      );
+    }
+
+    function setQuickLinksRankingDraftIds(ids) {
+      const normalized = normalizeQuickLinksDraftIds(ids);
+      quickLinksRankingDraftIds = arraysEqual(normalized, getQuickLinksBaseOrderIds()) ? null : normalized;
+      renderQuickLinksRankingPreview();
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      renderQuickLinksEditorContext(item || null);
+    }
+
+    function ensureQuickLinksRankingDraftIds() {
+      return normalizeQuickLinksDraftIds(quickLinksRankingDraftIds || getQuickLinksBaseOrderIds());
     }
 
     function getQuickLinksRankingEntry(resourceId) {
@@ -1867,6 +1973,119 @@
       return "候補：首頁只顯示前 12 筆。";
     }
 
+    function quickLinksResourceTitle(resourceId) {
+      const item = resources.find((resource) => resource.id === resourceId);
+      return item ? (item.title || "未命名內容") : resourceId;
+    }
+
+    function getQuickLinksRankingTransition() {
+      const baseIds = getQuickLinksBaseOrderIds();
+      const draftIds = normalizeQuickLinksDraftIds(quickLinksRankingDraftIds || baseIds);
+      const baseTop = new Set(baseIds.slice(0, COMMON_CONTENT_LIMIT));
+      const draftTop = new Set(draftIds.slice(0, COMMON_CONTENT_LIMIT));
+      const enteredTop = draftIds.slice(0, COMMON_CONTENT_LIMIT).filter((id) => !baseTop.has(id));
+      const exitedTop = baseIds.slice(0, COMMON_CONTENT_LIMIT).filter((id) => !draftTop.has(id));
+      const changedCount = draftIds.reduce((count, id, index) => count + (id !== baseIds[index] ? 1 : 0), 0);
+      return { baseIds, draftIds, enteredTop, exitedTop, changedCount };
+    }
+
+    function quickLinksDraftSummaryText() {
+      if (!hasQuickLinksRankingDraftChanges()) return "";
+      const transition = getQuickLinksRankingTransition();
+      const parts = ["將更新 " + transition.draftIds.length + " 筆常用入口排序。"];
+      if (transition.enteredTop.length) {
+        parts.push("進入前 12：" + transition.enteredTop.map(quickLinksResourceTitle).join("、") + "。");
+      }
+      if (transition.exitedTop.length) {
+        parts.push("退出前 12：" + transition.exitedTop.map(quickLinksResourceTitle).join("、") + "。");
+      }
+      if (!transition.enteredTop.length && !transition.exitedTop.length) {
+        parts.push("前 12 內容不變，只調整常用候選內的相對順序。");
+      }
+      return parts.join(" ");
+    }
+
+    function renderQuickLinksDraftControls() {
+      const hasChanges = hasQuickLinksRankingDraftChanges();
+      const canSave = Boolean(idToken && userCanEditContent() && hasChanges && !quickLinksRankingSaving);
+      el.quickLinksDraftNotice.hidden = !hasChanges;
+      el.quickLinksDraftSummary.hidden = !hasChanges;
+      el.quickLinksDraftSummary.textContent = hasChanges ? quickLinksDraftSummaryText() : "";
+      el.saveQuickLinksRankingBtn.disabled = !canSave;
+      el.cancelQuickLinksRankingBtn.disabled = !hasChanges || quickLinksRankingSaving;
+    }
+
+    function moveQuickLinksDraftItem(resourceId, offset) {
+      if (quickLinksRankingSaving) return;
+      const ids = ensureQuickLinksRankingDraftIds();
+      const index = ids.indexOf(resourceId);
+      const targetIndex = index + offset;
+      if (index < 0 || targetIndex < 0 || targetIndex >= ids.length) return;
+      const nextIds = ids.slice();
+      [nextIds[index], nextIds[targetIndex]] = [nextIds[targetIndex], nextIds[index]];
+      setQuickLinksRankingDraftIds(nextIds);
+    }
+
+    function moveQuickLinksDraftItemToTop12(resourceId) {
+      if (quickLinksRankingSaving) return;
+      const ids = ensureQuickLinksRankingDraftIds();
+      const index = ids.indexOf(resourceId);
+      if (index < 0 || index < COMMON_CONTENT_LIMIT) return;
+      const nextIds = ids.slice();
+      const [moved] = nextIds.splice(index, 1);
+      nextIds.splice(Math.min(COMMON_CONTENT_LIMIT - 1, nextIds.length), 0, moved);
+      setQuickLinksRankingDraftIds(nextIds);
+    }
+
+    function cancelQuickLinksRankingDraft() {
+      if (quickLinksRankingSaving) return;
+      quickLinksRankingDraftIds = null;
+      renderQuickLinksRankingPreview();
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      renderQuickLinksEditorContext(item || null);
+    }
+
+    function getQuickLinksRankingPayloadItems() {
+      if (!hasQuickLinksRankingDraftChanges()) return [];
+      return normalizeQuickLinksDraftIds(quickLinksRankingDraftIds)
+        .map((id, index) => ({ id, sort_order: index + 1 }));
+    }
+
+    function quickLinksSaveConfirmText(items) {
+      const summary = quickLinksDraftSummaryText();
+      return [
+        "將更新首頁常用入口排序。",
+        "此操作只會更新排序值，不會修改標題、連結、標籤或上架狀態。",
+        "將寫入 " + items.length + " 筆常用入口排序。",
+        summary,
+        "是否繼續？"
+      ].filter(Boolean).join("\n");
+    }
+
+    async function saveQuickLinksRankingDraft() {
+      if (quickLinksRankingSaving || !hasQuickLinksRankingDraftChanges()) return;
+      const items = getQuickLinksRankingPayloadItems();
+      if (!items.length) return;
+      if (!window.confirm(quickLinksSaveConfirmText(items))) return;
+      quickLinksRankingSaving = true;
+      renderQuickLinksRankingPreview();
+      const saved = await runCommand("reorderDirectoryItems", {
+        kind: "resource",
+        items
+      }, "已儲存首頁常用入口排序。", {
+        actionButton: el.saveQuickLinksRankingBtn,
+        loadingText: "儲存首頁常用入口排序中，請稍候……",
+        loadingButtonText: "儲存中……"
+      });
+      quickLinksRankingSaving = false;
+      if (saved) {
+        quickLinksRankingDraftIds = null;
+      }
+      renderQuickLinksRankingPreview();
+      const item = resources.find((resource) => resource.id === activeResourceId);
+      renderQuickLinksEditorContext(item || null);
+    }
+
     function quickLinksEditorSummaryText(item) {
       if (!item || !item.id) return "";
       const entry = getQuickLinksRankingEntry(item.id);
@@ -1888,6 +2107,12 @@
       const statusClass = entry.displayed ? "" : " is-candidate";
       const pinned = isCommonPinnedResource(item);
       const hint = quickLinksPreviewHint(entry);
+      const canEditRanking = Boolean(idToken && userCanEditContent() && !quickLinksRankingSaving);
+      const upDisabled = !canEditRanking || entry.rank === 1 ? " disabled" : "";
+      const downDisabled = !canEditRanking || entry.rank === getQuickLinksRankingItems().length ? " disabled" : "";
+      const moveToTopButton = entry.displayed ? "" : `
+              <button class="secondary" type="button" data-quick-link-action="move-to-top" data-quick-link-resource-id="${escapeHtml(item.id || "")}"${canEditRanking ? "" : " disabled"}>移入首頁第 12</button>
+            `;
       const detailText = [
         item.office || "未分處室",
         item.category || "未分類",
@@ -1906,7 +2131,10 @@
             ${pinned ? "<span class='preview-badge is-pinned'>常用置頂</span>" : ""}
           </div>
           <div class="quick-links-row-actions">
-            <button class="secondary" type="button" data-quick-link-resource-id="${escapeHtml(item.id || "")}">查看資料卡</button>
+            <button class="secondary" type="button" data-quick-link-action="move-up" data-quick-link-resource-id="${escapeHtml(item.id || "")}"${upDisabled}>上移</button>
+            <button class="secondary" type="button" data-quick-link-action="move-down" data-quick-link-resource-id="${escapeHtml(item.id || "")}"${downDisabled}>下移</button>
+            ${moveToTopButton}
+            <button class="secondary" type="button" data-quick-link-action="open" data-quick-link-resource-id="${escapeHtml(item.id || "")}">查看資料卡</button>
           </div>
         </article>
       `;
@@ -1922,6 +2150,7 @@
         el.quickLinksPreviewSummary.textContent = "目前沒有符合首頁常用入口條件的資料。";
         el.quickLinksTopList.innerHTML = "<p class='quick-links-empty'>沒有可顯示的常用入口。</p>";
         el.quickLinksCandidateList.innerHTML = "<p class='quick-links-empty'>沒有候補常用內容。</p>";
+        renderQuickLinksDraftControls();
         return;
       }
 
@@ -1935,6 +2164,7 @@
       el.quickLinksCandidateList.innerHTML = candidateItems.length
         ? previewCandidateItems.map(renderQuickLinksPreviewRow).join("")
         : "<p class='quick-links-empty'>沒有候補常用內容。</p>";
+      renderQuickLinksDraftControls();
     }
 
     function renderQuickLinksEditorContext(item) {
@@ -3220,11 +3450,27 @@
     });
     el.logoutBtn.addEventListener("click", logout);
     el.quickLinksPreviewPanel.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-quick-link-resource-id]");
+      const button = event.target.closest("[data-quick-link-action]");
       if (!button) return;
-      openResourceFromQuickLinksPreview(button.dataset.quickLinkResourceId);
+      const resourceId = button.dataset.quickLinkResourceId || "";
+      const action = button.dataset.quickLinkAction || "open";
+      if (action === "move-up") {
+        moveQuickLinksDraftItem(resourceId, -1);
+        return;
+      }
+      if (action === "move-down") {
+        moveQuickLinksDraftItem(resourceId, 1);
+        return;
+      }
+      if (action === "move-to-top") {
+        moveQuickLinksDraftItemToTop12(resourceId);
+        return;
+      }
+      openResourceFromQuickLinksPreview(resourceId);
     });
     el.backToQuickLinksPreviewBtn.addEventListener("click", scrollToQuickLinksPreview);
+    el.saveQuickLinksRankingBtn.addEventListener("click", saveQuickLinksRankingDraft);
+    el.cancelQuickLinksRankingBtn.addEventListener("click", cancelQuickLinksRankingDraft);
     el.resourceForm.addEventListener("input", markResourceFormDirty);
     el.resourceForm.addEventListener("change", markResourceFormDirty);
     el.listSearchInput.addEventListener("input", refreshListView);
