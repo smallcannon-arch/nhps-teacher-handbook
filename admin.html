@@ -405,11 +405,12 @@
     }
 
     .editor-header {
+      margin-top: 0;
       margin-bottom: 16px;
       padding: 16px 18px;
-      border: 1px solid #d8e4e7;
+      border: 1px solid #cfe2df;
       border-radius: var(--radius);
-      background: #f6faf9;
+      background: #eef7f4;
     }
 
     .editor-kicker {
@@ -627,11 +628,12 @@
     .quick-links-editor-context {
       display: grid;
       gap: 8px;
-      margin-top: 12px;
-      padding: 10px 12px;
-      border: 1px solid #d8e4e7;
+      margin: 18px 0 16px;
+      padding: 12px 14px;
+      border: 1px solid #cfe0ea;
       border-radius: var(--radius);
       background: white;
+      box-shadow: 0 6px 18px rgba(15, 59, 104, 0.05);
     }
 
     .quick-links-editor-context[hidden] {
@@ -641,6 +643,32 @@
     .quick-links-editor-context .meta {
       margin-bottom: 0;
       color: var(--ink);
+    }
+
+    #quickLinksEditorContext.is-scroll-target,
+    #resourceBasicSection.is-scroll-target {
+      outline: 3px solid rgba(13, 94, 166, 0.28);
+      outline-offset: 4px;
+      box-shadow: 0 0 0 6px rgba(13, 94, 166, 0.08), 0 16px 34px rgba(15, 59, 104, 0.14);
+      transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      #quickLinksEditorContext.is-scroll-target,
+      #resourceBasicSection.is-scroll-target {
+        animation: resourceFormScrollTarget 2.2s ease-out;
+      }
+
+      @keyframes resourceFormScrollTarget {
+        0% {
+          outline-color: rgba(13, 94, 166, 0.55);
+          box-shadow: 0 0 0 8px rgba(13, 94, 166, 0.14), 0 18px 36px rgba(15, 59, 104, 0.18);
+        }
+        100% {
+          outline-color: rgba(13, 94, 166, 0.28);
+          box-shadow: 0 0 0 6px rgba(13, 94, 166, 0.08), 0 16px 34px rgba(15, 59, 104, 0.14);
+        }
+      }
     }
 
     .preview-badge {
@@ -1195,15 +1223,6 @@
       <div id="message" class="notice" hidden></div>
 
       <form id="resourceForm">
-        <div class="editor-header">
-          <span id="resourceEditorLabel" class="editor-kicker">正在編輯資料卡</span>
-          <h2 id="resourceTitle">請先登入並選擇資料卡</h2>
-          <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
-          <div id="quickLinksEditorContext" class="quick-links-editor-context" hidden>
-            <p id="quickLinksEditorSummary" class="meta"></p>
-            <button id="backToQuickLinksPreviewBtn" class="secondary" type="button">返回首頁常用入口排序預覽</button>
-          </div>
-        </div>
         <input id="resourceIdInput" type="hidden">
 
         <details id="bulkPanel" class="bulk-panel">
@@ -1268,7 +1287,18 @@
           </div>
         </details>
 
-        <section class="form-section" aria-labelledby="resourceBasicHeading">
+        <div id="quickLinksEditorContext" class="quick-links-editor-context" hidden>
+          <p id="quickLinksEditorSummary" class="meta"></p>
+          <button id="backToQuickLinksPreviewBtn" class="secondary" type="button">返回首頁常用入口排序預覽</button>
+        </div>
+
+        <div class="editor-header">
+          <span id="resourceEditorLabel" class="editor-kicker">正在編輯資料卡</span>
+          <h2 id="resourceTitle">請先登入並選擇資料卡</h2>
+          <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
+        </div>
+
+        <section id="resourceBasicSection" class="form-section" aria-labelledby="resourceBasicHeading">
           <h3 id="resourceBasicHeading">基本資料</h3>
           <p class="meta section-help">目前後台只編輯 GAS 與試算表已支援保存的欄位；任務分類、使用情境與行動指引會在下一階段同步資料欄位後再開放。</p>
           <div class="grid-2">
@@ -1572,6 +1602,7 @@
     let quickLinksRankingDraftIds = null;
     let quickLinksRankingSaving = false;
     let quickLinksRankingStatus = null;
+    let resourceEditorHighlightTimer = null;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -2319,6 +2350,67 @@
       renderQuickLinksEditorContext(item || null);
     }
 
+    function setResourceEditorDirectoryId(resourceId) {
+      if (!el.resourceForm) return;
+      const id = String(resourceId || "").trim();
+      if (id) el.resourceForm.dataset.directoryId = id;
+      else delete el.resourceForm.dataset.directoryId;
+    }
+
+    function directoryIdSelector(resourceId) {
+      const id = String(resourceId || "").trim();
+      if (!id) return "";
+      if (window.CSS && typeof window.CSS.escape === "function") {
+        return `[data-directory-id="${window.CSS.escape(id)}"]`;
+      }
+      return `[data-directory-id="${id.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"]`;
+    }
+
+    function findResourceEditorTarget(resourceId) {
+      const selector = directoryIdSelector(resourceId);
+      if (!selector) return null;
+      const target = document.querySelector(selector);
+      if (target !== el.resourceForm) return null;
+      if (el.quickLinksEditorContext && !el.quickLinksEditorContext.hidden) return el.quickLinksEditorContext;
+      return document.getElementById("resourceBasicSection") || el.resourceForm;
+    }
+
+    function highlightResourceEditorTarget(target) {
+      const card = target || el.resourceForm;
+      if (!card) return;
+      if (resourceEditorHighlightTimer) window.clearTimeout(resourceEditorHighlightTimer);
+      card.classList.remove("is-scroll-target");
+      window.setTimeout(() => {
+        card.classList.add("is-scroll-target");
+      }, 0);
+      resourceEditorHighlightTimer = window.setTimeout(() => {
+        card.classList.remove("is-scroll-target");
+        resourceEditorHighlightTimer = null;
+      }, 2400);
+    }
+
+    function nudgeResourceEditorTargetIntoView(target) {
+      if (!target || !window.scrollY) return;
+      const minimumTop = 96;
+      const rect = target.getBoundingClientRect();
+      if (rect.top >= minimumTop) return;
+      window.scrollBy({
+        top: rect.top - minimumTop,
+        behavior: "smooth"
+      });
+    }
+
+    function scrollResourceEditorIntoViewFromPreview(resourceId) {
+      const target = findResourceEditorTarget(resourceId);
+      if (!target) {
+        showMessage("找不到對應的資料卡，請重新整理後再試。", true);
+        return;
+      }
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      window.setTimeout(() => nudgeResourceEditorTargetIntoView(target), 360);
+      highlightResourceEditorTarget(target);
+    }
+
     function openResourceFromQuickLinksPreview(resourceId) {
       const id = String(resourceId || "").trim();
       if (!id) return;
@@ -2335,7 +2427,7 @@
       renderQuickLinksRankingPreview();
       renderResourceEditor({ force: true });
       setEnabled(true);
-      el.resourceForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollResourceEditorIntoViewFromPreview(id);
     }
 
     function getTrashListMeta(item) {
@@ -2639,6 +2731,7 @@
         el.resourceTitle.textContent = el.resourceTitleInput.value.trim() || item.title || "未命名內容";
         el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
         el.resourceIdInput.value = item.id || "";
+        setResourceEditorDirectoryId(item.id);
       });
       renderQuickLinksEditorContext(item);
       resourceFormBoundResourceId = item.id || "";
@@ -2660,6 +2753,7 @@
         el.resourceTitle.textContent = item.title || "未命名內容";
         el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
         el.resourceIdInput.value = item.id || "";
+        setResourceEditorDirectoryId(item.id);
         el.resourceTitleInput.value = item.title || "";
         el.resourceUpdatedInput.value = normalizeDate(item.updated);
         el.resourceOfficeInput.value = normalizeResourceOffice(item.office || "全校共用");
@@ -2685,6 +2779,7 @@
         el.resourceTitle.textContent = "新增資料卡";
         el.resourceContext.textContent = "填寫資料卡後按「儲存並更新網站」新增。";
         el.resourceIdInput.value = "";
+        setResourceEditorDirectoryId("");
         el.resourceTitleInput.value = "";
         el.resourceUpdatedInput.value = todayText();
         el.resourceOfficeInput.value = "全校共用";
