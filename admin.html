@@ -643,6 +643,30 @@
       color: var(--ink);
     }
 
+    #resourceForm.is-scroll-target {
+      outline: 3px solid rgba(13, 94, 166, 0.28);
+      outline-offset: 4px;
+      box-shadow: 0 0 0 6px rgba(13, 94, 166, 0.08), 0 16px 34px rgba(15, 59, 104, 0.14);
+      transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      #resourceForm.is-scroll-target {
+        animation: resourceFormScrollTarget 2.2s ease-out;
+      }
+
+      @keyframes resourceFormScrollTarget {
+        0% {
+          outline-color: rgba(13, 94, 166, 0.55);
+          box-shadow: 0 0 0 8px rgba(13, 94, 166, 0.14), 0 18px 36px rgba(15, 59, 104, 0.18);
+        }
+        100% {
+          outline-color: rgba(13, 94, 166, 0.28);
+          box-shadow: 0 0 0 6px rgba(13, 94, 166, 0.08), 0 16px 34px rgba(15, 59, 104, 0.14);
+        }
+      }
+    }
+
     .preview-badge {
       display: inline-flex;
       align-items: center;
@@ -1572,6 +1596,7 @@
     let quickLinksRankingDraftIds = null;
     let quickLinksRankingSaving = false;
     let quickLinksRankingStatus = null;
+    let resourceEditorHighlightTimer = null;
 
     const el = {
       loginState: document.getElementById("loginState"),
@@ -2319,6 +2344,25 @@
       renderQuickLinksEditorContext(item || null);
     }
 
+    function highlightResourceEditorTarget() {
+      if (!el.resourceForm) return;
+      if (resourceEditorHighlightTimer) window.clearTimeout(resourceEditorHighlightTimer);
+      el.resourceForm.classList.remove("is-scroll-target");
+      window.setTimeout(() => {
+        el.resourceForm.classList.add("is-scroll-target");
+      }, 0);
+      resourceEditorHighlightTimer = window.setTimeout(() => {
+        el.resourceForm.classList.remove("is-scroll-target");
+        resourceEditorHighlightTimer = null;
+      }, 2400);
+    }
+
+    function scrollResourceEditorIntoViewFromPreview() {
+      if (!el.resourceForm) return;
+      el.resourceForm.scrollIntoView({ behavior: "smooth", block: "center" });
+      highlightResourceEditorTarget();
+    }
+
     function openResourceFromQuickLinksPreview(resourceId) {
       const id = String(resourceId || "").trim();
       if (!id) return;
@@ -2335,7 +2379,7 @@
       renderQuickLinksRankingPreview();
       renderResourceEditor({ force: true });
       setEnabled(true);
-      el.resourceForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollResourceEditorIntoViewFromPreview();
     }
 
     function getTrashListMeta(item) {
