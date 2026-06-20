@@ -390,7 +390,7 @@
     .common-content-list {
       display: grid;
       grid-auto-flow: row;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
       margin-top: 20px;
     }
@@ -399,7 +399,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      grid-column: span 3;
+      grid-column: span 1;
       min-height: 48px;
       min-width: 0;
       padding: 10px 16px;
@@ -417,19 +417,19 @@
     }
 
     .common-content-item[data-size="sm"] {
-      grid-column: span 2;
+      grid-column: span 1;
     }
 
     .common-content-item[data-size="md"] {
-      grid-column: span 3;
+      grid-column: span 1;
     }
 
     .common-content-item[data-size="lg"] {
-      grid-column: span 4;
+      grid-column: span 1;
     }
 
     .common-content-item[data-size="xl"] {
-      grid-column: span 6;
+      grid-column: span 1;
     }
 
     .common-content-item:hover,
@@ -453,21 +453,21 @@
 
     @media (max-width: 1024px) {
       .common-content-list {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
       }
 
       .common-content-item[data-size="sm"] {
-        grid-column: span 2;
+        grid-column: span 1;
       }
 
       .common-content-item[data-size="md"] {
-        grid-column: span 3;
+        grid-column: span 1;
       }
 
       .common-content-item[data-size="lg"],
       .common-content-item[data-size="xl"] {
-        grid-column: span 6;
+        grid-column: span 1;
       }
     }
 
@@ -490,7 +490,7 @@
 
       .common-content-item[data-size="lg"],
       .common-content-item[data-size="xl"] {
-        grid-column: span 2;
+        grid-column: span 1;
       }
     }
 
@@ -4039,9 +4039,9 @@
     }
 
     const commonContentSizeByTitle = new Map([
-      ["校務系統", "sm"],
-      ["研習護照", "sm"],
-      ["校園新聞網", "sm"],
+      ["校務系統", "md"],
+      ["研習護照", "md"],
+      ["校園新聞網", "md"],
       ["學生事件通報", "md"],
       ["差勤系統", "md"],
       ["教師認證系統", "md"],
@@ -4077,10 +4077,8 @@
       if (commonContentSizeByTitle.has(displayTitle)) return commonContentSizeByTitle.get(displayTitle);
       if (/中心德目雙週/.test(displayTitle)) return "md";
       if (/(線上週會|教師會議|教育網路中心|校內行事曆|學務處資料匣)/i.test(displayTitle)) return "md";
-      if (/(校務系統|研習護照)/.test(displayTitle) && displayTitle.length <= 6) return "sm";
-      if (/(校園新聞網)/.test(displayTitle)) return "sm";
-      if (/(學生事件通報|差勤系統|教師認證系統|學扶評量平台)/.test(displayTitle)) return "md";
-      if (displayTitle.length <= 5) return "sm";
+      if (/(校務系統|研習護照|校園新聞網|學生事件通報|差勤系統|教師認證系統|學扶評量平台)/.test(displayTitle)) return "md";
+      if (displayTitle.length <= 4) return "sm";
       if (displayTitle.length <= 12) return "md";
       if (displayTitle.length <= 18) return "lg";
       return "xl";
