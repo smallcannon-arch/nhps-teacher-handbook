@@ -378,6 +378,22 @@
       margin-top: 2px;
     }
 
+    #officeFilters {
+      gap: 10px;
+    }
+
+    #officeFilters .chip {
+      display: inline-flex;
+      align-items: center;
+      flex: 1 1 96px;
+      max-width: 150px;
+      box-sizing: border-box;
+      justify-content: center;
+      padding-inline: 16px;
+      font-weight: 800;
+      text-align: center;
+    }
+
     .common-content-panel {
       display: grid;
       gap: 10px;
@@ -472,6 +488,11 @@
     }
 
     @media (max-width: 640px) {
+      #officeFilters .chip {
+        flex-basis: calc(50% - 5px);
+        max-width: none;
+      }
+
       .common-content-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -495,6 +516,10 @@
     }
 
     @media (max-width: 420px) {
+      #officeFilters .chip {
+        flex-basis: 100%;
+      }
+
       .common-content-list {
         grid-template-columns: 1fr;
       }
