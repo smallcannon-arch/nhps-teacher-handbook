@@ -1184,7 +1184,7 @@
 
         <details id="quickLinksPreviewPanel" class="bulk-panel quick-links-preview" open>
           <summary>首頁常用入口排序預覽</summary>
-          <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區目前為只讀預覽；排序調整功能將另行處理。</p>
+          <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區目前僅供檢視，尚不能調整排序。</p>
           <p id="quickLinksPreviewSummary" class="quick-links-preview-summary">尚未載入常用入口資料。</p>
           <section class="quick-links-preview-section" aria-labelledby="quickLinksTopHeading">
             <h3 id="quickLinksTopHeading">首頁目前顯示</h3>
@@ -1266,9 +1266,9 @@
 
         <section class="form-section" aria-labelledby="resourceManageHeading">
           <h3 id="resourceManageHeading">排序與管理</h3>
-          <p class="meta section-help">數字越小通常越前面；首頁實際排名請看「首頁常用入口排序預覽」。</p>
+          <p class="meta section-help">排序值是系統用來計算順序的數字，不等於首頁名次。首頁實際名次請看上方預覽。</p>
           <div class="field">
-            <label for="resourceSortInput">排序權重（進階）</label>
+            <label for="resourceSortInput">排序值（系統用）</label>
             <input id="resourceSortInput" type="number" min="1" step="1">
           </div>
         </section>
@@ -1891,7 +1891,7 @@
       const detailText = [
         item.office || "未分處室",
         item.category || "未分類",
-        "權重 " + quickLinksSortWeightText(item)
+        "排序值（系統用） " + quickLinksSortWeightText(item)
       ].join("｜");
       return `
         <article class="quick-links-preview-row">
