@@ -404,6 +404,26 @@
       margin-top: 12px;
     }
 
+    .resource-panel-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 6px;
+      border: 1px solid #d8e4e7;
+      border-radius: var(--radius);
+      background: #f6faf9;
+      scroll-margin-top: 96px;
+    }
+
+    .resource-admin-panel[hidden] {
+      display: none;
+    }
+
+    .resource-editor-panel {
+      margin-top: 12px;
+    }
+
     .editor-header {
       margin-top: 0;
       margin-bottom: 16px;
@@ -423,6 +443,18 @@
 
     .editor-header h2 {
       margin-bottom: 6px;
+    }
+
+    .resource-editor-ranking-meta {
+      margin-top: 8px;
+      margin-bottom: 0;
+      padding-top: 8px;
+      border-top: 1px solid rgba(23, 55, 94, 0.12);
+      color: var(--muted);
+    }
+
+    .resource-editor-ranking-meta[hidden] {
+      display: none;
     }
 
     .trash-preview {
@@ -625,27 +657,7 @@
       display: none;
     }
 
-    .quick-links-editor-context {
-      display: grid;
-      gap: 8px;
-      margin: 18px 0 16px;
-      padding: 12px 14px;
-      border: 1px solid #cfe0ea;
-      border-radius: var(--radius);
-      background: white;
-      box-shadow: 0 6px 18px rgba(15, 59, 104, 0.05);
-    }
-
-    .quick-links-editor-context[hidden] {
-      display: none;
-    }
-
-    .quick-links-editor-context .meta {
-      margin-bottom: 0;
-      color: var(--ink);
-    }
-
-    #quickLinksEditorContext.is-scroll-target,
+    #resourceEditorSummaryCard.is-scroll-target,
     #resourceBasicSection.is-scroll-target {
       outline: 3px solid rgba(13, 94, 166, 0.28);
       outline-offset: 4px;
@@ -654,7 +666,7 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
-      #quickLinksEditorContext.is-scroll-target,
+      #resourceEditorSummaryCard.is-scroll-target,
       #resourceBasicSection.is-scroll-target {
         animation: resourceFormScrollTarget 2.2s ease-out;
       }
@@ -1255,7 +1267,7 @@
               <select id="batchVisibleInput">
                 <option value="">不變更</option>
                 <option value="true">上架顯示</option>
-                <option value="false">暫時下架</option>
+                <option value="false">取消上架顯示</option>
               </select>
             </div>
           </div>
@@ -1264,6 +1276,12 @@
           </div>
         </details>
 
+        <div id="resourcePanelTabs" class="resource-panel-tabs" role="tablist" aria-label="資源管理工作區">
+          <button id="resourceRankingTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="resourceRankingPanel">首頁常用入口排序</button>
+          <button id="resourceEditorTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="resourceEditorPanel">資料卡編輯</button>
+        </div>
+
+        <section id="resourceRankingPanel" class="resource-admin-panel" role="tabpanel" aria-labelledby="resourceRankingTab">
         <details id="quickLinksPreviewPanel" class="bulk-panel quick-links-preview" open>
           <summary>首頁常用入口排序預覽</summary>
           <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區可調整首頁常用入口的顯示順序。調整會先暫存在畫面中，按「儲存排序」後才會寫入。</p>
@@ -1287,15 +1305,14 @@
           </div>
         </details>
 
-        <div id="quickLinksEditorContext" class="quick-links-editor-context" hidden>
-          <p id="quickLinksEditorSummary" class="meta"></p>
-          <button id="backToQuickLinksPreviewBtn" class="secondary" type="button">返回首頁常用入口排序預覽</button>
-        </div>
+        </section>
 
-        <div class="editor-header">
+        <section id="resourceEditorPanel" class="resource-admin-panel resource-editor-panel" role="tabpanel" aria-labelledby="resourceEditorTab" hidden>
+        <div id="resourceEditorSummaryCard" class="editor-header">
           <span id="resourceEditorLabel" class="editor-kicker">正在編輯資料卡</span>
           <h2 id="resourceTitle">請先登入並選擇資料卡</h2>
           <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
+          <p id="quickLinksEditorSummary" class="meta resource-editor-ranking-meta" hidden></p>
         </div>
 
         <section id="resourceBasicSection" class="form-section" aria-labelledby="resourceBasicHeading">
@@ -1357,6 +1374,7 @@
             <label class="checkbox-row"><input id="resourceVisibleInput" type="checkbox"> 上架顯示</label>
             <label class="checkbox-row hidden" hidden aria-hidden="true"><input id="resourceFeaturedInput" type="checkbox"> 內部整理標記</label>
           </div>
+          <p class="meta section-help">取消勾選後，前台不會顯示此資料；資料仍保留在後台，可日後重新上架。</p>
         </section>
 
         <section class="form-section" aria-labelledby="resourceLinksHeading">
@@ -1366,7 +1384,7 @@
           <button id="addResourceLinkBtn" class="secondary" type="button">新增連結</button>
         </section>
 
-        <section class="form-section" aria-labelledby="resourceManageHeading">
+        <section class="form-section" aria-labelledby="resourceManageHeading" hidden aria-hidden="true">
           <h3 id="resourceManageHeading">排序與管理</h3>
           <p class="meta section-help">排序值是系統用來計算順序的數字，不等於首頁名次。首頁實際名次請看上方預覽。</p>
           <div class="field">
@@ -1381,9 +1399,9 @@
         <div class="actions">
           <button id="saveResourceBtn" type="button" disabled>儲存資料卡</button>
           <button id="duplicateResourceBtn" type="button" class="secondary" disabled>複製這筆</button>
-          <button id="unpublishResourceBtn" type="button" class="secondary" disabled>暫時下架</button>
           <button id="archiveResourceBtn" type="button" class="warn" disabled>移到回收桶</button>
         </div>
+        </section>
       </form>
 
       <section id="trashForm" class="hidden">
@@ -1599,6 +1617,7 @@
     let resourceFormRevision = 0;
     let resourceFormBoundResourceId = "";
     let quickLinksPreviewReturnActive = false;
+    let activeResourcePanel = "ranking";
     let quickLinksRankingDraftIds = null;
     let quickLinksRankingSaving = false;
     let quickLinksRankingStatus = null;
@@ -1634,6 +1653,11 @@
       batchFeaturedInput: document.getElementById("batchFeaturedInput"),
       batchVisibleInput: document.getElementById("batchVisibleInput"),
       batchApplyBtn: document.getElementById("batchApplyBtn"),
+      resourcePanelTabs: document.getElementById("resourcePanelTabs"),
+      resourceRankingTab: document.getElementById("resourceRankingTab"),
+      resourceEditorTab: document.getElementById("resourceEditorTab"),
+      resourceRankingPanel: document.getElementById("resourceRankingPanel"),
+      resourceEditorPanel: document.getElementById("resourceEditorPanel"),
       quickLinksPreviewPanel: document.getElementById("quickLinksPreviewPanel"),
       quickLinksPreviewSummary: document.getElementById("quickLinksPreviewSummary"),
       quickLinksTopList: document.getElementById("quickLinksTopList"),
@@ -1656,9 +1680,8 @@
       resourceEditorLabel: document.getElementById("resourceEditorLabel"),
       resourceTitle: document.getElementById("resourceTitle"),
       resourceContext: document.getElementById("resourceContext"),
-      quickLinksEditorContext: document.getElementById("quickLinksEditorContext"),
+      resourceEditorSummaryCard: document.getElementById("resourceEditorSummaryCard"),
       quickLinksEditorSummary: document.getElementById("quickLinksEditorSummary"),
-      backToQuickLinksPreviewBtn: document.getElementById("backToQuickLinksPreviewBtn"),
       resourceIdInput: document.getElementById("resourceIdInput"),
       resourceTitleInput: document.getElementById("resourceTitleInput"),
       resourceUpdatedInput: document.getElementById("resourceUpdatedInput"),
@@ -1680,7 +1703,6 @@
       addResourceLinkBtn: document.getElementById("addResourceLinkBtn"),
       saveResourceBtn: document.getElementById("saveResourceBtn"),
       duplicateResourceBtn: document.getElementById("duplicateResourceBtn"),
-      unpublishResourceBtn: document.getElementById("unpublishResourceBtn"),
       archiveResourceBtn: document.getElementById("archiveResourceBtn"),
       shortcutEditorLabel: document.getElementById("shortcutEditorLabel"),
       shortcutTitle: document.getElementById("shortcutTitle"),
@@ -1907,6 +1929,7 @@
       renderBulkState();
       if (mode === "resources") renderQuickLinksRankingPreview();
       if (mode === "resources") renderResourceEditor({ force: options.forceEditor === true });
+      if (mode === "resources") showResourcePanel(activeResourcePanel);
       if (mode === "trash") renderTrashEditor();
     }
 
@@ -2252,15 +2275,15 @@
       if (!item || !item.id) return "";
       const entry = getQuickLinksRankingEntry(item.id);
       if (!entry) {
-        return "目前首頁常用入口排名：未列入。首頁狀態：不符合首頁常用入口條件。";
+        return "首頁常用入口：未列入｜首頁狀態：不符合首頁常用入口條件";
       }
       if (entry.displayed) {
-        return "目前首頁常用入口排名：第 " + entry.rank + "。首頁狀態：會顯示。";
+        return "首頁常用入口：第 " + entry.rank + "｜首頁狀態：會顯示";
       }
       if (isCommonPinnedResource(item)) {
-        return "目前首頁常用入口排名：第 " + entry.rank + "。已置頂，但首頁只顯示前 12 筆，因此目前不會顯示於首頁。";
+        return "首頁常用入口：第 " + entry.rank + "｜首頁狀態：不顯示（已置頂，但首頁只顯示前 12 筆）";
       }
-      return "目前首頁常用入口排名：第 " + entry.rank + "。首頁狀態：候補，不顯示。首頁只顯示前 12 筆；此項目前為候補。";
+      return "首頁常用入口：第 " + entry.rank + "｜首頁狀態：不顯示（候補）";
     }
 
     function renderQuickLinksPreviewRow(entry) {
@@ -2277,8 +2300,7 @@
             `;
       const detailText = [
         item.office || "未分處室",
-        item.category || "未分類",
-        "排序值（系統用） " + quickLinksSortWeightText(item)
+        item.category || "未分類"
       ].join("｜");
       return `
         <article class="quick-links-preview-row">
@@ -2331,20 +2353,54 @@
 
     function renderQuickLinksEditorContext(item) {
       if (!item || !item.id) {
-        el.quickLinksEditorContext.hidden = true;
         el.quickLinksEditorSummary.textContent = "";
-        el.backToQuickLinksPreviewBtn.hidden = true;
+        el.quickLinksEditorSummary.hidden = true;
         return;
       }
       el.quickLinksEditorSummary.textContent = quickLinksEditorSummaryText(item);
-      el.backToQuickLinksPreviewBtn.hidden = !quickLinksPreviewReturnActive;
-      el.quickLinksEditorContext.hidden = false;
+      el.quickLinksEditorSummary.hidden = false;
+    }
+
+    function normalizeResourcePanel(panel) {
+      return panel === "editor" ? "editor" : "ranking";
+    }
+
+    function showResourcePanel(panel, options = {}) {
+      activeResourcePanel = normalizeResourcePanel(panel);
+      const isEditor = activeResourcePanel === "editor";
+      if (el.resourceRankingPanel) el.resourceRankingPanel.hidden = isEditor;
+      if (el.resourceEditorPanel) el.resourceEditorPanel.hidden = !isEditor;
+      if (el.resourceRankingTab) {
+        el.resourceRankingTab.classList.toggle("is-active", !isEditor);
+        el.resourceRankingTab.setAttribute("aria-selected", String(!isEditor));
+        el.resourceRankingTab.tabIndex = isEditor ? -1 : 0;
+      }
+      if (el.resourceEditorTab) {
+        el.resourceEditorTab.classList.toggle("is-active", isEditor);
+        el.resourceEditorTab.setAttribute("aria-selected", String(isEditor));
+        el.resourceEditorTab.tabIndex = isEditor ? 0 : -1;
+      }
+      if (options.focusTab) {
+        const tab = isEditor ? el.resourceEditorTab : el.resourceRankingTab;
+        if (tab) tab.focus();
+      }
+      if (options.scrollToTabs && el.resourcePanelTabs) {
+        el.resourcePanelTabs.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function handleResourcePanelTabKeydown(event) {
+      const key = event.key;
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) return;
+      event.preventDefault();
+      const nextPanel = key === "ArrowRight" || key === "End" ? "editor" : "ranking";
+      showResourcePanel(nextPanel, { focusTab: true, scrollToTabs: true });
     }
 
     function scrollToQuickLinksPreview() {
+      showResourcePanel("ranking", { scrollToTabs: true });
       if (!el.quickLinksPreviewPanel) return;
       el.quickLinksPreviewPanel.open = true;
-      el.quickLinksPreviewPanel.scrollIntoView({ behavior: "smooth", block: "start" });
       quickLinksPreviewReturnActive = false;
       const item = resources.find((resource) => resource.id === activeResourceId);
       renderQuickLinksEditorContext(item || null);
@@ -2371,7 +2427,7 @@
       if (!selector) return null;
       const target = document.querySelector(selector);
       if (target !== el.resourceForm) return null;
-      if (el.quickLinksEditorContext && !el.quickLinksEditorContext.hidden) return el.quickLinksEditorContext;
+      if (el.resourceEditorSummaryCard) return el.resourceEditorSummaryCard;
       return document.getElementById("resourceBasicSection") || el.resourceForm;
     }
 
@@ -2406,8 +2462,8 @@
         showMessage("找不到對應的資料卡，請重新整理後再試。", true);
         return;
       }
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
-      window.setTimeout(() => nudgeResourceEditorTargetIntoView(target), 360);
+      const scrollTarget = el.resourcePanelTabs || target;
+      scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" });
       highlightResourceEditorTarget(target);
     }
 
@@ -2426,6 +2482,7 @@
       renderBulkState();
       renderQuickLinksRankingPreview();
       renderResourceEditor({ force: true });
+      showResourcePanel("editor", { scrollToTabs: true });
       setEnabled(true);
       scrollResourceEditorIntoViewFromPreview(id);
     }
@@ -2951,42 +3008,6 @@
       });
     }
 
-    async function unpublishResource() {
-      if (!activeResourceId) return;
-      const item = resources.find((resource) => resource.id === activeResourceId);
-      if (!item) return;
-      if (item.visible === false) {
-        showMessage("這筆資料卡已經暫時下架。", false);
-        return;
-      }
-      const ok = window.confirm("確定要暫時下架「" + (item.title || "未命名資料卡") + "」？資料會保留在內容管理清單，不會移到回收桶。");
-      if (!ok) return;
-      const saveStartedRevision = resourceFormRevision;
-      await runCommand("saveDirectoryResource", {
-        resource: {
-          id: item.id,
-          title: item.title || "",
-          office: normalizeResourceOffice(item.office || "全校共用"),
-          category: item.category || DEFAULT_RESOURCE_CATEGORY,
-          type: item.type || "連結",
-          status: item.status || "",
-          note: item.note || "",
-          links: item.links || [],
-          tags: item.tags || [],
-          updated: item.updated || todayText(),
-          visible: false,
-          featured: item.featured === true,
-          sort_order: Number(item.sort_order || resources.length + 1)
-        }
-      }, "已暫時下架，前台將不再顯示此資料。若前台仍顯示舊資料，請稍候 30 秒後重新整理，或按 Ctrl + F5 強制重新整理。", {
-        actionButton: el.unpublishResourceBtn,
-        loadingText: "暫時下架中，請稍候……",
-        loadingButtonText: "下架中……",
-        isSaveAction: true,
-        saveStartedRevision
-      });
-    }
-
     function duplicateResource() {
       if (!activeResourceId) return;
       const item = resources.find((resource) => resource.id === activeResourceId);
@@ -3019,7 +3040,7 @@
 
     async function archiveResource() {
       if (!activeResourceId) return;
-      const ok = window.confirm("確定要將這筆資料卡移到回收桶？建議先使用「暫時下架」；移到回收桶後，網站與內容管理清單將不再顯示，可從回收桶還原。");
+      const ok = window.confirm("確定要將這筆資料卡移到回收桶？若只是暫時不要顯示在前台，請取消「上架顯示」後儲存；移到回收桶後，網站與內容管理清單將不再顯示，可從回收桶還原。");
       if (!ok) return;
       await runCommand("deleteDirectoryResource", { resource_id: activeResourceId }, "已移到回收桶。", {
         actionButton: el.archiveResourceBtn,
@@ -3088,7 +3109,7 @@
         showMessage("請先在左側勾選要移到回收桶的資料卡。", true);
         return;
       }
-      const ok = window.confirm("確定要將已勾選的 " + resourceIds.length + " 筆資料卡移到回收桶？建議優先使用批次整理中的「暫時下架」。");
+      const ok = window.confirm("確定要將已勾選的 " + resourceIds.length + " 筆資料卡移到回收桶？若只是暫時不要顯示在前台，建議優先使用批次整理取消上架顯示。");
       if (!ok) return;
       await runCommand("batchDeleteDirectoryResources", { resource_ids: resourceIds }, "已將 " + resourceIds.length + " 筆內容移到回收桶。");
       selectedResourceIds.clear();
@@ -3420,15 +3441,12 @@
       if (!canPublishContent) el.batchVisibleInput.value = "";
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEditContent;
       el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEditContent || mode !== "resources" || !activeResourceId;
-      el.unpublishResourceBtn.textContent = activeResource && activeResource.visible === false ? "目前已下架" : "暫時下架";
-      el.unpublishResourceBtn.hidden = !canPublishContent;
       el.archiveResourceBtn.hidden = !canManageTrash;
       el.batchDeleteBtn.hidden = !canManageTrash;
       el.restoreTrashBtn.hidden = !canManageTrash;
       const visibleField = el.resourceVisibleInput.closest("label");
       if (visibleField) visibleField.hidden = !canPublishContent;
       el.resourceVisibleInput.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources";
-      el.unpublishResourceBtn.disabled = !enabled || !idToken || !canPublishContent || mode !== "resources" || !activeResourceId || !activeResource || activeResource.visible === false;
       el.saveShortcutBtn.disabled = true;
       el.archiveResourceBtn.disabled = !enabled || !idToken || !canManageTrash || !activeResourceId;
       el.deleteShortcutBtn.disabled = true;
@@ -3676,6 +3694,10 @@
       quickLinksPreviewReturnActive = false;
       setMode("trash");
     });
+    el.resourceRankingTab.addEventListener("click", () => showResourcePanel("ranking", { scrollToTabs: true }));
+    el.resourceEditorTab.addEventListener("click", () => showResourcePanel("editor", { scrollToTabs: true }));
+    el.resourceRankingTab.addEventListener("keydown", handleResourcePanelTabKeydown);
+    el.resourceEditorTab.addEventListener("keydown", handleResourcePanelTabKeydown);
     el.logoutBtn.addEventListener("click", logout);
     el.quickLinksPreviewPanel.addEventListener("click", (event) => {
       const button = event.target.closest("[data-quick-link-action]");
@@ -3696,7 +3718,6 @@
       }
       openResourceFromQuickLinksPreview(resourceId);
     });
-    el.backToQuickLinksPreviewBtn.addEventListener("click", scrollToQuickLinksPreview);
     el.saveQuickLinksRankingBtn.addEventListener("click", saveQuickLinksRankingDraft);
     el.cancelQuickLinksRankingBtn.addEventListener("click", cancelQuickLinksRankingDraft);
     el.resourceForm.addEventListener("input", markResourceFormDirty);
@@ -3843,7 +3864,6 @@
     });
     el.saveResourceBtn.addEventListener("click", saveResource);
     el.duplicateResourceBtn.addEventListener("click", duplicateResource);
-    el.unpublishResourceBtn.addEventListener("click", unpublishResource);
     el.archiveResourceBtn.addEventListener("click", archiveResource);
     el.saveShortcutBtn.addEventListener("click", saveShortcut);
     el.deleteShortcutBtn.addEventListener("click", deleteShortcut);
