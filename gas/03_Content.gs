@@ -110,7 +110,7 @@ function ensureDirectoryCmsReady_() {
     seedDirectoryShortcuts_();
   }
   if (readyCache) {
-    try { readyCache.put(readyKey, "1", 300); } catch (cacheError) {}
+    try { readyCache.put(readyKey, "1", 3600); } catch (cacheError) {}
   }
 }
 
