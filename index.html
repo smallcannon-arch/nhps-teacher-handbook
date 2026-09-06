@@ -4407,12 +4407,31 @@
     });
     window.addEventListener("scroll", updateBackToTopVisibility, { passive: true });
 
-    renderFilters();
-    renderRecentUpdates();
-    initializeCommonContentItems();
-    renderAll();
-    updateBackToTopVisibility();
-    loadDirectoryFromApi();
+    if (new URLSearchParams(location.search).get("preview") === "card" && window.parent !== window) {
+      const previewHost = document.createElement("div");
+      previewHost.style.cssText = "padding:12px;max-width:640px;margin:auto;";
+      document.body.replaceChildren(previewHost);
+      document.body.style.background = "#fff";
+      window.addEventListener("message", (event) => {
+        if (event.origin !== location.origin || event.source !== window.parent) return;
+        if (!event.data || event.data.type !== "handbook-card-preview" || !event.data.resource) return;
+        const resource = normalizeResourceFromApi(event.data.resource);
+        resource.links = cleanLinks(resource.links);
+        previewHost.replaceChildren(createCommonResourceCard(resource));
+      });
+      const reportPreviewSize = () => window.parent.postMessage({
+        type: "handbook-card-preview-size", height: Math.ceil(previewHost.getBoundingClientRect().height)
+      }, location.origin);
+      new ResizeObserver(reportPreviewSize).observe(previewHost);
+      window.parent.postMessage({ type: "handbook-card-preview-ready" }, location.origin);
+    } else {
+      renderFilters();
+      renderRecentUpdates();
+      initializeCommonContentItems();
+      renderAll();
+      updateBackToTopVisibility();
+      loadDirectoryFromApi();
+    }
   </script>
 </body>
 </html>
