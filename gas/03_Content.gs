@@ -67,18 +67,33 @@ function getPublishedDirectory() {
 
 function getAdminDirectory(user) {
   ensureDirectoryCmsReady_();
+  var resourceRows = readTable(APP.SHEETS.DIRECTORY_RESOURCES);
+  var configRows = readTable(APP.SHEETS.CONFIG);
+  function configValue(key, fallback) {
+    var row = configRows.find(function(item) { return item.key === key; });
+    return row ? row.value : fallback;
+  }
   return {
     ok: true,
-    app_version: getConfigValue("app_version", APP.VERSION),
-    cache_version: getConfigValue("cache_version", ""),
+    app_version: configValue("app_version", APP.VERSION),
+    cache_version: configValue("cache_version", ""),
     user: user || null,
-    resources: getDirectoryResources_(true),
-    trash: getDirectoryTrash_(),
+    resources: getDirectoryResources_(true, resourceRows),
+    trash: getDirectoryTrash_(resourceRows),
     shortcuts: getDirectoryShortcuts_(true)
   };
 }
 
 function ensureDirectoryCmsReady_() {
+  // Only cache setup readiness, never user permissions or directory contents.
+  var readyCache = null;
+  var readyKey = "directory-ready:" + APP.SPREADSHEET_ID + ":" + APP.VERSION;
+  try {
+    readyCache = CacheService.getScriptCache();
+    if (readyCache.get(readyKey)) return;
+  } catch (cacheError) {
+    readyCache = null;
+  }
   var ss = openSpreadsheet();
   ensureSheet_(ss, APP.SHEETS.DIRECTORY_RESOURCES, APP.DIRECTORY_RESOURCE_COLUMNS);
   ensureSheet_(ss, APP.SHEETS.DIRECTORY_SHORTCUTS, APP.DIRECTORY_SHORTCUT_COLUMNS);
@@ -93,6 +108,9 @@ function ensureDirectoryCmsReady_() {
     importCurrentDirectoryContent_(false);
   } else {
     seedDirectoryShortcuts_();
+  }
+  if (readyCache) {
+    try { readyCache.put(readyKey, "1", 300); } catch (cacheError) {}
   }
 }
 
@@ -139,8 +157,8 @@ function getAdminHandbook(user) {
   };
 }
 
-function getDirectoryResources_(includeHidden) {
-  return readTable(APP.SHEETS.DIRECTORY_RESOURCES)
+function getDirectoryResources_(includeHidden, resourceRows) {
+  return (resourceRows || readTable(APP.SHEETS.DIRECTORY_RESOURCES))
     .filter(function(row) {
       if (isTrue_(row.archived)) return false;
       return includeHidden || isTrue_(row.visible);
@@ -169,8 +187,8 @@ function getDirectoryResources_(includeHidden) {
     });
 }
 
-function getDirectoryTrash_() {
-  return readTable(APP.SHEETS.DIRECTORY_RESOURCES)
+function getDirectoryTrash_(resourceRows) {
+  return (resourceRows || readTable(APP.SHEETS.DIRECTORY_RESOURCES))
     .filter(function(row) {
       return isTrue_(row.archived);
     })
