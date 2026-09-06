@@ -1317,7 +1317,7 @@
 
         <section id="resourceBasicSection" class="form-section" aria-labelledby="resourceBasicHeading">
           <h3 id="resourceBasicHeading">基本資料</h3>
-          <p class="meta section-help">目前後台只編輯 GAS 與試算表已支援保存的欄位；任務分類、使用情境與行動指引會在下一階段同步資料欄位後再開放。</p>
+          <p class="meta section-help">先填標題、承辦處室、簡短說明與連結，再預覽並儲存。其他欄位可在進階設定調整。</p>
           <div class="grid-2">
             <div class="field">
               <label for="resourceTitleInput">標題</label>
@@ -1393,6 +1393,18 @@
           </div>
         </section>
 
+        <details id="resourceAdvancedSettings" class="form-section">
+          <summary>進階設定（分類、標籤、日期與置頂）</summary>
+          <p class="meta">一般新增可沿用預設值；修改既有資料時，未調整的設定會保留。</p>
+          <div id="resourceAdvancedFields"></div>
+        </details>
+        <section class="form-section" aria-labelledby="resourcePreviewHeading">
+          <h3 id="resourcePreviewHeading">預覽與確認</h3>
+          <p class="meta">預覽目前填寫的內容，不會儲存。可按連結測試能否開啟；實際查看權限依原網站設定。</p>
+          <button id="previewResourceBtn" type="button" class="secondary">預覽與測試連結</button>
+          <div id="resourceDraftPreview" hidden style="margin-top:16px;padding:20px;border:1px solid #cbd5e1;border-radius:12px;overflow-wrap:anywhere"></div>
+          <p id="resourceSavedLink" hidden><a href="./index.html" target="_blank" rel="noopener noreferrer">已儲存，查看前台 ↗</a>（未上架資料不會顯示）</p>
+        </section>
         <div class="safety-note">
           高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
         </div>
@@ -2750,6 +2762,7 @@
 
     function markResourceFormDirty() {
       if (isHydratingResourceForm || mode !== "resources") return;
+      resetResourcePreview();
       resourceFormDirty = true;
       resourceFormRevision += 1;
       resourceFormBoundResourceId = el.resourceIdInput.value.trim() || activeResourceId || "";
@@ -2761,6 +2774,7 @@
     }
 
     function hydrateResourceForm(callback, options = {}) {
+      resetResourcePreview();
       isHydratingResourceForm = true;
       try {
         callback();
@@ -2834,7 +2848,7 @@
       hydrateResourceForm(() => {
         el.resourceEditorLabel.textContent = "新增資料卡";
         el.resourceTitle.textContent = "新增資料卡";
-        el.resourceContext.textContent = "填寫資料卡後按「儲存並更新網站」新增。";
+        el.resourceContext.textContent = "填寫基本資料與連結，按「預覽與測試連結」確認後，再儲存資料卡。";
         el.resourceIdInput.value = "";
         setResourceEditorDirectoryId("");
         el.resourceTitleInput.value = "";
@@ -2998,7 +3012,7 @@
       const resource = collectResource();
       if (!validateResourceBeforeSave(resource)) return;
       const saveStartedRevision = resourceFormRevision;
-      await runCommand("saveDirectoryResource", { resource }, saveSuccessText, {
+      const saved = await runCommand("saveDirectoryResource", { resource }, saveSuccessText, {
         actionButton: el.saveResourceBtn,
         loadingText: "儲存中，請稍候……",
         loadingButtonText: "儲存中……",
@@ -3006,6 +3020,7 @@
         isSaveAction: true,
         saveStartedRevision
       });
+      document.getElementById("resourceSavedLink").hidden = !saved || resourceFormRevision !== saveStartedRevision;
     }
 
     function duplicateResource() {
@@ -3862,6 +3877,51 @@
         markResourceFormDirty();
       }
     });
+
+    function resetResourcePreview() {
+      document.getElementById("resourceDraftPreview").hidden = true;
+      document.getElementById("resourceSavedLink").hidden = true;
+    }
+
+    function previewResourceDraft() {
+      const resource = collectResource();
+      const preview = document.getElementById("resourceDraftPreview");
+      preview.replaceChildren();
+      function addText(tag, text) {
+        const node = document.createElement(tag);
+        node.textContent = text;
+        preview.appendChild(node);
+      }
+      addText("h3", resource.title || "尚未填寫標題");
+      addText("p", resource.office + "／" + resource.category);
+      if (resource.note) addText("p", resource.note);
+      addText("p", resource.visible ? "儲存後上架顯示" : "不上架：僅保留在後台");
+      if (!resource.links.length) addText("p", "尚未填寫連結。");
+      resource.links.forEach((link, index) => {
+        const url = safeAdminUrl(link.url);
+        if (!url) {
+          addText("p", "第 " + (index + 1) + " 個連結無效，請修正網址。");
+          return;
+        }
+        const row = document.createElement("p");
+        const anchor = document.createElement("a");
+        anchor.textContent = (link.label || "開啟連結") + " ↗";
+        anchor.href = url;
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+        row.appendChild(anchor);
+        preview.appendChild(row);
+      });
+      preview.hidden = false;
+    }
+
+    const advancedFields = document.getElementById("resourceAdvancedFields");
+    ["resourceUpdatedInput", "resourceCategoryInput", "resourceTagsInput", "resourceCommonPinnedInput"].forEach((id) => {
+      advancedFields.appendChild(document.getElementById(id).closest(".field"));
+    });
+    advancedFields.appendChild(document.getElementById("staffUnitField"));
+    document.getElementById("previewResourceBtn").addEventListener("click", previewResourceDraft);
+
     el.saveResourceBtn.addEventListener("click", saveResource);
     el.duplicateResourceBtn.addEventListener("click", duplicateResource);
     el.archiveResourceBtn.addEventListener("click", archiveResource);
