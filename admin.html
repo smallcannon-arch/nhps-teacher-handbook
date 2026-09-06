@@ -1258,6 +1258,10 @@
 
     <section class="panel content">
       <div id="message" class="notice" hidden></div>
+      <details id="loadTimingPanel" class="meta" hidden>
+        <summary id="loadTimingSummary">本次載入時間</summary>
+        <p id="loadTimingDetails"></p>
+      </details>
 
       <form id="resourceForm">
         <input id="resourceIdInput" type="hidden">
@@ -1899,6 +1903,7 @@
     }
 
     async function loadDirectoryData(options = {}) {
+      const loadStarted = performance.now();
       const requestId = ++directoryLoadRequestId;
       try {
         const data = await api("directoryList");
@@ -1924,6 +1929,13 @@
         renderAll({ forceEditor: options.forceEditor === true });
         setEnabled(true);
         hideMessage();
+        const elapsed = performance.now() - loadStarted;
+        document.getElementById("loadTimingSummary").textContent = "本次資料載入：" + (elapsed / 1000).toFixed(1) + " 秒";
+        const timings = data.timing_ms;
+        document.getElementById("loadTimingDetails").textContent = timings
+          ? "帳號驗證 " + (timings.auth / 1000).toFixed(1) + " 秒；操作紀錄 " + (timings.audit / 1000).toFixed(1) + " 秒；讀取資料 " + (timings.directory / 1000).toFixed(1) + " 秒。總時間另包含服務啟動、網路傳輸及畫面呈現，不含 Google 帳號選擇時間。"
+          : "包含網路傳輸與畫面呈現，不含 Google 帳號選擇時間。";
+        document.getElementById("loadTimingPanel").hidden = false;
         return true;
       } catch (err) {
         if (requestId !== directoryLoadRequestId) return false;

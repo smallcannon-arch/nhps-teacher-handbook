@@ -116,11 +116,14 @@ function nowText() {
   return Utilities.formatDate(new Date(), APP.TIMEZONE, "yyyy-MM-dd HH:mm:ss");
 }
 
+var requestSpreadsheet_ = null;
+
 function openSpreadsheet() {
   if (!APP.SPREADSHEET_ID || APP.SPREADSHEET_ID.indexOf("PASTE_") === 0) {
     throw new Error("尚未設定 APP.SPREADSHEET_ID");
   }
-  return SpreadsheetApp.openById(APP.SPREADSHEET_ID);
+  if (!requestSpreadsheet_) requestSpreadsheet_ = SpreadsheetApp.openById(APP.SPREADSHEET_ID);
+  return requestSpreadsheet_;
 }
 
 function getSheet(name) {

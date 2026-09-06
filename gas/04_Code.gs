@@ -20,12 +20,14 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  var requestStarted = Date.now();
   var email = "";
   var cmd = "";
   try {
     var payload = parsePostPayload_(e);
     cmd = payload.cmd || "";
     var user = requireUser_(payload.idToken);
+    var authFinished = Date.now();
     email = user.email;
 
     if (cmd === "adminList") {
@@ -34,7 +36,15 @@ function doPost(e) {
     }
     if (cmd === "directoryList") {
       logAction(email, cmd, "", "ok", "load directory admin");
-      return jsonResponse(getAdminDirectory(user));
+      var auditFinished = Date.now();
+      var directory = getAdminDirectory(user);
+      directory.timing_ms = {
+        auth: authFinished - requestStarted,
+        audit: auditFinished - authFinished,
+        directory: Date.now() - auditFinished,
+        total: Date.now() - requestStarted
+      };
+      return jsonResponse(directory);
     }
     if (cmd === "saveDirectoryResource") {
       return jsonResponse(saveDirectoryResource_(payload, user));
