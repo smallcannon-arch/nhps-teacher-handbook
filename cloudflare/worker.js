@@ -1,3 +1,5 @@
+import { handleReports } from "./feedback.js";
+
 const DEFAULT_CACHE_SECONDS = 300;
 const CACHE_VERSION_TTL_MS = 30000;
 const ALLOWED_ACTIONS = new Set(["getHandbook", "getDirectory", "getConfig", "health"]);
@@ -33,6 +35,8 @@ let lineBotIndexRefreshPromise = null;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith("/reports/")) return handleReports(request, env);
 
     if (request.method === "OPTIONS") return corsResponse(null, 204);
     if (isLineWebhookRequest(request, url)) {

@@ -8,3 +8,14 @@ GAS_URL = "https://script.google.com/macros/s/AKfycbwOzdnBN_kl9mQYlma3VBWESFc2DC
 [[kv_namespaces]]
 binding = "HANDBOOK_BOT_KV"
 id = "31ec5b84c76d4e3da547f2c5fc2a4e08"
+
+[[d1_databases]]
+binding = "REPORTS_DB"
+database_name = "nhps-handbook-reports"
+database_id = "ee313c0c-8975-45a9-8f4c-9b23b6a7a839"
+migrations_dir = "cloudflare/migrations"
+
+[[ratelimits]]
+name = "REPORT_RATE_LIMITER"
+namespace_id = "202609061"
+simple = { limit = 60, period = 60 }
