@@ -18,8 +18,7 @@ const LINE_QUERY_ALIASES = {
   "系統入口": ["系統", "入口", "登入"],
   "採購": ["請購", "核銷"]
 };
-const LINE_SEARCH_RESULT_LIMIT = 5;
-const LINE_SEARCH_TEXT_LIMIT = 4800;
+const LINE_SEARCH_RESULT_LIMIT = 3;
 const LINE_BOT_INDEX_KEY = "teacher-handbook:bot-search-index";
 const LINE_BOT_INDEX_STALE_MS = 60 * 60 * 1000;
 const LINE_BOT_INDEX_FETCH_TIMEOUT_MS = 1500;
@@ -508,23 +507,34 @@ function getFirstValidLineLink(resource) {
 
 function createLineSearchResultsMessage(query, results) {
   const safeQuery = truncateLineText(query, 24);
-  const lines = [`找到 ${results.length} 筆「${safeQuery}」相關資源：`, ""];
-
-  results.forEach((item, index) => {
-    const resource = item.resource;
-    const meta = [resource.office, resource.category].filter(Boolean).join("／") || "教師手冊";
-    const summary = truncateLineText(getLineResourceSummary(resource), 72);
-    const linkUrl = String(item.link.url || "").trim();
-    lines.push(`${index + 1}. ${truncateLineText(resource.title || "未命名資源", 48)}`);
-    lines.push(truncateLineText(meta, 36));
-    if (summary) lines.push(summary);
-    lines.push(linkUrl);
-    if (index < results.length - 1) lines.push("");
+  const items = results.slice(0, LINE_SEARCH_RESULT_LIMIT);
+  const contents = [];
+  items.forEach((item, index) => {
+    if (index) contents.push({ type: "separator", margin: "md" });
+    contents.push({
+      type: "box", layout: "vertical", spacing: "sm", margin: "md",
+      contents: [
+        { type: "text", text: truncateLineText(item.resource.title || "未命名資源", 48), weight: "bold", size: "md", wrap: true },
+        { type: "text", text: truncateLineText(item.resource.office || "教師手冊", 24), size: "sm", color: "#666666", wrap: true },
+        { type: "button", style: "link", height: "sm", action: { type: "uri", label: "開啟", uri: String(item.link.url || "").trim() } }
+      ]
+    });
   });
 
   return {
-    type: "text",
-    text: truncateLineText(lines.join("\n"), LINE_SEARCH_TEXT_LIMIT),
+    type: "flex",
+    altText: `「${safeQuery}」相關資源：${items.map((item) => truncateLineText(item.resource.title || "未命名資源", 48)).join("、")}。請開啟聊天室查看。`,
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box", layout: "vertical",
+        contents: [{ type: "text", text: `「${safeQuery}」相關資源`, size: "sm", color: "#666666", wrap: true }, ...contents]
+      },
+      footer: {
+        type: "box", layout: "vertical",
+        contents: [{ type: "button", style: "secondary", height: "sm", action: { type: "uri", label: "更多資源・教師手冊", uri: HANDBOOK_HOME_URL } }]
+      }
+    },
     quickReply: {
       items: createLineQuickReplyItems()
     }
@@ -559,7 +569,7 @@ function createLineFallbackMessage(text) {
   const fallbackText = text || "目前無法完成查詢。請稍後再試，或先開啟教師手冊首頁。";
   return {
     type: "text",
-    text: `${fallbackText}\n${HANDBOOK_HOME_URL}`,
+    text: fallbackText,
     quickReply: {
       items: createLineQuickReplyItems()
     }
