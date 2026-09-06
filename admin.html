@@ -1188,6 +1188,9 @@
     #resourceAdvancedSettings[open] > summary { background: #dfeaf7; }
     #resourceAdvancedSettings[open] > summary::after { content: "－ 收合"; }
     .advanced-setting-hint { display: block; margin-top: 4px; font-size: .85rem; font-weight: 400; }
+    .list-entry.is-draggable { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .list-entry.is-draggable.has-check { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+    .list-edit-button { align-self: center; padding: 10px; white-space: nowrap; font-size: .88rem; }
   </style>
 </head>
 <body>
@@ -1205,7 +1208,7 @@
     </div>
     <nav class="header-tabs-bar" aria-label="後台主入口">
       <div class="tabs" role="tablist" aria-label="後台模式">
-        <button id="resourcesTab" class="tab-button is-active" type="button">內容管理</button>
+        <button id="resourcesTab" class="tab-button is-active" type="button">管理資料卡</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
     </nav>
@@ -1213,7 +1216,8 @@
 
   <main>
     <aside class="panel sidebar">
-      <h2 id="listTitle">內容管理清單</h2>
+      <h2 id="listTitle">資料卡清單</h2>
+      <p class="meta">找到資料後，按「編輯內容」即可修改。</p>
       <div class="field">
         <label for="listSearchInput">搜尋</label>
         <input id="listSearchInput" placeholder="搜尋標題、資料類別、承辦處室、連結">
@@ -1232,7 +1236,7 @@
         </select>
       </div>
       <div class="primary-list-actions">
-        <button id="addItemBtn" type="button" class="secondary" disabled>新增資料卡</button>
+        <button id="addItemBtn" type="button" class="secondary" disabled>＋ 新增資料卡</button>
       </div>
       <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整同群組內顯示順序。</p>
       <details id="bulkTools" class="sidebar-tools bulk-tools">
@@ -1298,11 +1302,11 @@
         </details>
 
         <div id="resourcePanelTabs" class="resource-panel-tabs" role="tablist" aria-label="資源管理工作區">
-          <button id="resourceRankingTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="resourceRankingPanel">首頁常用入口排序</button>
-          <button id="resourceEditorTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="resourceEditorPanel">資料卡編輯</button>
+          <button id="resourceEditorTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="resourceEditorPanel">編輯資料卡內容</button>
+          <button id="resourceRankingTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="resourceRankingPanel" tabindex="-1">首頁顯示與排序</button>
         </div>
 
-        <section id="resourceRankingPanel" class="resource-admin-panel" role="tabpanel" aria-labelledby="resourceRankingTab">
+        <section id="resourceRankingPanel" class="resource-admin-panel" role="tabpanel" aria-labelledby="resourceRankingTab" hidden>
         <details id="quickLinksPreviewPanel" class="bulk-panel quick-links-preview" open>
           <summary>首頁常用入口排序預覽</summary>
           <p class="meta">首頁常用內容只顯示排序前 12 筆；常用置頂仍會依排序排列。本區可調整首頁常用入口的顯示順序。調整會先暫存在畫面中，按「儲存排序」後才會寫入。</p>
@@ -1328,8 +1332,10 @@
 
         </section>
 
-        <section id="resourceEditorPanel" class="resource-admin-panel resource-editor-panel" role="tabpanel" aria-labelledby="resourceEditorTab" hidden>
+        <section id="resourceEditorPanel" class="resource-admin-panel resource-editor-panel" role="tabpanel" aria-labelledby="resourceEditorTab">
         <div id="resourceEditorSummaryCard" class="editor-header">
+          <button id="returnToResourceListBtn" class="secondary" type="button">← 返回清單</button>
+          <p class="meta">修改內容 → 預覽與測試連結 → 儲存資料卡</p>
           <span id="resourceEditorLabel" class="editor-kicker">正在編輯資料卡</span>
           <h2 id="resourceTitle">請先登入並選擇資料卡</h2>
           <p id="resourceContext" class="meta">從左側清單點選一筆內容後，就能在這裡修改。</p>
@@ -1650,7 +1656,7 @@
     let resourceFormRevision = 0;
     let resourceFormBoundResourceId = "";
     let quickLinksPreviewReturnActive = false;
-    let activeResourcePanel = "ranking";
+    let activeResourcePanel = "editor";
     let quickLinksRankingDraftIds = null;
     let quickLinksRankingSaving = false;
     let quickLinksRankingStatus = null;
@@ -1957,8 +1963,8 @@
       el.statusFilter.classList.toggle("hidden", mode === "trash");
       el.categoryFilter.disabled = false;
       el.officeFilter.setAttribute("aria-label", "處室篩選");
-      el.listTitle.textContent = mode === "trash" ? "回收桶清單" : "內容管理清單";
-      el.addItemBtn.textContent = "新增資料卡";
+      el.listTitle.textContent = mode === "trash" ? "回收桶清單" : "資料卡清單";
+      el.addItemBtn.textContent = "＋ 新增資料卡";
       renderList();
       renderBulkState();
       if (mode === "resources") renderQuickLinksRankingPreview();
@@ -2396,7 +2402,7 @@
     }
 
     function normalizeResourcePanel(panel) {
-      return panel === "editor" ? "editor" : "ranking";
+      return panel === "ranking" ? "ranking" : "editor";
     }
 
     function showResourcePanel(panel, options = {}) {
@@ -2427,7 +2433,7 @@
       const key = event.key;
       if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) return;
       event.preventDefault();
-      const nextPanel = key === "ArrowRight" || key === "End" ? "editor" : "ranking";
+      const nextPanel = key === "ArrowRight" || key === "End" ? "ranking" : "editor";
       showResourcePanel(nextPanel, { focusTab: true, scrollToTabs: true });
     }
 
@@ -2590,6 +2596,7 @@
                 </span>
                 <span class="list-meta">${escapeHtml(getResourceListMeta(item, index))}</span>
               </button>
+              <button class="list-edit-button" type="button" data-id="${escapeHtml(item.id)}" aria-label="編輯內容：${escapeHtml(item.title || '未命名內容')}">編輯內容</button>
             </div>
           `
         );
@@ -2821,7 +2828,7 @@
       if (!item || mode !== "resources" || activeResourceId !== item.id) return;
       hydrateResourceForm(() => {
         el.resourceEditorLabel.textContent = "正在編輯資料卡";
-        el.resourceTitle.textContent = el.resourceTitleInput.value.trim() || item.title || "未命名內容";
+        el.resourceTitle.textContent = "正在編輯：" + (el.resourceTitleInput.value.trim() || item.title || "未命名內容");
         el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
         el.resourceIdInput.value = item.id || "";
         setResourceEditorDirectoryId(item.id);
@@ -2843,7 +2850,7 @@
       }
       hydrateResourceForm(() => {
         el.resourceEditorLabel.textContent = "正在編輯資料卡";
-        el.resourceTitle.textContent = item.title || "未命名內容";
+        el.resourceTitle.textContent = "正在編輯：" + (item.title || "未命名內容");
         el.resourceContext.textContent = [getOfficeCategoryText(item), "ID " + (item.id || "")].join("｜");
         el.resourceIdInput.value = item.id || "";
         setResourceEditorDirectoryId(item.id);
@@ -3731,6 +3738,10 @@
       quickLinksPreviewReturnActive = false;
       setMode("trash");
     });
+    document.getElementById("returnToResourceListBtn").addEventListener("click", () => {
+      el.listSearchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.listSearchInput.focus({ preventScroll: true });
+    });
     el.resourceRankingTab.addEventListener("click", () => showResourcePanel("ranking", { scrollToTabs: true }));
     el.resourceEditorTab.addEventListener("click", () => showResourcePanel("editor", { scrollToTabs: true }));
     el.resourceRankingTab.addEventListener("keydown", handleResourcePanelTabKeydown);
@@ -3837,6 +3848,8 @@
       if (mode === "resources") {
         activeResourceId = "";
         clearResourceEditor({ force: true });
+        showResourcePanel("editor", { scrollToTabs: true });
+        el.resourceTitleInput.focus({ preventScroll: true });
       }
       renderList();
       setEnabled(true);
@@ -3866,7 +3879,7 @@
         setEnabled(true);
         return;
       }
-      const button = event.target.closest(".list-button");
+      const button = event.target.closest(".list-button, .list-edit-button");
       if (!button) return;
       quickLinksPreviewReturnActive = false;
       if (mode === "resources") {
@@ -3874,8 +3887,13 @@
       } else if (mode === "trash") {
         activeTrashId = button.dataset.id;
       }
+      if (mode === "resources") showResourcePanel("editor");
       renderAll({ forceEditor: true });
       setEnabled(true);
+      if (mode === "resources") {
+        document.getElementById("resourceEditorSummaryCard").scrollIntoView({ behavior: "smooth", block: "start" });
+        el.resourceTitleInput.focus({ preventScroll: true });
+      }
     });
     el.addResourceLinkBtn.addEventListener("click", () => {
       el.resourceLinksBox.insertAdjacentHTML("beforeend", `
