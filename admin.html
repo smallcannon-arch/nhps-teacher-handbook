@@ -1205,6 +1205,10 @@
       #resourceActionBar button { flex: 1; min-height: 44px; }
       main { padding-bottom: 145px; }
     }
+    .review-row { padding: 14px 0; border-bottom: 1px solid var(--line, #d4dde5); }
+    .review-row label { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+    .review-row input[type="checkbox"] { width: 18px; height: 18px; }
+    .review-row a { display: block; padding: 6px 0; overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
@@ -1249,6 +1253,20 @@
           <option value="unpublished">已下架</option>
         </select>
       </div>
+      <div class="compact-actions">
+        <button id="rememberOfficeBtn" type="button" class="secondary">設為預設處室</button>
+      </div>
+      <p id="defaultOfficeHint" class="meta" role="status">可將常用處室設為此瀏覽器的預設篩選。</p>
+      <details id="semesterReviewPanel" class="sidebar-tools">
+        <summary>每學期資料確認清單</summary>
+        <div class="sidebar-tools-body">
+          <p class="meta">依目前搜尋與篩選列出已儲存資料。逐筆開啟連結，確認本學期適用、連結可用、承辦資訊正確後再勾選。</p>
+          <p class="meta">勾選只保留在本分頁，重新整理會清除；完成後請下載清單留存或交接，不代表其他同仁已確認。</p>
+          <p id="semesterReviewSummary" role="status"></p>
+          <button id="downloadReviewBtn" type="button" class="secondary">下載確認清單</button>
+          <div id="semesterReviewList"></div>
+        </div>
+      </details>
       <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>＋ 新增資料卡</button>
       </div>
@@ -1829,6 +1847,28 @@
       renderSuggestionLists();
     }
 
+    let initialOfficeFilterApplied = false;
+    const DEFAULT_OFFICE_KEY = "nhps.admin.default-office.v1";
+    function applyInitialOfficeFilter() {
+      if (initialOfficeFilterApplied) return;
+      initialOfficeFilterApplied = true;
+      let saved = null;
+      try { saved = localStorage.getItem(DEFAULT_OFFICE_KEY); } catch (_) {}
+      const office = normalizeResourceOffice(saved === null ? currentUser && currentUser.office : saved);
+      el.officeFilter.value = getResourceOfficeOptions().includes(office) ? office : "";
+      const first = resources.find((item) => adminOfficeMatches(item.office, el.officeFilter.value));
+      if (first) activeResourceId = first.id;
+      document.getElementById("defaultOfficeHint").textContent = "目前先顯示：" + (el.officeFilter.value || "全部處室") + "；可隨時切換，不影響編輯權限。";
+    }
+    document.getElementById("rememberOfficeBtn").addEventListener("click", () => {
+      try {
+        localStorage.setItem(DEFAULT_OFFICE_KEY, el.officeFilter.value);
+        document.getElementById("defaultOfficeHint").textContent = "此瀏覽器下次先顯示：" + (el.officeFilter.value || "全部處室") + "。共用電腦也會套用此設定。";
+      } catch (_) {
+        document.getElementById("defaultOfficeHint").textContent = "瀏覽器無法保存設定；本次仍可使用處室篩選。";
+      }
+    });
+
     function renderOfficeFilter() {
       const current = normalizeResourceOffice(el.officeFilter.value);
       const offices = getResourceOfficeOptions();
@@ -1939,6 +1979,7 @@
         if (!activeShortcutId) activeShortcutId = firstShortcutId();
         renderOfficeSelects();
         renderOfficeFilter();
+        applyInitialOfficeFilter();
         renderCategoryFilter({ keepCurrent: options.keepCategoryFilter === true });
         renderSuggestionLists();
         el.loginState.textContent = currentUser
@@ -2610,6 +2651,7 @@
 
     function renderList() {
       mode = normalizeMode(mode);
+      renderSemesterReview();
       if (mode === "resources") {
         const items = getVisibleListItems();
         const selectionMode = isListSelectionMode();
@@ -2655,6 +2697,64 @@
         return;
       }
     }
+
+    const semesterReviewChecks = new Map();
+    function semesterLabel(date = new Date()) {
+      const year = date.getFullYear(), month = date.getMonth() + 1;
+      return (year - 1911 - (month < 8 ? 1 : 0)) + "學年度第" + (month >= 8 || month === 1 ? "一" : "二") + "學期";
+    }
+    function reviewEntry(item) {
+      const signature = semesterLabel() + JSON.stringify(item);
+      const existing = semesterReviewChecks.get(item.id);
+      if (existing && existing.signature === signature) return existing;
+      const entry = { signature, checks: [false, false, false] };
+      semesterReviewChecks.set(item.id, entry);
+      return entry;
+    }
+    function renderSemesterReview() {
+      const panel = document.getElementById("semesterReviewPanel");
+      panel.hidden = mode !== "resources";
+      if (mode !== "resources" || !panel.open) return;
+      const items = getVisibleListItems();
+      const done = items.filter((item) => reviewEntry(item).checks.every(Boolean)).length;
+      document.getElementById("semesterReviewSummary").textContent = semesterLabel() + "：已確認 " + done + "／" + items.length + " 筆";
+      const host = document.getElementById("semesterReviewList");
+      host.replaceChildren();
+      items.forEach((item) => {
+        const entry = reviewEntry(item);
+        const row = document.createElement("div");row.className = "review-row";
+        const title = document.createElement("strong");title.textContent = (item.title || "未命名資料") + (item.visible === false ? "（已下架）" : "");row.appendChild(title);
+        const meta = document.createElement("p");meta.className = "meta";meta.textContent = (item.office || "未分處室") + "｜更新：" + (normalizeDate(item.updated) || "未填寫");row.appendChild(meta);
+        (item.links || []).forEach((link) => {
+          const url = safeAdminUrl(link.url);if (!url) return;
+          const anchor = document.createElement("a");anchor.href=url;anchor.target="_blank";anchor.rel="noopener noreferrer";anchor.textContent=link.label || "開啟連結";row.appendChild(anchor);
+        });
+        ["本學期適用", "連結與權限可用", "承辦資訊正確"].forEach((label, index) => {
+          const wrap = document.createElement("label"), input = document.createElement("input");input.type="checkbox";input.checked=entry.checks[index];
+          input.addEventListener("change", () => {entry.checks[index]=input.checked;const done=items.filter((item)=>reviewEntry(item).checks.every(Boolean)).length;document.getElementById("semesterReviewSummary").textContent=semesterLabel()+"：已確認 "+done+"／"+items.length+" 筆";});
+          wrap.append(input, document.createTextNode(label));row.appendChild(wrap);
+        });
+        host.appendChild(row);
+      });
+    }
+    document.getElementById("semesterReviewPanel").addEventListener("toggle", renderSemesterReview);
+    function reviewCsvCell(value) {
+      let text = String(value == null ? "" : value);
+      if (/^[\s]*[=+@-]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+    function buildReviewCsv() {
+      const rows = [["學期", "資料名稱", "承辦處室", "上架狀態", "最後更新", "本學期適用", "連結與權限可用", "承辦資訊正確", "確認結果"]];
+      getVisibleListItems().forEach((item) => {
+        const checks = reviewEntry(item).checks;
+        rows.push([semesterLabel(), item.title, item.office, item.visible === false ? "已下架" : "上架中", normalizeDate(item.updated), ...checks.map((checked) => checked ? "已確認" : "待確認"), checks.every(Boolean) ? "本分頁已確認" : "待確認"]);
+      });
+      return "\ufeff" + rows.map((row) => row.map(reviewCsvCell).join(",")).join("\r\n");
+    }
+    document.getElementById("downloadReviewBtn").addEventListener("click", () => {
+      const url=URL.createObjectURL(new Blob([buildReviewCsv()],{type:"text/csv;charset=utf-8"}));
+      const link=document.createElement("a");link.href=url;link.download=semesterLabel()+"資料確認清單.csv";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    });
 
     function getListGroupName(item) {
       return getOfficeCategoryText(item);
