@@ -1923,7 +1923,8 @@
         if (requestId !== directoryLoadRequestId) return false;
         sessionStorage.removeItem(TOKEN_STORAGE_KEY);
         sessionStorage.removeItem(USER_STORAGE_KEY);
-        redirectToLogin("expired");
+        const denied = /未授權|網域/.test(String(err && err.message || ""));
+        redirectToLogin(denied ? "denied" : isAuthExpiredError(err) ? "expired" : "load-failed");
         return false;
       }
     }
