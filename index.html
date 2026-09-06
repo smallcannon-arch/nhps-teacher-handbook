@@ -1547,7 +1547,7 @@
         <input id="searchInput" class="search-field" type="search" autocomplete="off" placeholder="搜尋：請假、冷氣、學生受傷、校外教學、性平、報修……">
         <button id="clearFiltersBtn" class="clear-button" type="button">清除篩選</button>
       </div>
-      <p class="search-scope-note">目前會在所選情境內搜尋；未選情境時搜尋全站資料。</p>
+      <p id="searchScopeNote" class="search-scope-note">輸入關鍵字搜尋全站；也可選擇情境或處室瀏覽。</p>
     </section>
 
     <section id="commonContentPanel" class="workbench-section common-content-panel" aria-labelledby="commonContentTitle" hidden>
@@ -4304,6 +4304,10 @@
     }
 
     function renderAll() {
+      const scoped = state.task !== "all" || state.office !== "all" || state.padletCategory !== "none" || Boolean(state.tag);
+      document.getElementById("searchScopeNote").textContent = scoped
+        ? "目前依所選情境或處室篩選；輸入關鍵字即可改搜全站。"
+        : "搜尋範圍：全站。也可選擇情境或處室縮小範圍。";
       renderCommonContent();
       renderCommonResources();
       updateFilterActiveState();
@@ -4379,8 +4383,12 @@
     }
 
     elements.searchInput.addEventListener("input", (event) => {
-      // 搜尋採「共同篩選」：保留已選情境或處室，在目前範圍內縮小結果，避免畫面狀態突然被清掉。
+      // 新輸入關鍵字時搜尋全站，避免先前選取的分類漏掉結果。
       state.query = event.target.value;
+      state.task = "all";
+      state.office = "all";
+      state.padletCategory = "none";
+      state.tag = "";
       state.activeShortcut = "";
       state.showAllIdle = false;
       state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
