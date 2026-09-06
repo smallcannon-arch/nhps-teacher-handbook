@@ -1526,6 +1526,11 @@
         scroll-behavior: auto;
       }
     }
+    .link-issue-report { margin-top: 12px; border-top: 1px solid #d9e3e8; padding-top: 10px; font-size: .86rem; }
+    .link-issue-report summary { cursor: pointer; color: #385568; padding: 8px 0; }
+    .link-issue-report label { display: block; margin: 10px 0; }
+    .link-issue-report select, .link-issue-report textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; padding: 8px; font: inherit; }
+    .link-issue-report button { min-height: 44px; border: 1px solid #a9c0d2; border-radius: 8px; background: #f0f6fa; color: #173c60; padding: 8px 12px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -3873,6 +3878,68 @@
       return list;
     }
 
+    const reportAttempts = new Map();
+    function createLinkIssueReport(resource) {
+      const details = document.createElement("details");
+      details.className = "link-issue-report";
+      const summary = document.createElement("summary");
+      summary.textContent = "回報連結問題";
+      const hint = document.createElement("p");
+      hint.textContent = "選擇問題後送出，由行政同仁在後台處理。不需填寫帳號、學生名單或其他私人資料。";
+      const label = document.createElement("label");
+      label.textContent = "遇到的問題";
+      const select = document.createElement("select");
+      ["連結無法開啟", "需要權限／帳號不符", "內容過期或不正確", "其他問題"].forEach((text) => {
+        const option = document.createElement("option");
+        option.value = text; option.textContent = text; select.appendChild(option);
+      });
+      label.appendChild(select);
+      const textLabel = document.createElement("label");
+      textLabel.textContent = "補充說明（選填，最多 500 字）";
+      const area = document.createElement("textarea");
+      area.rows = 3; area.maxLength = 500;
+      area.placeholder = "例如：使用學校帳號仍顯示沒有權限";
+      textLabel.appendChild(area);
+      const button = document.createElement("button");
+      button.type = "button"; button.textContent = "送出問題回報";
+      const status = document.createElement("p");
+      status.setAttribute("role", "status");
+      const isPreview = new URLSearchParams(location.search).get("preview") === "card" && window.parent !== window;
+      if (isPreview) {
+        button.disabled = true;
+        status.textContent = "這是卡片預覽，無法送出回報。請從正式前台操作。";
+      }
+      button.addEventListener("click", async () => {
+        if (button.disabled || isPreview) return;
+        const signature = JSON.stringify([select.value, area.value.trim()]);
+        let attempt = reportAttempts.get(resource.id);
+        if (!attempt || attempt.signature !== signature) {
+          attempt = { id: crypto.randomUUID(), signature };
+          reportAttempts.set(resource.id, attempt);
+        }
+        button.disabled = true; select.disabled = true; area.disabled = true;
+        status.textContent = "正在送出，請稍候…";
+        try {
+          const response = await fetch(new URL("/reports/submit", directoryApiUrl), {
+            method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ id: attempt.id, resourceId: String(resource.id), issue: select.value, detail: area.value.trim() }),
+            signal: AbortSignal.timeout(30000)
+          });
+          const data = await response.json();
+          if (!response.ok || data.ok !== true) throw new Error(data.error || "送出失敗，請稍後重試。");
+          button.textContent = "已送出";
+          status.textContent = "已收到回報，行政同仁會在後台處理。謝謝你的協助。";
+        } catch (error) {
+          status.textContent = error.name === "TimeoutError" || error.name === "TypeError"
+            ? "尚未確認送出結果，請再試一次；相同內容重試不會重複建立回報。"
+            : (error.message || "送出失敗，請稍後重試。");
+          button.disabled = false; select.disabled = false; area.disabled = false;
+        }
+      });
+      details.append(summary, hint, label, textLabel, button, status);
+      return details;
+    }
+
     function createCommonResourceCard(resource) {
       const card = document.createElement("article");
       card.className = "padlet-card";
@@ -3910,6 +3977,7 @@
       if (staffUnits) card.appendChild(staffUnits);
       if (updatedText) card.appendChild(createTextElement("p", "padlet-meta", "更新：" + updatedText));
       if (displayStatus) card.appendChild(createTextElement("p", "padlet-status", displayStatus + "，每學年更換一次檔案或連結。"));
+      if (resource.links.length) card.appendChild(createLinkIssueReport(resource));
 
       return card;
     }

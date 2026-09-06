@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../cloudflare/worker.js'), 'utf8').replace('export default', 'const worker ='), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../cloudflare/worker.js'), 'utf8').replace(/^import .*;$/mg, '').replace('export default', 'const worker ='), context);
 const resources = Array.from({ length: 5 }, (_, i) => ({
   title: `行事曆 ${i}`, office: '校長室', summary: '不應出現在精簡回覆的冗長摘要',
   sort_order: i, links: [{ url: `https://example.com/calendar?src=${'a'.repeat(300)}&id=${i}` }]

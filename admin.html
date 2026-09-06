@@ -1209,6 +1209,13 @@
     .review-row label { display: flex; align-items: center; gap: 8px; min-height: 40px; }
     .review-row input[type="checkbox"] { width: 18px; height: 18px; }
     .review-row a { display: block; padding: 6px 0; overflow-wrap: anywhere; }
+    #reportInbox { width: min(900px, calc(100vw - 32px)); max-height: 85vh; box-sizing: border-box; overflow: auto; border: 1px solid #c4d4dc; border-radius: 14px; padding: 20px; }
+    #reportInbox::backdrop { background: #13283b88; }
+    .report-inbox-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .report-inbox-card { border-top: 1px solid #d4dde5; padding: 16px 0; overflow-wrap: anywhere; }
+    .report-inbox-card a { display: block; padding: 6px 0; }
+    .report-inbox-card .compact-actions { margin-top: 12px; }
+    .report-detail { white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -1227,10 +1234,29 @@
     <nav class="header-tabs-bar" aria-label="後台主入口">
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">管理資料卡</button>
+        <button id="reportInboxBtn" class="tab-button" type="button" disabled>連結問題回報</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
     </nav>
   </header>
+
+  <dialog id="reportInbox" aria-labelledby="reportInboxTitle">
+    <div class="report-inbox-heading">
+      <h2 id="reportInboxTitle">連結問題回報</h2>
+      <button id="closeReportInboxBtn" type="button" class="secondary">關閉</button>
+    </div>
+    <p class="meta">由具編輯權限的行政同仁共同處理。可開啟原連結確認，再更新處理狀態。</p>
+    <div class="compact-actions">
+      <label for="reportStatusFilter">處理狀態</label>
+      <select id="reportStatusFilter">
+        <option>待處理</option><option>處理中</option><option>已完成</option><option value="">全部狀態</option>
+      </select>
+      <button id="reloadReportsBtn" type="button" class="secondary">重新載入</button>
+    </div>
+    <p id="reportInboxStatus" role="status"></p>
+    <div id="reportInboxList"></div>
+    <button id="moreReportsBtn" type="button" class="secondary" hidden>載入更多</button>
+  </dialog>
 
   <main>
     <aside class="panel sidebar">
@@ -3584,6 +3610,85 @@
       showMessage(AUTH_EXPIRED_NOTICE, true);
     }
 
+    let reportInboxItems = [];
+    let reportInboxNext = null;
+    let reportInboxBusy = false;
+    async function reportAdminApi(action, extra = {}) {
+      const response = await fetch(new URL("/reports/admin", GAS_ENDPOINT), {
+        method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action, idToken, ...extra }), signal: AbortSignal.timeout(30000)
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "回報資料讀取失敗，請稍後重試。");
+      return data;
+    }
+    function setReportInboxBusy(busy) {
+      reportInboxBusy = busy;
+      ["reloadReportsBtn", "reportStatusFilter", "moreReportsBtn"].forEach((id) => { document.getElementById(id).disabled = busy; });
+      document.querySelectorAll("#reportInboxList button, #reportInboxList select").forEach((node) => { node.disabled = busy; });
+    }
+    function renderReportInbox() {
+      const host = document.getElementById("reportInboxList");
+      host.replaceChildren();
+      const statusFilter = document.getElementById("reportStatusFilter").value;
+      reportInboxItems.filter((item) => !statusFilter || item.status === statusFilter).forEach((item) => {
+        const card = document.createElement("article"); card.className = "report-inbox-card";
+        const title = document.createElement("h3"); title.textContent = item.title || "未命名資料";
+        const meta = document.createElement("p"); meta.className = "meta";
+        meta.textContent = (item.office || "未分處室") + "｜" + new Date(item.created_at).toLocaleString("zh-TW") + "｜" + item.status;
+        const issue = document.createElement("p"); issue.textContent = "問題：" + item.issue;
+        const detail = document.createElement("p"); detail.className = "report-detail"; detail.textContent = item.detail || "未填補充說明";
+        card.append(title, meta, issue, detail);
+        (item.links || []).forEach((link) => {
+          const url = safeAdminUrl(link.url); if (!url) return;
+          const anchor = document.createElement("a"); anchor.href = url; anchor.target = "_blank"; anchor.rel = "noopener noreferrer";
+          anchor.textContent = link.label || "開啟原連結"; card.appendChild(anchor);
+        });
+        const actions = document.createElement("div"); actions.className = "compact-actions";
+        const label = document.createElement("label"); label.textContent = "處理狀態 ";
+        const select = document.createElement("select");
+        ["待處理", "處理中", "已完成"].forEach((text) => { const option = document.createElement("option"); option.value = text; option.textContent = text; select.appendChild(option); });
+        select.value = item.status; label.appendChild(select);
+        const save = document.createElement("button"); save.type = "button"; save.textContent = "更新狀態";
+        save.addEventListener("click", async () => {
+          if (reportInboxBusy) return;
+          setReportInboxBusy(true);
+          document.getElementById("reportInboxStatus").textContent = "正在更新狀態…";
+          try {
+            const data = await reportAdminApi("update", { id: item.id, version: item.version, status: select.value });
+            Object.assign(item, data.item); renderReportInbox();
+            document.getElementById("reportInboxStatus").textContent = "已更新為「" + item.status + "」。";
+          } catch (error) {
+            document.getElementById("reportInboxStatus").textContent = error.message || "更新失敗，請重試。";
+          } finally { setReportInboxBusy(false); }
+        });
+        actions.append(label, save); card.appendChild(actions); host.appendChild(card);
+      });
+      if (!host.childElementCount) host.textContent = "目前沒有符合此狀態的回報。";
+      document.getElementById("moreReportsBtn").hidden = !reportInboxNext;
+    }
+    async function loadReportInbox(more = false) {
+      if (reportInboxBusy) return;
+      setReportInboxBusy(true);
+      document.getElementById("reportInboxStatus").textContent = "正在確認權限並載入回報…";
+      if (!more) { reportInboxItems = []; reportInboxNext = null; document.getElementById("reportInboxList").replaceChildren(); document.getElementById("moreReportsBtn").hidden = true; }
+      try {
+        const data = await reportAdminApi("list", { status: document.getElementById("reportStatusFilter").value, before: more ? reportInboxNext : null });
+        reportInboxItems = more ? reportInboxItems.concat(data.items) : data.items;
+        reportInboxNext = data.next; renderReportInbox();
+        document.getElementById("reportInboxStatus").textContent = "已載入 " + reportInboxItems.length + " 筆回報。";
+      } catch (error) {
+        document.getElementById("reportInboxStatus").textContent = error.message || "讀取失敗，請重試。";
+      } finally { setReportInboxBusy(false); }
+    }
+    document.getElementById("reportInboxBtn").addEventListener("click", () => {
+      document.getElementById("reportInbox").showModal(); loadReportInbox();
+    });
+    document.getElementById("closeReportInboxBtn").addEventListener("click", () => document.getElementById("reportInbox").close());
+    document.getElementById("reloadReportsBtn").addEventListener("click", () => loadReportInbox());
+    document.getElementById("reportStatusFilter").addEventListener("change", () => loadReportInbox());
+    document.getElementById("moreReportsBtn").addEventListener("click", () => loadReportInbox(true));
+
     function setMode(nextMode) {
       if (normalizeMode(nextMode) !== mode && !confirmDiscardResourceChanges()) return;
       mode = normalizeMode(nextMode);
@@ -3624,6 +3729,7 @@
     function setEnabled(enabled) {
       mode = normalizeMode(mode);
       const canEditContent = userCanEditContent();
+      document.getElementById("reportInboxBtn").disabled = !enabled || !idToken || !canEditContent;
       const canPublishContent = userCanPublishContent();
       const canManageTrash = userCanManageTrash();
       const activeResource = resources.find((item) => item.id === activeResourceId);
