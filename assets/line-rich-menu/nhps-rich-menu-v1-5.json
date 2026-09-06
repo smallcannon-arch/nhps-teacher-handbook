@@ -1,0 +1,89 @@
+{
+  "size": {
+    "width": 1527,
+    "height": 1030
+  },
+  "selected": true,
+  "name": "內湖國小教師手冊 V1.5",
+  "chatBarText": "教師手冊",
+  "areas": [
+    {
+      "bounds": {
+        "x": 0,
+        "y": 0.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "uri",
+        "label": "教師手冊",
+        "uri": "https://smallcannon-arch.github.io/nhps-teacher-handbook/"
+      }
+    },
+    {
+      "bounds": {
+        "x": 509,
+        "y": 0.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "message",
+        "label": "報修服務",
+        "text": "報修"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1018,
+        "y": 0.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "uri",
+        "label": "行事曆",
+        "uri": "https://smallcannon-arch.github.io/nhps-teacher-handbook/calendar.html"
+      }
+    },
+    {
+      "bounds": {
+        "x": 0,
+        "y": 515.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "message",
+        "label": "週報",
+        "text": "週報"
+      }
+    },
+    {
+      "bounds": {
+        "x": 509,
+        "y": 515.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "uri",
+        "label": "手冊首頁",
+        "uri": "https://smallcannon-arch.github.io/nhps-teacher-handbook/"
+      }
+    },
+    {
+      "bounds": {
+        "x": 1018,
+        "y": 515.0,
+        "width": 509,
+        "height": 515
+      },
+      "action": {
+        "type": "message",
+        "label": "學生通報",
+        "text": "疾病通報 學生事件通報"
+      }
+    }
+  ]
+}
