@@ -35,7 +35,7 @@ var CURRENT_DIRECTORY_SEED = {
       "links": [
         {
           "label": "開啟Google 行事曆",
-          "url": "https://calendar.google.com/calendar/u/0?cid=Y19hNmZlZTI0Yjg4MTIwMDUzNmQwMmQ0MTFkNjY4ODRmZWVhYzFmZGNiMDdlMTQ1ZTdmZjc4N2Q5MzAwOWI3ODUxQGdyb3VwLmNhbGVuZGFyLmdvb2dsZS5jb20"
+          "url": "https://smallcannon-arch.github.io/nhps-teacher-handbook/calendar.html"
         }
       ],
       "updated": "2026-01-22",

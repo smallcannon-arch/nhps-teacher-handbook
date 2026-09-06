@@ -1,18 +1,18 @@
 {
   "size": {
-    "width": 2500,
-    "height": 1686
+    "width": 1527,
+    "height": 1030
   },
   "selected": true,
-  "name": "內湖國小教師手冊 V1.2",
+  "name": "內湖國小教師手冊 V1.5",
   "chatBarText": "教師手冊",
   "areas": [
     {
       "bounds": {
         "x": 0,
-        "y": 0,
-        "width": 833,
-        "height": 843
+        "y": 0.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
         "type": "uri",
@@ -22,10 +22,10 @@
     },
     {
       "bounds": {
-        "x": 833,
-        "y": 0,
-        "width": 834,
-        "height": 843
+        "x": 509,
+        "y": 0.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
         "type": "message",
@@ -35,23 +35,23 @@
     },
     {
       "bounds": {
-        "x": 1667,
-        "y": 0,
-        "width": 833,
-        "height": 843
+        "x": 1018,
+        "y": 0.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
-        "type": "message",
+        "type": "uri",
         "label": "行事曆",
-        "text": "行事曆"
+        "uri": "https://smallcannon-arch.github.io/nhps-teacher-handbook/calendar.html"
       }
     },
     {
       "bounds": {
         "x": 0,
-        "y": 843,
-        "width": 833,
-        "height": 843
+        "y": 515.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
         "type": "message",
@@ -61,23 +61,23 @@
     },
     {
       "bounds": {
-        "x": 833,
-        "y": 843,
-        "width": 834,
-        "height": 843
+        "x": 509,
+        "y": 515.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
         "type": "uri",
-        "label": "線上會議",
+        "label": "手冊首頁",
         "uri": "https://smallcannon-arch.github.io/nhps-teacher-handbook/"
       }
     },
     {
       "bounds": {
-        "x": 1667,
-        "y": 843,
-        "width": 833,
-        "height": 843
+        "x": 1018,
+        "y": 515.0,
+        "width": 509,
+        "height": 515
       },
       "action": {
         "type": "message",
