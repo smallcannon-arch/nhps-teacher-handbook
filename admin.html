@@ -3986,37 +3986,43 @@
       document.getElementById("resourceSavedLink").hidden = true;
     }
 
+    let resourcePreviewSnapshot = null;
     function previewResourceDraft() {
-      const resource = collectResource();
+      const draft = collectResource();
+      resourcePreviewSnapshot = { ...(resources.find((item) => item.id === draft.id) || {}), ...draft };
       const preview = document.getElementById("resourceDraftPreview");
       preview.replaceChildren();
-      function addText(tag, text) {
-        const node = document.createElement(tag);
-        node.textContent = text;
-        preview.appendChild(node);
+      const status = document.createElement("p");
+      status.className = "meta";
+      status.textContent = draft.visible
+        ? "以下使用前台資料卡的實際版型。這是未儲存預覽，寬度依預覽區調整。"
+        : "這筆資料未上架，不會出現在前台。以下僅預覽上架後的卡片樣式。";
+      preview.appendChild(status);
+      if (draft.note && !resourcePreviewSnapshot.summary) {
+        const note = document.createElement("p");
+        note.className = "meta";
+        note.textContent = "提醒：目前前台卡片不顯示「補充說明／注意事項」欄位；這裡也依相同規則呈現。";
+        preview.appendChild(note);
       }
-      addText("h3", resource.title || "尚未填寫標題");
-      addText("p", resource.office + "／" + resource.category);
-      if (resource.note) addText("p", resource.note);
-      addText("p", resource.visible ? "儲存後上架顯示" : "不上架：僅保留在後台");
-      if (!resource.links.length) addText("p", "尚未填寫連結。");
-      resource.links.forEach((link, index) => {
-        const url = safeAdminUrl(link.url);
-        if (!url) {
-          addText("p", "第 " + (index + 1) + " 個連結無效，請修正網址。");
-          return;
-        }
-        const row = document.createElement("p");
-        const anchor = document.createElement("a");
-        anchor.textContent = (link.label || "開啟連結") + " ↗";
-        anchor.href = url;
-        anchor.target = "_blank";
-        anchor.rel = "noopener noreferrer";
-        row.appendChild(anchor);
-        preview.appendChild(row);
-      });
+      const frame = document.createElement("iframe");
+      frame.id = "resourcePreviewFrame";
+      frame.title = "前台資料卡實際版型預覽";
+      frame.style.cssText = "width:100%;height:480px;border:0;display:block;background:#fff;";
+      frame.src = "./index.html?preview=card";
+      preview.appendChild(frame);
       preview.hidden = false;
     }
+
+    window.addEventListener("message", (event) => {
+      const frame = document.getElementById("resourcePreviewFrame");
+      if (!frame || event.source !== frame.contentWindow || event.origin !== location.origin) return;
+      if (event.data && event.data.type === "handbook-card-preview-ready" && resourcePreviewSnapshot) {
+        frame.contentWindow.postMessage({ type: "handbook-card-preview", resource: resourcePreviewSnapshot }, location.origin);
+      }
+      if (event.data && event.data.type === "handbook-card-preview-size" && Number.isFinite(event.data.height)) {
+        frame.style.height = Math.max(180, Math.min(2400, event.data.height)) + "px";
+      }
+    });
 
     const advancedFields = document.getElementById("resourceAdvancedFields");
     ["resourceUpdatedInput", "resourceCategoryInput", "resourceTagsInput", "resourceCommonPinnedInput"].forEach((id) => {
