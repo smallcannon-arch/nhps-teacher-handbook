@@ -1,5 +1,7 @@
 # LINE Bot KV 搜尋索引規劃
 
+> 2026-09-06 狀態註記：以下保留歷史規劃與當時基準線，不能作為今日實作狀態。現有 `cloudflare/worker.js` 已有記憶體／KV 索引讀取、背景更新及關鍵字搜尋，`wrangler.toml` 已宣告 `HANDBOOK_BOT_KV` 綁定。線上部署與 KV 實際綁定尚待管理授權恢復後核對；本機存在程式不等於線上已部署。最新核對見 `docs/project-status-2026-09-06.md`。
+
 ## 1. 本階段目標
 
 本文件只規劃 LINE Bot 使用 Workers KV 作為「教師手冊常用資料搜尋索引」的設計方向，不進行實作、不建立 KV namespace、不修改 Worker、不部署。

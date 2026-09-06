@@ -1,15 +1,17 @@
 # LINE Rich Menu V1.2 Plan
 
+> 2026-09-06 後續：使用者已同意調整第五格名稱與圖示，新版素材與配套座標見 `docs/line-rich-menu-v1-3-plan.md`。本檔保留前階段紀錄，不是本次最終部署版本。
+
 ## 1. 目的
 
-LINE Rich Menu V1.2 記錄目前要更新的官方 Bot 選單設定，讓 repo 中保留可重建的 JSON 與操作依據。此版只調整第 5 格「線上會議」連結，其他入口維持 V1.1 行為。
+LINE Rich Menu V1.2 記錄目前要更新的官方 Bot 選單設定，讓 repo 中保留可重建的 JSON 與操作依據。2026-09-06 使用者確認第 5 格「線上會議」連結改指向已恢復服務的教師手冊首頁，其他入口維持 V1.1 行為。此為待套用設定，不代表官方 Bot 已完成更新。
 
 ## 2. 與 V1.1 差異
 
-V1.2 與 V1.1 的圖片、尺寸與 6 格座標相同，唯一差異是第 5 格「線上會議」URI：
+V1.2 與 V1.1 的圖片、尺寸與 6 格座標相同，目前差異是第 5 格「線上會議」URI：
 
 - 舊 URI：`https://meet.google.com/vvf-djns-hzd`
-- 新 URI：`https://meet.google.com/gjx-nbsg-twb`
+- 新 URI：`https://smallcannon-arch.github.io/nhps-teacher-handbook/`
 
 ## 3. 檔案
 
@@ -37,7 +39,7 @@ JSON 不包含 `richMenuId`，也不包含 token、secret 或 Authorization head
 | 報修服務 | `x: 833, y: 0, width: 834, height: 843` | `message`: `報修` |
 | 行事曆 | `x: 1667, y: 0, width: 833, height: 843` | `message`: `行事曆` |
 | 週報 | `x: 0, y: 843, width: 833, height: 843` | `message`: `週報` |
-| 線上會議 | `x: 833, y: 843, width: 834, height: 843` | `uri`: `https://meet.google.com/gjx-nbsg-twb` |
+| 線上會議 | `x: 833, y: 843, width: 834, height: 843` | `uri`: `https://smallcannon-arch.github.io/nhps-teacher-handbook/` |
 | 學生通報 | `x: 1667, y: 843, width: 833, height: 843` | `message`: `疾病通報 學生事件通報` |
 
 「學生通報」維持導向教師手冊既有查詢文字，不導向法律判斷或個案建議。
@@ -51,8 +53,8 @@ JSON 不包含 `richMenuId`，也不包含 token、secret 或 Authorization head
 3. create rich menu。
 4. upload image。
 5. set default rich menu。
-6. 手機端確認「線上會議」開啟新 URI。
-7. 確認新 default 後，再清理舊 Rich Menu。
+6. 手機端確認「線上會議」開啟教師手冊首頁。
+7. 保留舊 Rich Menu 及其 ID 供回退；未經明確同意不刪除。
 
 ## 7. 安全提醒
 

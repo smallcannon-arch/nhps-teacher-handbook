@@ -6,7 +6,11 @@
 
 LINE Bot webhook shell 已在 Worker 程式中完成，但正式接上 LINE 前，仍需要建立 Cloudflare Workers Secrets、部署 Worker、測試既有 API 與 webhook 安全回應，最後才到 LINE Developers 設定 webhook URL。
 
-目前狀態：尚未建立 Cloudflare Workers Secrets、尚未 deploy Worker、尚未設定 LINE webhook URL。
+歷史狀態（撰寫本清單時）：尚未建立 Cloudflare Workers Secrets、尚未 deploy Worker、尚未設定 LINE webhook URL。
+
+2026-09-06 核對：公開 Worker 的 `health` 與 `getDirectory` 均回傳 HTTP 200、`ok: true`。本機已有 LINE 搜尋與 KV 索引程式；Cloudflare 管理授權失效，因此尚未確認目前部署版本、Secrets 名稱、KV 綁定及 LINE webhook/default Rich Menu。本清單下方勾選項是原始部署流程，不代表今日仍全部未完成；不要直接照舊 commit 重新部署。詳見 `docs/project-status-2026-09-06.md`。
+
+同日後續：已用既有 LINE 憑證核對並更新 API default Rich Menu 為 V1.3，讀回成功；手機驗收另記於 `docs/line-rich-menu-v1-3-deployment.json`。Worker 部署版本與 webhook 狀態仍不因此視為已驗證。
 
 本清單目的：
 

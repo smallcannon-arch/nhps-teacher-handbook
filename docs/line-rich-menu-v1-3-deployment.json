@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-06",
+  "bot": "@143jthut",
+  "previousDefault": "richmenu-970ce30a51f30269fa3fb0329e0ad94a",
+  "newMenu": "richmenu-019a731ed7c8c641912498fadff85c37",
+  "stage": "default-verified",
+  "mobileVerification": "user-confirmed-working-with-calendar-app-redirect-followup",
+  "webhookActiveObserved": true,
+  "webhookTestSuccess": true,
+  "webhookTestStatusCode": 200,
+  "responseSettingsChange": "authorized-and-applied",
+  "maintenanceAutoResponseEnabled": false
+}
