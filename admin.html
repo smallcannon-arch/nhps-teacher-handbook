@@ -1167,6 +1167,27 @@
         display: none;
       }
     }
+    #resourceAdvancedSettings > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border: 2px solid #49698b;
+      border-radius: 10px;
+      background: #edf3fa;
+      color: #17375e;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+    }
+    #resourceAdvancedSettings > summary::-webkit-details-marker { display: none; }
+    #resourceAdvancedSettings > summary::after { content: "＋ 展開"; flex-shrink: 0; }
+    #resourceAdvancedSettings > summary:hover { background: #dfeaf7; }
+    #resourceAdvancedSettings > summary:focus-visible { outline: 3px solid #a66600; outline-offset: 4px; }
+    #resourceAdvancedSettings[open] > summary { background: #dfeaf7; }
+    #resourceAdvancedSettings[open] > summary::after { content: "－ 收合"; }
+    .advanced-setting-hint { display: block; margin-top: 4px; font-size: .85rem; font-weight: 400; }
   </style>
 </head>
 <body>
@@ -1394,7 +1415,7 @@
         </section>
 
         <details id="resourceAdvancedSettings" class="form-section">
-          <summary>進階設定（分類、標籤、日期與置頂）</summary>
+          <summary><span>進階設定<span class="advanced-setting-hint">分類、標籤、日期與置頂</span></span></summary>
           <p class="meta">一般新增可沿用預設值；修改既有資料時，未調整的設定會保留。</p>
           <div id="resourceAdvancedFields"></div>
         </details>
