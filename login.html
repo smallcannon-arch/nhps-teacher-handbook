@@ -4,6 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>內湖國小教師手冊後台登入</title>
+  <script>
+    // Re-entry must not wait for the external Google sign-in widget.
+    // The admin page still verifies the credential and current permissions on the server.
+    try {
+      const reason = new URLSearchParams(window.location.search).get("reason") || "";
+      if (!reason && sessionStorage.getItem("nhpsTeacherHandbookIdToken")) {
+        window.location.replace("admin.html");
+      }
+    } catch (storageError) {
+      // Keep the normal sign-in page when browser storage is unavailable.
+    }
+  </script>
+  <link rel="preconnect" href="https://accounts.google.com">
+  <link rel="preconnect" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
