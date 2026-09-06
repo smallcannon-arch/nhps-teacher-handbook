@@ -1191,6 +1191,20 @@
     .list-entry.is-draggable { grid-template-columns: auto minmax(0, 1fr) auto; }
     .list-entry.is-draggable.has-check { grid-template-columns: auto auto minmax(0, 1fr) auto; }
     .list-edit-button { align-self: center; padding: 10px; white-space: nowrap; font-size: .88rem; }
+    #resourceActionBar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px;
+      padding: 12px max(16px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom));
+      background: #fffdf8; border-top: 2px solid #c7d8e7; box-shadow: 0 -3px 12px #17375e18;
+    }
+    #resourceDirtyStatus { margin-right: auto; font-weight: 700; color: #536577; }
+    #resourceDirtyStatus.is-dirty { color: #8b4600; }
+    .content { padding-bottom: 150px; scroll-padding-bottom: 150px; }
+    @media (max-width: 600px) {
+      #resourceDirtyStatus { flex-basis: 100%; }
+      #resourceActionBar button { flex: 1; min-height: 44px; }
+      main { padding-bottom: 145px; }
+    }
   </style>
 </head>
 <body>
@@ -1440,9 +1454,13 @@
           高風險或含學生名單的資料，建議只放校內權限 Drive 連結，不要直接上傳到公開靜態頁。
         </div>
         <div class="actions">
-          <button id="saveResourceBtn" type="button" disabled>儲存資料卡</button>
           <button id="duplicateResourceBtn" type="button" class="secondary" disabled>複製這筆</button>
           <button id="archiveResourceBtn" type="button" class="warn" disabled>移到回收桶</button>
+        </div>
+        <div id="resourceActionBar" aria-label="資料卡操作">
+          <span id="resourceDirtyStatus" role="status">尚無未儲存變更</span>
+          <button id="stickyPreviewResourceBtn" class="secondary" type="button">預覽</button>
+          <button id="saveResourceBtn" type="button" disabled>儲存資料卡</button>
         </div>
         </section>
       </form>
@@ -1798,6 +1816,7 @@
     }
 
     function logout() {
+      if (!confirmDiscardResourceChanges()) return;
       sessionStorage.removeItem(TOKEN_STORAGE_KEY);
       sessionStorage.removeItem(USER_STORAGE_KEY);
       redirectToLogin("logout");
@@ -2527,13 +2546,14 @@
         showMessage("找不到這筆資料卡，請重新整理後再試。", true);
         return;
       }
+      if (id !== activeResourceId && !confirmDiscardResourceChanges()) return;
       mode = "resources";
       activeResourceId = id;
       quickLinksPreviewReturnActive = true;
       renderList();
       renderBulkState();
       renderQuickLinksRankingPreview();
-      renderResourceEditor({ force: true });
+      renderResourceEditor({ force: !resourceFormDirty });
       showResourcePanel("editor", { scrollToTabs: true });
       setEnabled(true);
       scrollResourceEditorIntoViewFromPreview(id);
@@ -2801,16 +2821,38 @@
       return normalizeResourceOffice(value) === normalizeResourceOffice(selectedOffice);
     }
 
+    function warnBeforeResourceUnload(event) {
+      event.preventDefault();
+      event.returnValue = true;
+    }
+
+    function updateResourceDirtyStatus() {
+      const status = document.getElementById("resourceDirtyStatus");
+      status.textContent = resourceFormDirty ? "有未儲存變更" : "尚無未儲存變更";
+      status.classList.toggle("is-dirty", resourceFormDirty);
+      window.removeEventListener("beforeunload", warnBeforeResourceUnload);
+      if (resourceFormDirty) window.addEventListener("beforeunload", warnBeforeResourceUnload);
+    }
+
+    function confirmDiscardResourceChanges() {
+      if (!resourceFormDirty) return true;
+      if (!window.confirm("這筆資料有未儲存的修改。\n\n按「取消」繼續編輯或儲存；按「確定」放棄修改並繼續。")) return false;
+      renderResourceEditor({ force: true });
+      return true;
+    }
+
     function markResourceFormDirty() {
       if (isHydratingResourceForm || mode !== "resources") return;
       resetResourcePreview();
       resourceFormDirty = true;
+      updateResourceDirtyStatus();
       resourceFormRevision += 1;
       resourceFormBoundResourceId = el.resourceIdInput.value.trim() || activeResourceId || "";
     }
 
     function clearResourceFormDirty(resourceId = "") {
       resourceFormDirty = false;
+      updateResourceDirtyStatus();
       resourceFormBoundResourceId = resourceId;
     }
 
@@ -3065,7 +3107,7 @@
     }
 
     function duplicateResource() {
-      if (!activeResourceId) return;
+      if (!activeResourceId || !confirmDiscardResourceChanges()) return;
       const item = resources.find((resource) => resource.id === activeResourceId);
       if (!item) return;
       activeResourceId = "";
@@ -3274,6 +3316,7 @@
     }
 
     async function runCommand(cmd, payload, successText, options = {}) {
+      if (cmd !== "saveDirectoryResource" && !confirmDiscardResourceChanges()) return false;
       const actionButton = options.actionButton || null;
       const originalButtonText = actionButton ? actionButton.textContent : "";
       const idleButtonText = options.idleButtonText || originalButtonText;
@@ -3442,6 +3485,7 @@
     }
 
     function setMode(nextMode) {
+      if (normalizeMode(nextMode) !== mode && !confirmDiscardResourceChanges()) return;
       mode = normalizeMode(nextMode);
       renderOfficeFilter();
       renderCategoryFilter();
@@ -3496,6 +3540,7 @@
       if (batchVisibleField) batchVisibleField.hidden = !canPublishContent;
       if (!canPublishContent) el.batchVisibleInput.value = "";
       el.saveResourceBtn.disabled = !enabled || !idToken || !canEditContent;
+      document.getElementById("stickyPreviewResourceBtn").disabled = !enabled || !idToken;
       el.duplicateResourceBtn.disabled = !enabled || !idToken || !canEditContent || mode !== "resources" || !activeResourceId;
       el.archiveResourceBtn.hidden = !canManageTrash;
       el.batchDeleteBtn.hidden = !canManageTrash;
@@ -3856,6 +3901,7 @@
     });
     el.itemList.addEventListener("dragend", clearDragState);
     el.addItemBtn.addEventListener("click", () => {
+      if (!confirmDiscardResourceChanges()) return;
       quickLinksPreviewReturnActive = false;
       if (mode === "resources") {
         activeResourceId = "";
@@ -3870,6 +3916,10 @@
       const check = event.target.closest(".list-check");
       if (check) {
         const id = check.dataset.selectId;
+        if (mode === "resources" && id !== activeResourceId && !confirmDiscardResourceChanges()) {
+          check.checked = !check.checked;
+          return;
+        }
         if (check.checked) {
           if (mode === "trash") selectedTrashIds.add(id);
           if (mode === "resources") selectedResourceIds.add(id);
@@ -3885,7 +3935,7 @@
         el.itemList.querySelectorAll(".list-button.is-active").forEach((activeButton) => activeButton.classList.remove("is-active"));
         const selectedButton = entry && entry.querySelector(".list-button");
         if (selectedButton) selectedButton.classList.add("is-active");
-        if (mode === "resources") renderResourceEditor({ force: true });
+        if (mode === "resources") renderResourceEditor({ force: !resourceFormDirty });
         if (mode === "trash") renderTrashEditor();
         renderBulkState();
         setEnabled(true);
@@ -3893,6 +3943,7 @@
       }
       const button = event.target.closest(".list-button, .list-edit-button");
       if (!button) return;
+      if (mode === "resources" && button.dataset.id !== activeResourceId && !confirmDiscardResourceChanges()) return;
       quickLinksPreviewReturnActive = false;
       if (mode === "resources") {
         activeResourceId = button.dataset.id;
@@ -3900,7 +3951,7 @@
         activeTrashId = button.dataset.id;
       }
       if (mode === "resources") showResourcePanel("editor");
-      renderAll({ forceEditor: true });
+      renderAll({ forceEditor: !resourceFormDirty });
       setEnabled(true);
       if (mode === "resources") {
         document.getElementById("resourceEditorSummaryCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -3974,6 +4025,10 @@
     advancedFields.appendChild(document.getElementById("staffUnitField"));
     document.getElementById("previewResourceBtn").addEventListener("click", previewResourceDraft);
 
+    document.getElementById("stickyPreviewResourceBtn").addEventListener("click", () => {
+      previewResourceDraft();
+      document.getElementById("resourceDraftPreview").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
     el.saveResourceBtn.addEventListener("click", saveResource);
     el.duplicateResourceBtn.addEventListener("click", duplicateResource);
     el.archiveResourceBtn.addEventListener("click", archiveResource);
