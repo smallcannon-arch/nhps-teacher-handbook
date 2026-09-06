@@ -30,6 +30,9 @@ function doPost(e) {
     var authFinished = Date.now();
     email = user.email;
 
+    if (cmd === "accountList") return jsonResponse(getManagedAccounts_(user));
+    if (cmd === "accountSave") return jsonResponse(saveManagedAccount_(payload, user));
+
     if (cmd === "adminList") {
       logAction(email, cmd, "", "ok", "load admin handbook");
       return jsonResponse(getAdminHandbook(user));
@@ -88,7 +91,11 @@ function doPost(e) {
 
     return jsonResponse({ ok: false, error: "UNKNOWN_CMD" });
   } catch (err) {
-    logAction(email, cmd, "", "error", String(err && err.message || err));
+    if (cmd === "accountList" || cmd === "accountSave") {
+      logAction("", cmd, "", "error", "account management request failed");
+    } else {
+      logAction(email, cmd, "", "error", String(err && err.message || err));
+    }
     return jsonResponse({ ok: false, error: String(err && err.message || err) });
   }
 }

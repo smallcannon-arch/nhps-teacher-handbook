@@ -1216,6 +1216,15 @@
     .report-inbox-card a { display: block; padding: 6px 0; }
     .report-inbox-card .compact-actions { margin-top: 12px; }
     .report-detail { white-space: pre-wrap; }
+    #accountManager { width: min(1000px, calc(100vw - 32px)); max-height: 88vh; box-sizing: border-box; overflow: auto; border: 1px solid #c4d4dc; border-radius: 14px; padding: 20px; }
+    #accountManager::backdrop { background: #13283b88; }
+    .account-manager-grid { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr); gap: 24px; }
+    .account-list-entry { display: block; width: 100%; white-space: pre-line; text-align: left; margin-bottom: 8px; overflow-wrap: anywhere; }
+    #accountForm label { display: block; margin: 12px 0; }
+    #accountForm input:not([type="checkbox"]), #accountForm select { display: block; width: 100%; box-sizing: border-box; margin-top: 6px; }
+    #accountForm .account-enabled-label { display: flex; align-items: center; gap: 8px; }
+    #accountForm input[type="checkbox"] { width: 18px; height: 18px; }
+    @media (max-width: 650px) { .account-manager-grid { grid-template-columns: 1fr; } #accountList { max-height: 240px; overflow: auto; } }
   </style>
 </head>
 <body>
@@ -1234,11 +1243,47 @@
     <nav class="header-tabs-bar" aria-label="後台主入口">
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">管理資料卡</button>
+        <button id="accountManagerBtn" class="tab-button" type="button" hidden disabled>帳號與權限管理</button>
         <button id="reportInboxBtn" class="tab-button" type="button" disabled>連結問題回報</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
     </nav>
   </header>
+
+  <dialog id="accountManager" aria-labelledby="accountManagerTitle">
+    <div class="report-inbox-heading">
+      <h2 id="accountManagerTitle">帳號與權限管理</h2>
+      <button id="closeAccountManagerBtn" type="button" class="secondary">關閉</button>
+    </div>
+    <p class="meta">管理教師手冊後台權限，不會建立或刪除 Google 帳號。處室用於預設篩選，不代表只能編輯該處室。</p>
+    <p id="accountPolicy" class="notice"></p>
+    <div class="compact-actions">
+      <label for="accountSearch">搜尋帳號</label>
+      <input id="accountSearch" type="search" placeholder="姓名、學校帳號或處室" autocomplete="off">
+      <button id="reloadAccountsBtn" type="button" class="secondary">重新載入</button>
+      <button id="newAccountBtn" type="button" class="secondary" disabled>＋ 新增帳號設定</button>
+    </div>
+    <p id="accountManagerStatus" role="status"></p>
+    <div class="account-manager-grid">
+      <div id="accountList" aria-label="已設定帳號"></div>
+      <form id="accountForm" hidden>
+        <h3 id="accountFormTitle">編輯帳號</h3>
+        <label>學校帳號<input id="accountEmail" type="email" required maxlength="254" autocomplete="off"></label>
+        <label>姓名<input id="accountName" maxlength="80" autocomplete="off"></label>
+        <label>所屬處室<select id="accountOffice"></select></label>
+        <label>角色<select id="accountRole">
+          <option value="viewer">檢視者</option><option value="editor">編輯者</option>
+          <option value="reviewer">審核者</option><option value="admin">管理員</option>
+        </select></label>
+        <p id="accountRoleHint" class="meta"></p>
+        <label class="account-enabled-label"><input id="accountEnabled" type="checkbox">允許登入後台</label>
+        <p id="accountSelfHint" class="meta"></p>
+        <p class="meta">停用後，該帳號下一次向後端讀取或儲存時會被拒絕。已開啟的畫面需重新整理才會反映。</p>
+        <button id="saveAccountBtn" type="submit">儲存帳號設定</button>
+        <span id="accountDirtyStatus" class="meta" role="status"></span>
+      </form>
+    </div>
+  </dialog>
 
   <dialog id="reportInbox" aria-labelledby="reportInboxTitle">
     <div class="report-inbox-heading">
@@ -3610,6 +3655,125 @@
       showMessage(AUTH_EXPIRED_NOTICE, true);
     }
 
+    const ACCOUNT_ROLE_LABELS = { viewer: "檢視者", editor: "編輯者", reviewer: "審核者", admin: "管理員" };
+    let managedAccounts = [];
+    let selectedAccount = null;
+    let accountManagerBusy = false;
+    let accountFormDirty = false;
+    let accountManagerLoaded = false;
+    let accountDomain = "";
+    function updateAccountDirty(dirty) {
+      accountFormDirty = dirty;
+      document.getElementById("accountDirtyStatus").textContent = dirty ? "有未儲存的帳號修改" : "";
+      window.removeEventListener("beforeunload", warnAccountUnload);
+      if (dirty) window.addEventListener("beforeunload", warnAccountUnload);
+    }
+    function warnAccountUnload(event) { event.preventDefault(); event.returnValue = true; }
+    function discardAccountChanges() {
+      return !accountFormDirty || window.confirm("帳號設定尚未儲存。要放棄這些修改嗎？");
+    }
+    function setAccountBusy(busy) {
+      accountManagerBusy = busy;
+      document.querySelectorAll("#accountManager input, #accountManager select, #accountManager button").forEach((node) => { node.disabled = busy; });
+      document.getElementById("newAccountBtn").disabled = busy || !accountManagerLoaded;
+      document.getElementById("saveAccountBtn").disabled = busy || !accountManagerLoaded;
+      if (selectedAccount && selectedAccount.isSelf) {
+        document.getElementById("accountRole").disabled = true;
+        document.getElementById("accountEnabled").disabled = true;
+      }
+    }
+    function updateAccountRoleHint() {
+      const hints = {
+        viewer: "可查看後台資料，不能修改資料卡或處理回報。",
+        editor: "可編輯資料卡及處理連結問題回報，不能管理帳號。",
+        reviewer: "可編輯資料、執行既有審核功能及處理回報，不能管理帳號。",
+        admin: "可管理資料、回收桶、問題回報，以及帳號與權限。"
+      };
+      document.getElementById("accountRoleHint").textContent = hints[document.getElementById("accountRole").value] || "";
+    }
+    function renderAccountList() {
+      const query = document.getElementById("accountSearch").value.trim().toLowerCase();
+      const host = document.getElementById("accountList"); host.replaceChildren();
+      managedAccounts.filter((item) => [item.email, item.name, item.office].join(" ").toLowerCase().includes(query)).forEach((item) => {
+        const button = document.createElement("button"); button.type = "button"; button.className = "account-list-entry secondary";
+        button.textContent = (item.name || item.email) + (item.name ? "\n" + item.email : "") + "\n" + (ACCOUNT_ROLE_LABELS[item.role] || item.role) + "｜" + (item.enabled ? "啟用" : "停用") + (item.isSelf ? "｜本人" : "");
+        button.disabled = accountManagerBusy;
+        button.addEventListener("click", () => { if (discardAccountChanges()) openAccountForm(item); });
+        host.appendChild(button);
+      });
+      if (!host.childElementCount) host.textContent = "沒有符合條件的帳號設定。";
+    }
+    function openAccountForm(item) {
+      selectedAccount = item || null;
+      const form = document.getElementById("accountForm"); form.hidden = false;
+      document.getElementById("accountFormTitle").textContent = item ? "編輯帳號設定" : "新增帳號設定";
+      const email = document.getElementById("accountEmail"); email.value = item ? item.email : ""; email.readOnly = Boolean(item);
+      email.placeholder = accountDomain ? "帳號@" + accountDomain : "學校帳號";
+      document.getElementById("accountName").value = item ? item.name : "";
+      const office = document.getElementById("accountOffice"); office.replaceChildren();
+      [...new Set(["", ...getResourceOfficeOptions(), item ? item.office : ""])].forEach((value) => { const option = document.createElement("option"); option.value = value; option.textContent = value || "未指定"; office.appendChild(option); });
+      office.value = item ? item.office : "";
+      document.getElementById("accountRole").value = item ? item.role : "viewer";
+      document.getElementById("accountEnabled").checked = item ? item.enabled : true;
+      document.getElementById("accountSelfHint").textContent = item && item.isSelf ? "這是目前登入帳號；自己的角色與啟用狀態須由其他管理員調整。" : "";
+      updateAccountDirty(false); updateAccountRoleHint(); setAccountBusy(false);
+      form.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    async function loadManagedAccounts() {
+      if (accountManagerBusy || !discardAccountChanges()) return;
+      updateAccountDirty(false); accountManagerLoaded = false; selectedAccount = null; managedAccounts = [];
+      document.getElementById("accountForm").hidden = true; document.getElementById("accountList").replaceChildren();
+      setAccountBusy(true); document.getElementById("accountManagerStatus").textContent = "正在確認管理員權限並載入帳號…";
+      try {
+        const data = await api("accountList");
+        managedAccounts = data.users; accountDomain = data.domain; accountManagerLoaded = true;
+        document.getElementById("accountPolicy").textContent = data.autoAllowSchoolAccounts
+          ? "現行規則：未列入清單的學校帳號仍可用「" + (ACCOUNT_ROLE_LABELS[data.defaultRole] || data.defaultRole) + "」身分登入。若要停用特定帳號，請新增該帳號設定並取消「允許登入後台」。"
+          : "現行規則：僅已列入清單且啟用的帳號可以登入後台。";
+        renderAccountList(); document.getElementById("accountManagerStatus").textContent = "已載入 " + managedAccounts.length + " 筆帳號設定。";
+      } catch (error) { document.getElementById("accountManagerStatus").textContent = error.message || "載入失敗，請重試。"; }
+      finally { setAccountBusy(false); }
+    }
+    async function saveAccountSettings(event) {
+      event.preventDefault();
+      if (accountManagerBusy || !accountManagerLoaded) return;
+      const account = {
+        email: document.getElementById("accountEmail").value.trim().toLowerCase(),
+        name: document.getElementById("accountName").value.trim(),
+        office: document.getElementById("accountOffice").value,
+        role: document.getElementById("accountRole").value,
+        enabled: document.getElementById("accountEnabled").checked
+      };
+      if ((!account.enabled || account.role === "admin") &&
+          (!selectedAccount || selectedAccount.enabled !== account.enabled || selectedAccount.role !== account.role) &&
+          !window.confirm("確定將「" + (account.name || account.email) + "」設為「" + (ACCOUNT_ROLE_LABELS[account.role] || account.role) + "／" + (account.enabled ? "啟用" : "停用") + "」嗎？")) return;
+      setAccountBusy(true); document.getElementById("accountManagerStatus").textContent = "正在儲存帳號設定…";
+      try {
+        const data = await api("accountSave", { account, create: !selectedAccount, revision: selectedAccount ? selectedAccount.revision : null });
+        const index = managedAccounts.findIndex((item) => item.email === data.user.email);
+        if (index < 0) managedAccounts.push(data.user); else managedAccounts[index] = data.user;
+        openAccountForm(data.user); renderAccountList();
+        document.getElementById("accountManagerStatus").textContent = "帳號設定已儲存。";
+      } catch (error) { document.getElementById("accountManagerStatus").textContent = error.message || "儲存失敗，請重試。"; }
+      finally { setAccountBusy(false); }
+    }
+    function closeAccountManager() {
+      if (accountManagerBusy || !discardAccountChanges()) return;
+      updateAccountDirty(false); managedAccounts = []; selectedAccount = null; accountManagerLoaded = false;
+      document.getElementById("accountList").replaceChildren(); document.getElementById("accountForm").reset(); document.getElementById("accountForm").hidden = true;
+      document.getElementById("accountManager").close();
+    }
+    document.getElementById("accountManagerBtn").addEventListener("click", () => { document.getElementById("accountManager").showModal(); loadManagedAccounts(); });
+    document.getElementById("closeAccountManagerBtn").addEventListener("click", closeAccountManager);
+    document.getElementById("accountManager").addEventListener("cancel", (event) => { event.preventDefault(); closeAccountManager(); });
+    document.getElementById("accountSearch").addEventListener("input", renderAccountList);
+    document.getElementById("reloadAccountsBtn").addEventListener("click", loadManagedAccounts);
+    document.getElementById("newAccountBtn").addEventListener("click", () => { if (discardAccountChanges()) openAccountForm(null); });
+    document.getElementById("accountForm").addEventListener("input", () => updateAccountDirty(true));
+    document.getElementById("accountForm").addEventListener("change", () => updateAccountDirty(true));
+    document.getElementById("accountRole").addEventListener("change", updateAccountRoleHint);
+    document.getElementById("accountForm").addEventListener("submit", saveAccountSettings);
+
     let reportInboxItems = [];
     let reportInboxNext = null;
     let reportInboxBusy = false;
@@ -3728,6 +3892,9 @@
 
     function setEnabled(enabled) {
       mode = normalizeMode(mode);
+      const accountManagerBtn = document.getElementById("accountManagerBtn");
+      accountManagerBtn.hidden = !userCanManageUsers();
+      accountManagerBtn.disabled = !enabled || !idToken || !userCanManageUsers();
       const canEditContent = userCanEditContent();
       document.getElementById("reportInboxBtn").disabled = !enabled || !idToken || !canEditContent;
       const canPublishContent = userCanPublishContent();
