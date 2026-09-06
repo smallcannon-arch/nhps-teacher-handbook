@@ -2,6 +2,8 @@
 
 ## 最終方案：先顯示說明頁
 
+完成狀態：PR #21 已合併，Pages 工作流程 `34015182599` 成功；正式 `calendar.html` 可讀且內容符合本機。後台單筆儲存成功，公開 `getDirectory` 已讀回說明頁網址。LINE V1.5 已通過 validate、上傳、設定 default 及讀回，第三格直接連到說明頁。回退 ID 見 `docs/line-rich-menu-v1-5-deployment.json`。既有日曆權限不變，使用者先前已確認學校帳號可查看日曆。
+
 使用者切换為學校帳號後已可查看日曆，但認為操作不易，因此同意採說明頁。新增 `calendar.html`，提供「查看校內行事曆」主按鈕、使用有權限學校帳號的提醒、LINE 轉到一般瀏覽器與登入指引。日曆內容及分享權限保持不變，不提供未經確認的公開替代版本。
 
 首頁備援與初始化資料改指向 `https://smallcannon-arch.github.io/nhps-teacher-handbook/calendar.html`。頁面部署完成後，後台 `padlet-002` 與 LINE V1.5 的第三格也指向此頁；V1.5 沿用 V1.3 圖片，只有第三格網址較 V1.4 改變。V1.4 保留供回復。
