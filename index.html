@@ -3408,14 +3408,36 @@
       return resource && resource.links && resource.links[0] ? resource.links[0].url : "";
     }
 
+    const timetableResource = {
+      id: "nhps-timetable-entry",
+      category: "教務處",
+      office: "教務處",
+      title: "課表查詢",
+      type: "查詢系統",
+      task: "teaching-assessment",
+      note: "查詢班級、教師、場地課表、空堂代課與全校總覽。代課人選仍須由教務處確認安排。",
+      links: [{ label: "開啟課表查詢", url: "https://smallcannon-arch.github.io/nhps-timetable/" }],
+      updated: "2026-09-07",
+      tags: ["常用資源", "課表", "課務", "班級", "教師", "場地", "空堂", "調課", "代課"],
+      featured: true,
+      source: "builtin"
+    };
+
+    function withTimetableResource(items) {
+      const timetableUrl = canonicalUrl(timetableResource.links[0].url);
+      const exists = items.some((item) => item.id === timetableResource.id ||
+        (item.links || []).some((link) => canonicalUrl(link.url) === timetableUrl));
+      return exists ? items : [timetableResource, ...items];
+    }
+
     function getDirectoryItems() {
       if (Array.isArray(directoryApiResources)) {
-        return directoryApiResources.map((resource) => ({
+        return withTimetableResource(directoryApiResources.map((resource) => ({
           ...resource,
           links: cleanLinks(resource.links),
           office: resource.office || resourceOffice(resource),
           source: "api"
-        }));
+        })));
       }
       const hiddenResourceIds = new Set(["padlet-041", "padlet-049", "padlet-058"]);
       const resourceItems = padletResources
@@ -3477,7 +3499,7 @@
           hasOnlyDuplicateLinks: links.length > 0 && uniqueLinks.length === 0
         };
       }).filter((item) => !item.hasOnlyDuplicateLinks);
-      return [...resourceItems, spaceBookingItem, schoolInfoItem, ...linkItems];
+      return withTimetableResource([...resourceItems, spaceBookingItem, schoolInfoItem, ...linkItems]);
     }
 
     function directorySearchText(item) {
@@ -4107,7 +4129,11 @@
     }
 
     function getCommonContentItems() {
-      return cachedCommonContentItems;
+      // 舊快取或 API 尚未回應時，也保留課表的常用入口。
+      const exists = cachedCommonContentItems.some((item) =>
+        item.id === timetableResource.id || item.title === timetableResource.title);
+      return exists ? cachedCommonContentItems :
+        [timetableResource, ...cachedCommonContentItems].slice(0, commonContentLimit);
     }
 
     function updateCommonContentItems() {
