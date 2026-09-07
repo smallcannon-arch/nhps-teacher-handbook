@@ -1193,11 +1193,19 @@
     .list-edit-button { align-self: center; padding: 10px; white-space: nowrap; font-size: .88rem; }
     #resourceActionBar {
       display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 10px;
-      margin-top: 20px; padding-top: 16px;
-      border-top: 1px solid var(--line);
+      margin-top: 24px; padding: 18px;
+      background: #edf4f8; border: 1px solid #bdcedc;
+      border-left: 4px solid var(--navy); border-radius: 12px;
     }
-    #resourceDirtyStatus { margin-right: auto; font-weight: 700; color: #536577; }
-    #resourceDirtyStatus.is-dirty { color: #8b4600; }
+    #resourceDirtyStatus {
+      margin-right: auto; padding: 8px 12px; border-radius: 8px;
+      background: #fff; border: 1px solid #d4dfe7;
+      font-weight: 700; color: #40576b;
+    }
+    #resourceDirtyStatus.is-dirty { color: #824300; background: #fff1d9; border-color: #dfb56e; }
+    #resourceActionBar button { min-height: 46px; padding: 12px 20px; font-weight: 700; }
+    #stickyPreviewResourceBtn { background: #fff; border-color: #819bb1; color: var(--navy); }
+    #saveResourceBtn:not(:disabled) { box-shadow: 0 2px 5px #17375e26; }
     @media (max-width: 600px) {
       #resourceDirtyStatus { flex-basis: 100%; }
       #resourceActionBar button { flex: 1; min-height: 44px; }
