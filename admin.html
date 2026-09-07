@@ -1222,7 +1222,14 @@
     .report-inbox-card .compact-actions { margin-top: 12px; }
     .report-detail { white-space: pre-wrap; }
     #accountManager { width: min(1000px, calc(100vw - 32px)); max-height: 88vh; box-sizing: border-box; overflow: auto; border: 1px solid #c4d4dc; border-radius: 14px; padding: 20px; }
-    #accountManager::backdrop { background: #13283b88; }
+    #accountManager::backdrop, #editLogDialog::backdrop { background: #13283b88; }
+    #editLogDialog { width: min(1100px, calc(100vw - 32px)); max-height: 88vh; box-sizing: border-box; overflow: auto; border: 1px solid #c4d4dc; border-radius: 14px; padding: 20px; font-size: 16px; }
+    .edit-log-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+    .edit-log-filters label { display: grid; gap: 6px; }
+    .edit-log-table { overflow-x: auto; }
+    .edit-log-table table { width: 100%; min-width: 720px; border-collapse: collapse; }
+    .edit-log-table th, .edit-log-table td { padding: 12px; border-bottom: 1px solid #dce5e5; text-align: left; vertical-align: top; overflow-wrap: anywhere; max-width: 340px; }
+    .edit-log-table th { background: #edf5f1; }
     .account-manager-grid { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr); gap: 24px; }
     .account-list-entry { display: block; width: 100%; white-space: pre-line; text-align: left; margin-bottom: 8px; overflow-wrap: anywhere; }
     #accountForm label { display: block; margin: 12px 0; }
@@ -1249,11 +1256,26 @@
       <div class="tabs" role="tablist" aria-label="後台模式">
         <button id="resourcesTab" class="tab-button is-active" type="button">管理資料卡</button>
         <button id="accountManagerBtn" class="tab-button" type="button" hidden disabled>帳號與權限管理</button>
+        <button id="editLogBtn" class="tab-button" type="button" hidden disabled>編輯紀錄</button>
         <button id="reportInboxBtn" class="tab-button" type="button" disabled>連結問題回報</button>
         <button id="trashTab" class="tab-button" type="button">回收桶</button>
       </div>
     </nav>
   </header>
+
+  <dialog id="editLogDialog" aria-labelledby="editLogTitle">
+    <div class="toolbar"><h2 id="editLogTitle">編輯紀錄</h2><button id="closeEditLogBtn" type="button" class="secondary">關閉</button></div>
+    <p class="meta">僅管理員可查看。顯示儲存、刪除與發布等操作，不包含修改前後的文字。資料名稱採目前名稱。</p>
+    <form id="editLogFilters" class="edit-log-filters">
+      <label>帳號或姓名<input id="editLogAccount" type="search" maxlength="254" placeholder="全部帳號" autocomplete="off"></label>
+      <label>開始日期<input id="editLogFrom" type="date"></label>
+      <label>結束日期<input id="editLogTo" type="date"></label>
+      <button type="submit">查詢</button>
+    </form>
+    <p id="editLogStatus" role="status"></p>
+    <div class="edit-log-table"><table aria-label="編輯操作紀錄"><thead><tr><th scope="col">時間</th><th scope="col">帳號</th><th scope="col">操作</th><th scope="col">資料名稱／ID</th><th scope="col">結果</th></tr></thead><tbody id="editLogRows"></tbody></table></div>
+    <button id="moreEditLogsBtn" type="button" class="secondary" hidden>載入更早紀錄</button>
+  </dialog>
 
   <dialog id="accountManager" aria-labelledby="accountManagerTitle">
     <div class="report-inbox-heading">
@@ -3661,6 +3683,42 @@
     }
 
     const ACCOUNT_ROLE_LABELS = { viewer: "檢視者", editor: "編輯者", reviewer: "審核者", admin: "管理員" };
+    let editLogNext = null, editLogBusy = false, editLogQuery = {}, editLogCount = 0;
+    async function loadEditLogs(more = false) {
+      if (editLogBusy || !userCanManageUsers()) return;
+      const status = document.getElementById("editLogStatus");
+      const rows = document.getElementById("editLogRows");
+      if (!more) {
+        editLogQuery = { account: document.getElementById("editLogAccount").value.trim(), from: document.getElementById("editLogFrom").value, to: document.getElementById("editLogTo").value };
+        rows.replaceChildren(); editLogCount = 0; editLogNext = null;
+      }
+      editLogBusy = true;
+      document.querySelectorAll("#editLogFilters input, #editLogFilters button, #moreEditLogsBtn").forEach(node => { node.disabled = true; });
+      status.textContent = "正在載入編輯紀錄…";
+      try {
+        const data = await api("editLogList", { ...editLogQuery, before: more ? editLogNext : null });
+        data.items.forEach(item => {
+          const tr = document.createElement("tr");
+          [item.time, [item.name, item.email].filter(Boolean).join(" ／ ") || "未記錄帳號", item.action, item.target, item.result].forEach(value => {
+            const td = document.createElement("td"); td.textContent = value; tr.appendChild(td);
+          });
+          rows.appendChild(tr);
+        });
+        editLogCount += data.items.length; editLogNext = data.next;
+        status.textContent = editLogCount ? "已顯示 " + editLogCount + " 筆，依操作順序由新到舊排列。" : "沒有符合條件的編輯紀錄。";
+      } catch (error) {
+        status.textContent = error.message === "UNKNOWN_CMD" ? "編輯紀錄服務尚未更新，請先部署新版 Apps Script。" : (error.message || "載入失敗，請重試。");
+      } finally {
+        editLogBusy = false;
+        document.querySelectorAll("#editLogFilters input, #editLogFilters button, #moreEditLogsBtn").forEach(node => { node.disabled = false; });
+        document.getElementById("moreEditLogsBtn").hidden = editLogNext == null;
+      }
+    }
+    document.getElementById("editLogBtn").addEventListener("click", () => { document.getElementById("editLogDialog").showModal(); loadEditLogs(); });
+    document.getElementById("closeEditLogBtn").addEventListener("click", () => document.getElementById("editLogDialog").close());
+    document.getElementById("editLogFilters").addEventListener("submit", event => { event.preventDefault(); loadEditLogs(); });
+    document.getElementById("moreEditLogsBtn").addEventListener("click", () => loadEditLogs(true));
+
     let managedAccounts = [];
     let selectedAccount = null;
     let accountManagerBusy = false;
@@ -3900,6 +3958,8 @@
       const accountManagerBtn = document.getElementById("accountManagerBtn");
       accountManagerBtn.hidden = !userCanManageUsers();
       accountManagerBtn.disabled = !enabled || !idToken || !userCanManageUsers();
+      document.getElementById("editLogBtn").hidden = !userCanManageUsers();
+      document.getElementById("editLogBtn").disabled = !enabled || !idToken || !userCanManageUsers();
       const canEditContent = userCanEditContent();
       document.getElementById("reportInboxBtn").disabled = !enabled || !idToken || !canEditContent;
       const canPublishContent = userCanPublishContent();

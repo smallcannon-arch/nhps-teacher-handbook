@@ -30,6 +30,8 @@ function doPost(e) {
     var authFinished = Date.now();
     email = user.email;
 
+    if (cmd === "editLogList") return jsonResponse(getEditLogs_(payload, user));
+
     if (cmd === "accountList") return jsonResponse(getManagedAccounts_(user));
     if (cmd === "accountSave") return jsonResponse(saveManagedAccount_(payload, user));
 
