@@ -6,9 +6,11 @@ function requireUser_(idToken) {
   enforceAllowedDomain_(email, profile);
 
   var users = readTable(APP.SHEETS.USERS);
-  var user = users.find(function(row) {
-    return String(row.email || "").toLowerCase() === email && String(row.enabled).toUpperCase() === "TRUE";
+  var matches = users.filter(function(row) {
+    return String(row.email || "").trim().toLowerCase() === email;
   });
+  var user = matches.find(function(row) { return String(row.enabled).toUpperCase() === "TRUE"; });
+  if (matches.length && !user) throw new Error("此帳號已停用，請洽管理員。");
   if (!user && !APP.AUTO_ALLOW_DOMAIN_USERS) throw new Error("此帳號未授權使用後台：" + email);
 
   return {
