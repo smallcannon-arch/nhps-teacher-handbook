@@ -69,7 +69,7 @@ export default {
 
     if (action !== "health" && cacheVersion) {
       const hit = await cache.match(cacheKey);
-      if (hit) return withCors(hit, "HIT", cacheVersionSource);
+      if (hit) return withCors(directoryBrowserCache(hit, action), "HIT", cacheVersionSource);
     }
 
     const upstream = await fetch(gasUrl.toString(), {
@@ -90,9 +90,22 @@ export default {
     });
 
     if (cacheable) ctx.waitUntil(cache.put(cacheKey, response.clone()));
-    return withCors(response, cacheable ? "MISS" : "BYPASS", cacheVersionSource);
+    return withCors(directoryBrowserCache(response, action, cacheable), cacheable ? "MISS" : "BYPASS", cacheVersionSource);
   }
 };
+
+function directoryBrowserCache(response, action, cacheable = true) {
+  if (action !== "getDirectory") return response;
+  const remaining = Math.max(0, Math.min(30,
+    Math.floor((cachedCacheVersionAt + CACHE_VERSION_TTL_MS - Date.now()) / 1000)));
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", cacheable && remaining > 0
+    ? `private, max-age=${remaining}, must-revalidate` : "no-store");
+  // The response was validated against the version now; retain only its remaining window.
+  headers.set("Date", new Date().toUTCString());
+  headers.delete("Age");
+  return new Response(response.body, { status: response.status, headers });
+}
 
 async function proxyPostToGas(request, env) {
   const upstream = await fetch(env.GAS_URL, {

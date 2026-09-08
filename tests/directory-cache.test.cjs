@@ -10,7 +10,8 @@ const request = new Request('https://worker.test/?action=getDirectory');
 function fixture(store, clock) {
   let fetches = 0;
   const pending = [];
-  const c = vm.createContext({Request, Response, URL, Date: {now:()=>clock.now},
+  class ClockDate extends Date { constructor(...args) { super(...(args.length ? args : [clock.now])); } static now() {return clock.now;} }
+  const c = vm.createContext({Request, Response, Headers, URL, Date: ClockDate,
     caches: {default: {
       match: async key => store.get(key.url)?.clone(),
       put: async (key, value) => {store.set(key.url, value.clone());}
@@ -18,6 +19,7 @@ function fixture(store, clock) {
   });
   vm.runInContext(source, c);
   return {read:()=>c.getCacheVersion(env,request,{waitUntil:p=>pending.push(p)}),
+    browser:(response,action='getDirectory',cacheable=true)=>c.directoryBrowserCache(response,action,cacheable),
     flush:()=>Promise.all(pending), fetches:()=>fetches};
 }
 test('a fresh isolate reuses edge version without another Google request', async()=>{
@@ -28,6 +30,21 @@ test('a fresh isolate reuses edge version without another Google request', async
   clock.now+=29000; assert.equal((await second.read()).source,'memory-cache');
   clock.now+=1001; assert.equal((await second.read()).source,'gas');
   assert.equal(second.fetches(),1);
+});
+test('browser caching never extends the original version deadline',async()=>{
+  const clock={now:100000},f=fixture(new Map(),clock);
+  await f.read(); await f.flush();
+  clock.now+=24000;
+  const result=f.browser(Response.json({ok:true}));
+  assert.equal(result.headers.get('Cache-Control'),'private, max-age=6, must-revalidate');
+  assert.equal(result.headers.get('Date'),new Date(clock.now).toUTCString());
+  clock.now+=6001;
+  assert.equal(f.browser(Response.json({ok:true})).headers.get('Cache-Control'),'no-store');
+});
+test('failed responses and other endpoints do not gain browser caching',async()=>{
+  const f=fixture(new Map(),{now:100000}); await f.read(); await f.flush();
+  assert.equal(f.browser(Response.json({ok:false}),'getDirectory',false).headers.get('Cache-Control'),'no-store');
+  const health=Response.json({ok:true}); assert.equal(f.browser(health,'health'),health);
 });
 test('expired and malformed shared entries are refreshed',async()=>{
   for(const entry of [{value:'old',checkedAt:1},{value:'bad',checkedAt:'100000'},{}]){

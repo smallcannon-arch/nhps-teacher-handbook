@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>內湖國小教師手冊｜校務支援站</title>
   <link rel="preconnect" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev" crossorigin>
+  <link rel="preload" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory" as="fetch" crossorigin>
   <style>
     :root {
       --ink: #203044;
@@ -4486,7 +4487,7 @@
       try {
         const response = await fetch(directoryApiRequestUrl(), {
           method: "GET",
-          cache: "no-store",
+          cache: "default",
           signal: controller.signal,
           headers: { "Accept": "application/json" }
         });
@@ -4516,9 +4517,7 @@
     }
 
     function directoryApiRequestUrl() {
-      const url = new URL(directoryApiUrl);
-      url.searchParams.set("_cache", String(Date.now()));
-      return url.toString();
+      return directoryApiUrl;
     }
 
     elements.searchInput.addEventListener("input", (event) => {
