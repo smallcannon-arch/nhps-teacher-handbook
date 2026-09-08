@@ -57,7 +57,7 @@ export default {
       return corsResponse(JSON.stringify({ ok: false, error: "ACTION_NOT_ALLOWED" }), 400);
     }
 
-    const cacheVersionResult = await getCacheVersion(env);
+    const cacheVersionResult = await getCacheVersion(env, request, ctx);
     const cacheVersion = cacheVersionResult.value;
     const cacheVersionSource = cacheVersionResult.source;
     const gasUrl = new URL(env.GAS_URL);
@@ -611,10 +611,29 @@ function lineJsonResponse(body, status) {
   });
 }
 
-async function getCacheVersion(env) {
+async function getCacheVersion(env, request, ctx) {
   const now = Date.now();
   if (cachedCacheVersion && now - cachedCacheVersionAt < CACHE_VERSION_TTL_MS) {
     return { value: cachedCacheVersion, source: "memory-cache" };
+  }
+
+  // Share the existing 30-second check window across isolates in this location.
+  // Keep the original timestamp so an edge hit cannot restart that window.
+  const versionKey = new Request(new URL(
+    "/__handbook-version?upstream=" + encodeURIComponent(env.GAS_URL), request.url));
+  try {
+    const hit = await caches.default.match(versionKey);
+    if (hit) {
+      const entry = await hit.json();
+      if (typeof entry.value === "string" && entry.value && Number.isFinite(entry.checkedAt) &&
+          now >= entry.checkedAt && now - entry.checkedAt < CACHE_VERSION_TTL_MS) {
+        cachedCacheVersion = entry.value;
+        cachedCacheVersionAt = entry.checkedAt;
+        return { value: entry.value, source: "edge-cache" };
+      }
+    }
+  } catch (err) {
+    // A cache failure must not prevent checking the authoritative source.
   }
 
   try {
@@ -631,6 +650,13 @@ async function getCacheVersion(env) {
     if (cacheVersion) {
       cachedCacheVersion = cacheVersion;
       cachedCacheVersionAt = Date.now();
+      const versionResponse = new Response(JSON.stringify({
+        value: cacheVersion, checkedAt: cachedCacheVersionAt
+      }), { headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": `public, max-age=${CACHE_VERSION_TTL_MS / 1000}`
+      } });
+      ctx.waitUntil(caches.default.put(versionKey, versionResponse).catch(() => {}));
       return { value: cacheVersion, source: "gas" };
     }
     return cachedCacheVersion

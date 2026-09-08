@@ -74,3 +74,12 @@
 - 本機驗證通過：內嵌JavaScript語法、diff空白檢查、載入隱藏舊資料、下架過濾、空清單、HTTP／格式／斷線錯誤、錯誤後重試及重複請求防護。
 - Context7工具不可用，逾時取消方式改查MDN官方文件：https://developer.mozilla.org/en-US/docs/Web/API/AbortController/abort
 - 使用者已明確同意發布；此修正與處理紀錄一併提交至GitHub Pages來源分支。
+
+## 載入速度優化
+
+- 首頁檔案量測0.66秒，優化前資料API兩次量測6.72及2.60秒。
+- Worker版本資訊增加Cloudflare同區域共用30秒快取，沿用原檢查期限；保留原時間戳，避免跨實例讀取重新延長期限。首頁增加資料服務preconnect。
+- Context7不可用，改查官方Cache API文件：https://developers.cloudflare.com/workers/runtime-apis/cache/
+- 新增directory-cache測試；跨實例共用、期限不延長、過期／格式異常重新查詢及既有LINE回覆共5項檢查通過，Worker部署檢查通過。
+- Worker已部署版本e5d64f76-9129-417b-938b-7ff1e080378e。
+- 部署後API量測：版本來源gas時3.38秒；edge-cache兩次為0.54與0.48秒，均回傳56筆正式資料。這是三次樣本，並非所有使用者延遲保證；冷快取與版本到期仍須等待Google回應。
