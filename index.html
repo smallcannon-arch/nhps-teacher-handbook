@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>內湖國小教師手冊｜校務支援站</title>
   <link rel="preconnect" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev" crossorigin>
-  <link rel="preload" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory" as="fetch" crossorigin>
+  <link rel="preload" href="https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory&amp;publication=1" as="fetch" crossorigin>
   <style>
     :root {
       --ink: #203044;
@@ -1701,7 +1701,7 @@
     const homeRecentExcludedStatuses = ["年度檔案待整理", "資料待整理", "附件待整理", "連結待補", "連結異常"];
     const homeRecentExcludedKeywords = ["學生名單", "學生名冊", "名冊", "名單", "個資", "特教生", "性平", "霸凌", "學生事件", "高風險"];
 
-    const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory";
+    const directoryApiUrl = "https://nhps-teacher-handbook-api.smallcannon.workers.dev?action=getDirectory&publication=1";
     const defaultOfficeTab = "常用入口";
     const realOfficeCategories = ["校長室", "教務處", "學務處", "總務處", "輔導室", "幼兒園", "人事", "會計", "全校共用"];
     const officeCategories = [...realOfficeCategories];

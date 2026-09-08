@@ -1,4 +1,5 @@
 import { handleReports } from "./feedback.js";
+import { PUBLICATION_COMMANDS, publishDirectory, readPublishedDirectory } from "./directory-publication.js";
 
 const DEFAULT_CACHE_SECONDS = 300;
 const CACHE_VERSION_TTL_MS = 30000;
@@ -57,6 +58,19 @@ export default {
       return corsResponse(JSON.stringify({ ok: false, error: "ACTION_NOT_ALLOWED" }), 400);
     }
 
+    if (action === "getDirectory") {
+      try {
+        let snapshot = await readPublishedDirectory(env);
+        if (!snapshot) {
+          await publishDirectory(env);
+          snapshot = await readPublishedDirectory(env);
+        }
+        return snapshot ? withCors(snapshot, "PUBLISHED")
+          : corsResponse(JSON.stringify({ok:false, error:"公開資料尚未發布，請稍後重試。"}), 503);
+      } catch (err) {
+        return corsResponse(JSON.stringify({ok:false, error:"公開資料暫時無法讀取，請稍後重試。"}), 503);
+      }
+    }
     const cacheVersionResult = await getCacheVersion(env, request, ctx);
     const cacheVersion = cacheVersionResult.value;
     const cacheVersionSource = cacheVersionResult.source;
@@ -108,16 +122,21 @@ function directoryBrowserCache(response, action, cacheable = true) {
 }
 
 async function proxyPostToGas(request, env) {
+  const body = await request.text();
+  let command;
+  try { command = JSON.parse(body.startsWith("payload=") ? new URLSearchParams(body).get("payload") : body); }
+  catch (err) { command = {}; }
+  const manualPublish = command.cmd === "publishDirectory";
   const upstream = await fetch(env.GAS_URL, {
     method: "POST",
     headers: {
       "Content-Type": request.headers.get("Content-Type") || "text/plain;charset=utf-8",
       "Accept": "application/json"
     },
-    body: await request.text(),
+    body: manualPublish ? JSON.stringify({cmd:"directoryList", idToken:command.idToken}) : body,
     redirect: "follow"
   });
-  const text = await upstream.text();
+  let text = await upstream.text();
   const isJson = (upstream.headers.get("content-type") || "").includes("json") || looksLikeJson(text);
   if (!isJson) {
     return withCors(new Response(JSON.stringify({
@@ -132,6 +151,21 @@ async function proxyPostToGas(request, env) {
         "X-Handbook-Cache": "BYPASS"
       }
     }), "BYPASS");
+  }
+  try {
+    const data = JSON.parse(text);
+    if (manualPublish) {
+      if (!upstream.ok || data.ok !== true || !["admin", "editor", "reviewer"].includes(data.user && data.user.role)) {
+        text = JSON.stringify({ok:false, error:"請使用具發布權限的學校帳號登入。"});
+      } else {
+        text = JSON.stringify({ok:true, publication:await publishDirectory(env, data.cache_version)});
+      }
+    } else if (upstream.ok && data.ok === true && PUBLICATION_COMMANDS.has(command.cmd)) {
+      data.publication = await publishDirectory(env, data.cache_version);
+      text = JSON.stringify(data);
+    }
+  } catch (err) {
+    if (manualPublish) text = JSON.stringify({ok:false, error:"無法確認發布權限，請重新登入後再試。"});
   }
   const response = new Response(text, {
     status: upstream.status,

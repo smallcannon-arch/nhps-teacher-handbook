@@ -1367,7 +1367,9 @@
       </details>
       <div class="primary-list-actions">
         <button id="addItemBtn" type="button" class="secondary" disabled>＋ 新增資料卡</button>
+        <button id="publishDirectoryBtn" type="button" class="secondary" disabled>同步發布</button>
       </div>
+      <p id="publicationNotice" class="meta" role="status">儲存資料卡會自動發布；若直接修改試算表，請按「同步發布」。</p>
       <p id="sortHint" class="sidebar-sort-hint">拖曳資料卡可調整同群組內顯示順序。</p>
       <details id="bulkTools" class="sidebar-tools bulk-tools">
         <summary id="bulkToolsSummary">批次整理</summary>
@@ -3543,6 +3545,7 @@
           }, slowAfterMs);
         }
         const data = await api(cmd, payload);
+        if (data.publication) showPublicationResult(data.publication);
         if (typeof options.onApiSuccess === "function") options.onApiSuccess(data);
         if (cmd === "saveDirectoryResource" && data.resource_id) activeResourceId = data.resource_id;
         if (cmd === "saveDirectoryShortcut" && data.shortcut_id) activeShortcutId = data.shortcut_id;
@@ -3553,7 +3556,9 @@
         const resourceEditedAfterSubmit = cmd === "saveDirectoryResource" && resourceFormRevision > saveStartedRevision;
         applyCommandResultLocally(cmd, payload, data, { preserveDirtyEditor: resourceEditedAfterSubmit });
         await loadDirectoryData({ keepCategoryFilter: true });
-        showMessage(resourceEditedAfterSubmit
+        showMessage(data.publication && data.publication.status !== "published"
+          ? "資料已儲存，但尚未發布到前台。請按「同步發布」重試，不必重新儲存。"
+          : resourceEditedAfterSubmit
           ? "已儲存上一版；目前畫面仍有新的未儲存變更。"
           : resolveSuccessText(successText), false);
         return true;
@@ -3644,7 +3649,7 @@
     }
 
     function saveSuccessText() {
-      return "已儲存於 " + currentTimeText() + "。若前台尚未更新，請稍候 30 秒後重新整理；若前台仍顯示舊資料，可按 Ctrl + F5 強制重新整理。";
+      return "已儲存於 " + currentTimeText() + "，發布狀態請見「同步發布」下方說明。";
     }
 
     function currentTimeText() {
@@ -3939,6 +3944,26 @@
       return ["admin", "editor", "reviewer"].includes(role);
     }
 
+    function showPublicationResult(publication) {
+      document.getElementById("publicationNotice").textContent = publication.status === "published"
+        ? "已發布，重新開啟前台即可查看最新資料。"
+        : "已儲存，尚未發布。請按「同步發布」重試。";
+    }
+
+    document.getElementById("publishDirectoryBtn").addEventListener("click", async () => {
+      const button = document.getElementById("publishDirectoryBtn");
+      button.disabled = true;
+      document.getElementById("publicationNotice").textContent = "正在同步已儲存的資料，請稍候……";
+      try {
+        const data = await api("publishDirectory");
+        showPublicationResult(data.publication || {status:"pending"});
+      } catch (err) {
+        document.getElementById("publicationNotice").textContent = "同步未完成：" + err.message;
+      } finally {
+        button.disabled = !idToken || !userCanPublishContent();
+      }
+    });
+
     function userCanManageTrash() {
       return currentUser && currentUser.role === "admin";
     }
@@ -3966,6 +3991,7 @@
       const canManageTrash = userCanManageTrash();
       const activeResource = resources.find((item) => item.id === activeResourceId);
       el.addItemBtn.disabled = !enabled || !idToken || !canEditContent || mode === "trash";
+      document.getElementById("publishDirectoryBtn").disabled = !enabled || !idToken || !userCanPublishContent();
       el.listSearchInput.disabled = !enabled || !idToken;
       el.officeFilter.disabled = !enabled || !idToken;
       el.categoryFilter.disabled = !enabled || !idToken;
