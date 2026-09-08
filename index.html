@@ -3185,12 +3185,15 @@
       return window.matchMedia("(max-width: 980px)").matches;
     }
 
-    function scrollCurrentResultsIntoViewOnMobile() {
-      if (!isMobileResultsLayout()) return;
+    function scrollCurrentResultsIntoView() {
       const target = elements.currentTitle || elements.resourceResults;
       if (!target) return;
       const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
       target.scrollIntoView({ behavior, block: "start", inline: "nearest" });
+    }
+
+    function scrollCurrentResultsIntoViewOnMobile() {
+      if (isMobileResultsLayout()) scrollCurrentResultsIntoView();
     }
 
     function getTaskLabel(taskId) {
@@ -4235,7 +4238,7 @@
         state.resultsMode = hasActiveFilters() ? "filtered" : "directory";
         elements.searchInput.value = state.query;
         renderAll();
-        scrollCurrentResultsIntoViewOnMobile();
+        scrollCurrentResultsIntoView();
       });
       return button;
     }
