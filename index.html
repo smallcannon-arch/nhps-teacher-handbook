@@ -1719,6 +1719,8 @@
 
     // 由既有教師常用網匯出資料轉成靜態資源。新增或修正資源時，只要維持 id/category/title/links/updated 這幾個欄位即可。
     let directoryApiResources = null;
+    let directoryLoadState = "loading";
+    let directoryRequestPending = false;
 
     let padletResources = [
           {
@@ -3431,6 +3433,8 @@
     }
 
     function getDirectoryItems() {
+      // 正式資料尚未確認前，不顯示可能已過期或下架的內建清單。
+      if (!Array.isArray(directoryApiResources)) return [];
       if (Array.isArray(directoryApiResources)) {
         return withTimetableResource(directoryApiResources.map((resource) => ({
           ...resource,
@@ -4356,6 +4360,10 @@
     }
 
     function renderRecentUpdates() {
+      if (directoryLoadState !== "ready") {
+        elements.recentUpdates.replaceChildren();
+        return;
+      }
       const recent = getHomeRecentItems(getDirectoryItems());
       elements.recentUpdates.replaceChildren(...recent.map((item) => {
         const row = document.createElement("li");
@@ -4398,6 +4406,28 @@
     }
 
     function renderAll() {
+      elements.resourceResults.setAttribute("aria-busy", String(directoryLoadState === "loading"));
+      if (directoryLoadState !== "ready") {
+        elements.commonContentList.replaceChildren();
+        elements.padletGrid.replaceChildren();
+        elements.recentUpdates.replaceChildren();
+        elements.showAllResultsBtn.hidden = true;
+        elements.padletEmpty.hidden = true;
+        elements.padletCount.setAttribute("role", "status");
+        elements.padletCount.textContent = directoryLoadState === "loading"
+          ? "正在載入最新資料，請稍候……"
+          : "暫時無法取得最新資料，請確認網路後重試。";
+        elements.currentTitle.textContent = directoryLoadState === "loading" ? "正在載入教師手冊" : "資料載入未完成";
+        elements.currentDescription.textContent = "";
+        if (directoryLoadState === "error") {
+          const retry = document.createElement("button");
+          retry.type = "button";
+          retry.textContent = "重新載入";
+          retry.addEventListener("click", loadDirectoryFromApi);
+          elements.padletGrid.append(retry);
+        }
+        return;
+      }
       const scoped = state.task !== "all" || state.office !== "all" || state.padletCategory !== "none" || Boolean(state.tag);
       document.getElementById("searchScopeNote").textContent = scoped
         ? "目前依所選情境或處室篩選；輸入關鍵字即可改搜全站。"
@@ -4446,14 +4476,22 @@
     }
 
     async function loadDirectoryFromApi() {
+      if (directoryRequestPending) return false;
+      directoryRequestPending = true;
+      directoryLoadState = "loading";
+      renderAll();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
       try {
         const response = await fetch(directoryApiRequestUrl(), {
           method: "GET",
           cache: "no-store",
+          signal: controller.signal,
           headers: { "Accept": "application/json" }
         });
+        if (!response.ok) throw new Error("Directory request failed");
         const data = await response.json();
-        if (!data || data.ok !== true || !Array.isArray(data.resources) || data.resources.length === 0) return false;
+        if (!data || data.ok !== true || !Array.isArray(data.resources)) throw new Error("Invalid directory response");
         directoryApiResources = data.resources.map(normalizeResourceFromApi).filter((resource) => resource.visible);
         padletResources = directoryApiResources;
         const dynamicShortcuts = normalizeShortcutsFromApi(data.shortcuts);
@@ -4461,12 +4499,18 @@
         padletCategories = getPadletCategories();
         updateCommonContentItems();
         writeCommonContentCache(cachedCommonContentItems);
+        directoryLoadState = "ready";
         renderFilters();
         renderRecentUpdates();
         renderAll();
         return true;
       } catch (err) {
+        directoryLoadState = "error";
+        renderAll();
         return false;
+      } finally {
+        clearTimeout(timeout);
+        directoryRequestPending = false;
       }
     }
 
